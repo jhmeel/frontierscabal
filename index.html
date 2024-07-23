@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/src/client/src/assets/logos/icon-152x152.png"
+    />
+    <link
+      rel="apple-touch-icon"  
+      type="image/png"
+      href="/src/client/src/assets/logos/icon-128x128.png"
+    />
+    <link
+      rel="mask-icon"
+      type="image/png"
+      href="/src/client/src/assets/logos/icon-384x384.png"
+    />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FrontiersCabal</title>
+    <meta
+      name="description"
+      content="Frontierscabal - your ultimate all-in-one platform designed to cater to every student's needs. Access extensive database of pastquestions and answers, helping you excel in exams with ease. Unleash Your creativity with built-in blog editor, where you can write and explore insightful articles on various topics. Stay updated with importants event through our handy notifier, Frontierscabal is here to empower and enrich your educational journey like never before! "
+    />
+
+    <!-- Additional Meta Tags for SEO -->
+    <meta
+      name="keywords"
+      content="education, past questions, answers, exams, blog, events, Frontierscabal"
+    />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <meta property="og:locale" content="en_US" />
+    <meta
+      name="og:title"
+      content="Frontierscabal - Your Ultimate Educational Platform"
+    />
+    <meta
+      name="og:description"
+      content="Frontierscabal is your ultimate all-in-one platform designed to cater to every student's needs. Access an extensive database of past questions and answers, excel in exams with ease, unleash your creativity with our built-in blog editor, and stay updated with important events. Frontierscabal empowers and enriches your educational journey like never before."
+    />
+    <meta name="og:url" content="https://frontierscabal.com" />
+    <meta name="og:type" content="website" />
+    <meta property="og:site_name" content="FrontiersCabal" />
+    <link rel="canonical" href="https://frontierscabal.com" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@frontierscabal" />
+    <script
+      async
+      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3890471840851132"
+      crossorigin="anonymous"
+    ></script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-CZN50NEF3P"
+      defer
+    ></script>
+    <script defer>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        window.dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-CZN50NEF3P");
+    </script>
+
+    <style type="text/css">
+      .pwa-install {
+        width: 100%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 10px 20px;
+        background-color: azure;
+        gap: 2px;
+      }
+      .pwa-install-btn {
+        padding: 9px 18px;
+        height: fit-content;
+        width: fit-content;
+        color: white;
+        border-radius: 4px;
+        border: none;
+        background-color: #176984;
+        cursor: pointer;
+      }
+      .pwa-text {
+        padding: 5px;
+        font-size: 12px;
+        text-align: left;
+      }
+    </style>
+  </head>
+
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div class="pwa-install">
+      <p class="pwa-text">
+        <b>Frontierscabal</b> - your ultimate all-in-one platform designed to
+        cater to every student's needs.
+      </p>
+      <button class="pwa-install-btn">Install</button>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/client/src/main.tsx"></script>
+    <script type="module">
+      import getToken from "./src/client/src/utils/getToken.ts";
+      import axiosInstance from "./src/client/src/utils/axiosInstance.ts";
+      // Function to send the subscription to the server
+      const sendSubscriptionToServer = async (subscription) => {
+        try {
+          const authToken = await getToken();
+          if (authToken) {
+            await axiosInstance(authToken).post(
+              "/api/v1/push-subscription",
+              JSON.stringify(subscription)
+            );
+            console.log("Subscription to webpush done successfully!");
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      };
+
+      window.addEventListener("load", () => {
+        navigator.serviceWorker && navigator.serviceWorker.register("/sw.js");
+
+        navigator.serviceWorker.ready
+          .then(async (registration) => {
+            try {
+              let subscription =
+                await registration.pushManager.getSubscription();
+
+              if (!subscription) {
+                // If there's no existing subscription, create one
+                subscription = await registration.pushManager.subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey:
+                    "BP_zBx8Se411U33MhcPWFMPwurhn9mP7YLnQI8CRUJXp35hk3lnYM6ZPfAZ0L4g7Ws7EhBSdqGlcE_nreH7YZNw",
+                });
+
+                // Send the initial subscription to your server
+                await sendSubscriptionToServer(subscription);
+              }
+
+              // Listen for push subscription change
+              navigator.serviceWorker.addEventListener(
+                "pushsubscriptionchange",
+                async (event) => {
+                  console.log("Push subscription has changed.");
+                  const newSubscription = event.newSubscription;
+                  await sendSubscriptionToServer(newSubscription);
+                }
+              );
+            } catch (err) {
+              console.log(err);
+            }
+
+            registration.onupdatefound = () => {
+              const installingWorker = registration.installing;
+              if (installingWorker) {
+                installingWorker.onstatechange = () => {
+                  if (installingWorker.state === "installed") {
+                    // A new service worker is installed but not yet active.
+                    // You can notify the user or take some action here.
+                    console.log(
+                      "New content is available and will be used when all " +
+                        "tabs for this page are closed. See https://bit.ly/CRA-PWA."
+                    );
+
+                    // Optionally, you can force the new service worker to become active
+                    // by calling registration.waiting.postMessage({ action: "skipWaiting" });
+                    // This will skip the "waiting" state and activate the new service worker immediately.
+
+                    // You might want to show a UI message to the user, asking them to reload the page.
+                  }
+                };
+              }
+            };
+          })
+          .catch((error) => {
+            console.error("Error during service worker registration:", error);
+          });
+      });
+
+      let deferredPrompt;
+      const installBtn = document.querySelector(".pwa-install-btn");
+      const pwaBanner = document.querySelector(".pwa-install");
+      if (
+        (window.addEventListener("beforeinstallprompt", (e) => {
+          e.preventDefault(),
+            (deferredPrompt = e),
+            (pwaBanner.style.display = "flex");
+          installBtn.addEventListener("click", (e) => {
+            e.preventDefault(),
+              (pwaBanner.style.display = "none"),
+              deferredPrompt.prompt(),
+              deferredPrompt.userChoice.then((e) => {
+                "accepted" === e.outcome
+                  ? console.log("A2HS prompt accepted")
+                  : console.log("A2HS prompt dismissed"),
+                  (deferredPrompt = null);
+              });
+          });
+        }),
+        !deferredPrompt)
+      ) {
+        let e = window.location.href;
+        -1 != e.indexOf("pwa") && (pwaBanner.style.display = "flex");
+      }
+    </script>
+  </body>
+</html>
