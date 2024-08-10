@@ -8,7 +8,7 @@ export default defineConfig({
     svgr(),
   ],
   build: {
-    outDir: "build",
+    outDir: "dist",
     rollupOptions: {
       output: {
         manualChunks(id) {
