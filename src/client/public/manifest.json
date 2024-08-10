@@ -1,0 +1,68 @@
+{
+  "name": "FrontiersCabal",
+  "short_name": "FrontiersCabal",
+  "categories": ["social", "blog", "academic", "event"],
+  "description": "Frontierscabal - your ultimate all-in-one platform designed to cater to every student's needs.",
+  "start_url": "https://frontierscabal.onrender.com",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#176984",
+  "orientation": "portrait",
+  "id": "/",
+  "icons": [
+    {
+      "src": "/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Story",
+      "url": "/#/blog/article/new"
+    },
+    {
+      "name": "Search",
+      "url": "/#/search"
+    },
+    {
+      "name": "Notifications",
+      "url": "/#/notifications"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": ""
+    }
+  ],
+  "lang": "en",
+  "scope": "/",
+  "serviceworker": {
+    "src": "/sw.js",
+    "use_cache": true
+  },
+  "splash_pages": null
+}
