@@ -1,13 +1,12 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-
 const Config = {
-  NAME: process.env.NAME || "<FRONTIERSCABAL>",
+  NAME: process.env.NAME || '<FRONTIERSCABAL>',
   BASE_URL: process.env.BASE_URL,
   PORT: process.env.PORT || 8000,
   VERSION: process.env.VERSION,
-  ADMIN: {
+  ADMIN: { 
     USERNAME: process.env.ADMIN_USER_NAME,
     PASSWORD: process.env.ADMIN_PASSWORD,
     ADMIN_ID: process.env.AMIN_ID,
