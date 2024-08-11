@@ -3,7 +3,7 @@ import getMimeType from "../utils/getMimeType.js";
 import catchAsync from "../middlewares/catchAsync.js";
 import { ErrorHandler } from "./errorHandler.js";
 
-const genAI = new GoogleGenerativeAI("AIzaSyBI8ZHuk-YKPsyMi1BZjwA9PEyRVADv92s");
+const genAI = new GoogleGenerativeAI("AIzaSyCRkhaz1l25Z-OmjbO_k2uDPzE0LQj6M68");
 
 export const processPastQuestionImage = catchAsync(async (req, res, next) => {
   const { image } = req.body;

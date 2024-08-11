@@ -191,7 +191,6 @@ const fetchUser = useCallback(async()=>{
     const mail = `mailto:${user?.email}`;
     window.open(mail, "_blank");
   };
-console.log(currentUser, user)
   const isCurrentUser = currentUser?.username === user?.username;
 
   return (

@@ -3,9 +3,7 @@ import { Route, Routes, useLocation } from "react-router-dom";
 import Header from "./components/header/Header";
 import Bot from "./components/Bot/Bot";
 import toast, { useToasterStore } from "react-hot-toast";
-import {
-  PrivateRoute,
-} from "./components/privateRoute/PrivateRoute";
+import { PrivateRoute } from "./components/privateRoute/PrivateRoute";
 import { isOnline } from "./utils";
 
 import { useDispatch, useSelector } from "react-redux";
@@ -156,7 +154,7 @@ function App() {
         {!["/login", "/#/login", "/signup", "/#/signup"].includes(pathname) && (
           <>
             <Header />
-            <Bot/>
+            <Bot />
           </>
         )}
         <Routes>
@@ -172,13 +170,45 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
 
           <Route path="/" element={<HomePage />} />
-          <Route path="/module/:moduleId" element={<ModulePage />} />
-          <Route path="/modules" element={<ModuleListPage />} />
-          <Route path="/module/new" element={<CreateModulePage />} />
-          <Route path="/lesson/new/:moduleId" element={<UploadLessonPage />} />
+          <Route
+            path="/module/:moduleId"
+            element={
+              <PrivateRoute>
+                <ModulePage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/modules"
+            element={
+              <PrivateRoute>
+                <ModuleListPage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/module/new"
+            element={
+              <PrivateRoute>
+                <CreateModulePage />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/lesson/new/:moduleId"
+            element={
+              <PrivateRoute>
+                <UploadLessonPage />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/lesson/update/:lessonId"
-            element={<UpdateLessonPage />}
+            element={
+              <PrivateRoute>
+                <UpdateLessonPage />
+              </PrivateRoute>
+            }
           />
 
           <Route path="/blog" element={<BlogPage />} />
@@ -195,10 +225,14 @@ function App() {
           <Route path="/study-materials" element={<StudyMaterialPage />} />
           <Route
             path="/study-material/new"
-            element={<StudyMaterialUploadPage />}
+            element={
+              <PrivateRoute>
+                <StudyMaterialUploadPage />
+              </PrivateRoute>
+            }
           />
 
-          <Route path="/profile/:username" element={<ProfilePage />} />
+          <Route path="/profile/:username" element={  <PrivateRoute><ProfilePage /></PrivateRoute>} />
 
           <Route
             path="/profile/"
@@ -233,7 +267,16 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path="/personalize" element={<PersonalizePage />} />
+
+          <Route
+            path="/personalize"
+            element={
+              <PrivateRoute>
+                <PersonalizePage />
+              </PrivateRoute>
+            }
+          />
+
           <Route path="/notifications" element={<NotificationPage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/terms-of-service" element={<TermsOfServicePage />} />
