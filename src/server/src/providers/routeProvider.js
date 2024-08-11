@@ -30,7 +30,6 @@ class RouteProvider {
       this.app.use("/api/v1", Module);
       this.app.use("/api/v1", Event);
       this.app.use("/api/v1", Misc);
-      this.app.use("/api/v1", Payment);
       this.app.use("/api/v1", Bot);
       this.app.use(errorMiddleware);
 
