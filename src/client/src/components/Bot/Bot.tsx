@@ -46,7 +46,7 @@ const bounceEffect = keyframes`
 const BotButton = styled(animated.button)`
   position: absolute;
   bottom: 0;
-  right: 0;
+  right: 10px;
   background-color: #3498db;
   color: white;
   border: none;
@@ -96,9 +96,9 @@ const BotHeader = styled.div`
 
 const BotTitle = styled.h2`
   margin: 0;
-  font-size: 18px;
+  font-size: 12px;
   font-weight: 600;
-  color:#fff;
+  color:#ccc;
 `;
 
 const CloseButton = styled.button`
@@ -430,9 +430,11 @@ const Bot = () => {
       <animated.div style={botSpring}>
         <BotContainer>
           <BotHeader>
-            <BotTitle>Assitance</BotTitle>
+            <div style={{display:'flex',flexDirection:'column', alignItems:'center'}}>  <VscRobot fill="#fff" size={20} />
+            <BotTitle>Online</BotTitle></div>
+        
             <CloseButton onClick={handleToggle}>
-              <FaTimes fill="#ccc" />
+              <FaTimes fill="#fff" />
             </CloseButton>
           </BotHeader>
           <ChatArea ref={chatAreaRef}>

@@ -55,7 +55,7 @@ const Banner: React.FC = () => {
     <BannerContainer style={fadeIn}>
       <ContentWrapper>
         <TextContent>
-          <Title>Frontier Learning Hub</Title>
+          <Title>Frontiers Learning Hub</Title>
           <animated.div style={textSpring}>
             <Subtitle>{features[currentImage]}</Subtitle>
           </animated.div>
@@ -85,6 +85,7 @@ export default Banner;
 const BannerContainer = styled(animated.div)`
   background: linear-gradient(135deg,#176984, #DFDFDF);
   min-height: 100vh;
+  width:100%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -145,6 +146,7 @@ const CtaButton = styled.button`
   cursor: pointer;
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
+  margin-bottom:10px;
 
   &:hover {
     background: rgba(255, 255, 255, 0.3);

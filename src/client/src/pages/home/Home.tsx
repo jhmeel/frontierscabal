@@ -438,6 +438,7 @@ export default Home;
 
 const HomeRenderer = styled.div`
   width: 100%;
+  overflow-x:hidden;
 
   .msg-holder {
     border-top: 1px solid #ededed;
