@@ -99,9 +99,8 @@ const DescriptorWrapper = styled.div`
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
   padding: 20px;
-  max-width: 1200px;
   margin: 0 auto;
-
+  width: 100%;
   @media (max-width: 768px) {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   }
@@ -150,14 +149,14 @@ const IconWrapper = styled.div`
 const Count = styled.span`
   font-size: clamp(1rem, 5vw, 2rem);
   font-weight: bold;
-  color:#fff;
-  font-family:serif;
+  color: #fff;
+  font-family: serif;
   margin-bottom: 10px;
 `;
 
 const Text = styled.span`
   font-size: 0.85rem;
-  font-family:sans-serif;
+  font-family: sans-serif;
   font-weight: 500;
-  color:#ccc;
+  color: #ccc;
 `;
