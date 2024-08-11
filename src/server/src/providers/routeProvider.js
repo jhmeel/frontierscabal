@@ -1,7 +1,6 @@
 import { logger } from "../utils/logger.js";
 import { Emitter } from "../utils/emitter.js";
 import { Event } from "../routes/eventRoutes.js";
-import { Payment } from "../routes/paymentRoutes.js";
 import { Module } from "../routes/moduleRoutes.js";
 import { CourseMaterial } from "../routes/courseMaterialRoutes.js";
 import { Misc } from "../routes/miscRoutes.js";
