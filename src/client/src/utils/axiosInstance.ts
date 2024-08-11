@@ -6,8 +6,14 @@ interface AxiosInstanceConfig extends AxiosRequestConfig {
 }
 
 const axiosInstance = (token?: string): AxiosInstance => {
+
+
+  const baseUrl = window.location.protocol.includes("https")
+  ? "https://frontierscabal.onrender.com"
+  : "http://127.0.0.1:8000";
+
   const config: AxiosInstanceConfig = {
-    baseURL: "http://localhost:8000",//"https://fcabalserver.onrender.com",
+    baseURL:baseUrl,
     headers: { 'Content-Type': 'application/json' },
   };
 
