@@ -85,7 +85,7 @@ export default Banner;
 const BannerContainer = styled(animated.div)`
   background: linear-gradient(135deg,#176984, #DFDFDF);
   min-height: 100vh;
-  width:100%;
+  max-width:100%;
   display: flex;
   justify-content: center;
   align-items: center;
