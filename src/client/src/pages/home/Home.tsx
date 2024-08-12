@@ -437,7 +437,7 @@ const Home: React.FC = () => {
 export default Home;
 
 const HomeRenderer = styled.div`
-  width: 100%;
+  max-width: 100%;
   overflow-x:hidden;
 
   .msg-holder {

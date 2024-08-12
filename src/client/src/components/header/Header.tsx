@@ -375,7 +375,7 @@ const UserAvatar = styled.div`
   }
 `;
 const MainHeader = styled.header`
-  width: 100%;
+  max-width: 100%;
   height: 70px;
   position: sticky;
   display: flex;
@@ -449,7 +449,7 @@ const MainHeader = styled.header`
     z-index: 999;
     padding-right: 40px;
     top: 80%;
-    right: -10px;
+    right: 10px;
   }
 
   .h-menu .h-menu-items li {
