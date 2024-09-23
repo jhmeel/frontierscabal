@@ -2,9 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import styled, { ThemeProvider } from "styled-components";
 import fcabal from '../../assets/logos/fcabal.png';
+<<<<<<< HEAD
 import knowledgeShareImg from "../../assets/images/sharing_knowledge.svg";
 import joinImg from "../../assets/images/join_.svg";
 import onlineVidImg from "../../assets/images/online_article.svg";
+=======
+import knowledgeShareImg from "../../assets/images/youngStudent.png";
+import joinImg from "../../assets/images/communityStudent.png";
+import onlineVidImg from "../../assets/images/happyStudent.png";
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 
 const MsgItem = () => {
   const [currentMsg, setCurrentMsg] = useState(0);
@@ -109,7 +115,11 @@ const MsgItemRenderer = styled.div`
   }
 .m-card-avt{
     position: absolute;
+<<<<<<< HEAD
     max-width: 280px;
+=======
+    max-width: 160px;
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
     height: auto;
     right: 30px;
     bottom: 0;

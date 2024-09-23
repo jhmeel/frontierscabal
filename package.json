@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "name": "vite-react-typescript-starter",
+=======
+  "name": "frontierscabal",
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -11,12 +15,16 @@
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^42.0.1",
     "@ckeditor/ckeditor5-react": "^8.0.0",
+<<<<<<< HEAD
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@google/generative-ai": "^0.15.0",
     "@mui/icons-material": "^6.1.1",
     "@mui/material": "^6.1.1",
     "@mui/styled-engine-sc": "^6.1.1",
+=======
+    "@google/generative-ai": "^0.15.0",
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
     "@reduxjs/toolkit": "^1.9.7",
     "axios": "^1.7.2",
     "bcryptjs": "^2.4.3",
@@ -31,8 +39,12 @@
     "express-healthcheck": "^0.1.0",
     "express-rate-limit": "^7.3.1",
     "express-session": "^1.18.0",
+<<<<<<< HEAD
     "firebase": "^10.13.2",
     "firebase-admin": "^12.5.0",
+=======
+    "framer-motion": "^11.3.21",
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
     "jsdom": "^24.1.1",
     "jsonwebtoken": "^9.0.2",
     "ldrs": "^1.0.2",
@@ -57,6 +69,10 @@
     "react-responsive-carousel": "^3.2.23",
     "react-rough-notation": "^1.0.5",
     "react-router-dom": "^6.25.1",
+<<<<<<< HEAD
+=======
+    "react-spring": "^9.7.4",
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
     "react-tooltip": "^5.27.1",
     "reading-time-estimator": "^1.11.0",
     "redux": "^5.0.1",
@@ -67,6 +83,7 @@
     "scrollreveal": "^4.0.9",
     "sib-api-v3-sdk": "^8.5.0",
     "slugify": "^1.6.6",
+<<<<<<< HEAD
     "styled-components": "^6.1.13",
     "tesseract.js": "^5.1.0",
     "tsx": "^4.3.0",
@@ -74,6 +91,16 @@
     "valid-url": "^1.0.9",
     "vite-express": "*",
     "vite-plugin-node-polyfills": "^0.22.0",
+=======
+    "styled-components": "^6.1.11",
+    "tesseract.js": "^5.1.0",
+    "tsx": "^4.3.0",
+    "typescript": "^5.3.2",
+    "typewriter-effect": "^2.21.0",
+    "valid-url": "^1.0.9",
+    "vite": "^5.3.5",
+    "vite-express": "*",
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
     "vite-plugin-static-copy": "^1.0.6",
     "vite-plugin-svgr": "^4.2.0",
     "web-push": "^3.6.7",
@@ -91,7 +118,11 @@
     "@types/styled-components": "^5.1.34",
     "@types/yt-search": "^2.10.3",
     "@vitejs/plugin-react": "^4.2.0",
+<<<<<<< HEAD
     "nodemon": "^3.0.1",
     "vite": "^5.0.2"
+=======
+    "nodemon": "^3.0.1"
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   }
 }

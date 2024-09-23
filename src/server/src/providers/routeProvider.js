@@ -1,13 +1,20 @@
 import { logger } from "../utils/logger.js";
 import { Emitter } from "../utils/emitter.js";
 import { Event } from "../routes/eventRoutes.js";
+<<<<<<< HEAD
 import { Payment } from "../routes/paymentRoutes.js";
+=======
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 import { Module } from "../routes/moduleRoutes.js";
 import { CourseMaterial } from "../routes/courseMaterialRoutes.js";
 import { Misc } from "../routes/miscRoutes.js";
 import { User } from "../routes/userRoutes.js";
 import { Article } from "../routes/articleRoutes.js";
 import { PastQuestion } from "../routes/pastQuestionRoutes.js";
+<<<<<<< HEAD
+=======
+import { Bot } from "../routes/botRoute.js";
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 
 import os from "os";
 import {errorMiddleware} from "../middlewares/error.js";
@@ -30,7 +37,11 @@ class RouteProvider {
       this.app.use("/api/v1", Module);
       this.app.use("/api/v1", Event);
       this.app.use("/api/v1", Misc);
+<<<<<<< HEAD
       this.app.use("/api/v1", Payment);
+=======
+      this.app.use("/api/v1", Bot);
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
       this.app.use(errorMiddleware);
 
       this.app.route("/healthz").get(async (req, res, next) => {

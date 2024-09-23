@@ -18,12 +18,16 @@ import { enqueueSnackbar, useSnackbar } from "notistack";
 import Player from "../../lib/player";
 import axiosInstance from "../../utils/axiosInstance";
 import getToken from "../../utils/getToken";
+<<<<<<< HEAD
 import vid1 from "../../assets/_danish__.zehen__-20230611-0001.mp4";
 import vid2 from "../../assets/_foyr-20230513-0001.mp4";
 import vid3 from "../../assets/2c2b5204d914479c9935a7d529d79002.mp4";
 import vid4 from "../../assets/2ec83c3ca9d24a51a1a71cf59028fddb.mp4";
 import vid5 from "../../assets/04b4ccdd02fd467e896d3491fbbd3eaa.mp4";
 import vid6 from "../../assets/11d04b3cad78434f86782edf6b0f87ff.mp4";
+=======
+
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 import { IModule } from "../../types";
 const Module: React.FC = (): React.ReactElement => {
   const [activeTab, setActiveTab] = useState<string>("MODULE");
@@ -109,6 +113,7 @@ const Module: React.FC = (): React.ReactElement => {
   };
 
   useEffect(() => {
+<<<<<<< HEAD
     // const getModule = async () => {
     //   const authToken = await getToken();
     //   try {
@@ -139,6 +144,38 @@ const Module: React.FC = (): React.ReactElement => {
     // };
 
     // isOnline() && getModule();
+=======
+    const getModule = async () => {
+      const authToken = await getToken();
+      try {
+        const { data } = await axiosInstance(authToken).get(
+          `/api/v1/module/${params.moduleId}`
+        );
+        setModuleDetails(data?.module);
+        setModuleLesson(data?.lessons);
+        const lessonsWithDurations = await Promise.all(
+          data?.lessons.map(async (lesson: any) => {
+            const duration = await getVideoDuration(lesson.lessonUrl);
+            return {
+              ...lesson,
+              lessonId: lesson._id,
+              lessonUrl: lesson?.lessonMaterial.secureUrl,
+              duration,
+              isWatched: false,
+              progress: 0,
+            };
+          })
+        );
+
+        setModuleLesson(lessonsWithDurations);
+      } catch (err: any) {
+        enqueueSnackbar(err.message, { variant: "error" });
+        setModuleErr(err);
+      }
+    };
+
+    isOnline() && getModule();
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 
     setModuleDetails(demoDetails);
     setModuleLesson(demoDetails?.lessons);

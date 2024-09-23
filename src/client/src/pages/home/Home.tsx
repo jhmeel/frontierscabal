@@ -292,8 +292,13 @@ const Home: React.FC = () => {
                       <ModuleItem
                         key={i}
                         _id={mod?._id}
+<<<<<<< HEAD
                         title="Demo title"
                         description="Demo description"
+=======
+                        title="title"
+                        description="description"
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                         banner={testImg}
                       />
                     ))
@@ -437,7 +442,12 @@ const Home: React.FC = () => {
 export default Home;
 
 const HomeRenderer = styled.div`
+<<<<<<< HEAD
   width: 100%;
+=======
+  max-width: 100%;
+  overflow-x:hidden;
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 
   .msg-holder {
     border-top: 1px solid #ededed;
@@ -491,6 +501,10 @@ const HomeRenderer = styled.div`
     align-items: center;
     overflow-x: scroll;
     padding: 0px 10px 0px 10px;
+<<<<<<< HEAD
+=======
+    gap: 5px;
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   }
   .module-header {
     width: 100%;
@@ -568,7 +582,11 @@ const HomeRenderer = styled.div`
     flex-direction: row;
     justify-content: space-between;
     border-bottom: 1px solid #ededed;
+<<<<<<< HEAD
     padding-left: 5px;
+=======
+ 
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   }
 
   .recent-article-list-header h2 {
@@ -578,13 +596,23 @@ const HomeRenderer = styled.div`
   }
 
   .recent-article-list-holder {
+<<<<<<< HEAD
     display: flex;
+=======
+   display: flex;
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
     flex-direction: row;
     justify-content: space-around;
     flex-wrap: wrap;
     align-items: center;
+<<<<<<< HEAD
     max-width: 100%;
     gap: 10px;
+=======
+    width: 90%;
+    gap: 10px;
+    padding:3px;
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   }
   .random-article {
     display: flex;
@@ -619,6 +647,10 @@ const HomeRenderer = styled.div`
     align-items: center;
     width: 90%;
     gap: 10px;
+<<<<<<< HEAD
+=======
+    padding:3px;
+>>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   }
   @media (max-width: 767px) {
     .module_fact_cont {
