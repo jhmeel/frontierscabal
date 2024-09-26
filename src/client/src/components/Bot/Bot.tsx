@@ -13,9 +13,9 @@ import { jelly } from "ldrs";
 
 const BotWrapper = styled.div`
   position: fixed;
-  bottom: 20px;
+  bottom: 30px;
   right: 20px;
-  z-index: 1000;
+  z-index: 10000;
   pointer-events: none;
 `;
 
@@ -71,7 +71,7 @@ const BotButton = styled(animated.button)`
 
 const BotContainer = styled(animated.div)`
   position: absolute;
-  bottom: 30px;
+  bottom: 50px;
   right: 0;
   background-color: #fff;
   border-radius: 12px;
@@ -305,17 +305,15 @@ const Bot = () => {
   const chatAreaRef = useRef(null);
 
   useEffect(() => {
-    const hasShownMessage = localStorage.getItem("hasShownInitialMessage");
-    if (!hasShownMessage) {
+   
       setMessages([
         {
           type: "bot",
           content:
-            "Hi, I'm Gemini! I'm here to assist you in providing answers to past questions, generating quizzes from questions, and answering your academic questions.",
+            "Hi! I'm here to assist you in providing answers to past questions, generating quizzes from questions, and answering your academic questions.",
         },
       ]);
-      localStorage.setItem("hasShownInitialMessage", "true");
-    }
+     
   }, []);
 
   const handleToggle = () => setIsOpen(!isOpen);
@@ -424,14 +422,15 @@ const Bot = () => {
     <BotWrapper>
       <animated.div style={buttonSpring}>
         <BotButton onClick={handleToggle}>
-          <VscRobot />
+          <VscRobot /> 
         </BotButton>
       </animated.div>
       <animated.div style={botSpring}>
         <BotContainer>
           <BotHeader>
-            <div style={{display:'flex',flexDirection:'column', alignItems:'center'}}>  <VscRobot fill="#fff" size={20} />
+            <div style={{display:'flex',flexDirection:'column', alignItems:'center'}}> <span style={{display:"flex", alignItems:"center",justifyContent:"center"}}><VscRobot fill="#fff" size={20} />&nbsp;<span style={{fontSize:"13px",color:"#fff"}}>Dex</span></span> 
             <BotTitle>Online</BotTitle></div>
+            
         
             <CloseButton onClick={handleToggle}>
               <FaTimes fill="#fff" />

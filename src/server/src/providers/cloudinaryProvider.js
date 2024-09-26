@@ -24,7 +24,7 @@ class CloudinaryProvider {
     } catch (err) {
       throw err
     }
-  }
+  } 
 
 }
 

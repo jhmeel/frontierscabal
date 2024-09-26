@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import React, { useEffect, useState, useRef } from "react";
-=======
 import React, { useEffect, useState, useRef, useCallback } from "react";
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { clearErrors, logoutUser } from "../../actions/user";
@@ -43,10 +39,8 @@ import { ARTICLE, IModule, USER } from "../../types";
 import styled from "styled-components";
 import LocalForageProvider from "../../utils/localforage";
 import { RootState } from "../../store";
-<<<<<<< HEAD
-=======
 import { getUserDetails } from "../../actions/user.js";
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
+import { Message } from "@mui/icons-material";
 
 type ActiveList = "MY_ARTICLES" | "READING_LIST";
 
@@ -80,22 +74,6 @@ const Profile: React.FC = () => {
   const [userInterest, setUserInterest] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [activeUList, setActiveUList] = useState<ActiveList>("MY_ARTICLES");
-<<<<<<< HEAD
-  const [curriculum, setCurriculum] = useState<Array<IModule>|null>(null)
-
-  useEffect(() => {
-    const fetchArticles = async () => {
-      const authToken = await getToken();
-      if (activeUList === "MY_ARTICLES" && authToken && params?.username) {
-        dispatch<any>(getUserArticles(authToken, params?.username));
-      } else if (activeUList === "READING_LIST" && authToken) {
-        dispatch<any>(getBookmarkedArticle(authToken, page));
-      }
-    };
-
-    isOnline() && fetchArticles();
-  }, [params?.username, activeUList, dispatch, page]);
-=======
   const [curriculum, setCurriculum] = useState<Array<IModule> | null>(null);
 
   const fetchArticles = useCallback(async () => {
@@ -119,7 +97,6 @@ const fetchUser = useCallback(async()=>{
       fetchUser();
     }
   }, [fetchArticles, fetchUser]);
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 
   useEffect(() => {
     LocalForageProvider.getItem("FC:USER:INTERESTS", (err, val: any) => {
@@ -204,24 +181,14 @@ const fetchUser = useCallback(async()=>{
   };
 
   const messageUser = () => {
-    const url = `https://wa.me/${user?.phonenumber?.replace(
-      /^(\d{1})/,
-      "+234"
-    )}`;
-    window.open(url, "_blank");
+    navigate(`/chat/${user?.username}`);
   };
 
   const mailUser = () => {
     const mail = `mailto:${user?.email}`;
     window.open(mail, "_blank");
   };
-<<<<<<< HEAD
-
-
-
-=======
   const isCurrentUser = currentUser?.username === user?.username;
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 
   return (
     <>
@@ -232,12 +199,7 @@ const fetchUser = useCallback(async()=>{
           <div className="profile-user-item">
             <div className="user-card">
               <div className="user-card-header">
-<<<<<<< HEAD
-                {(user && currentUser?.username === user?.username) ||
-                  (currentUser?.username && (
-=======
                 {isCurrentUser && (
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                     <>
                       <span
                         ref={ptabRef}
@@ -305,33 +267,22 @@ const fetchUser = useCallback(async()=>{
                         </div>
                       )}
                     </>
-<<<<<<< HEAD
-                  ))}
-=======
                   )}
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
               </div>
 
               <div className="user-card-img">
                 <img
                   loading="lazy"
                   src={
-<<<<<<< HEAD
-                    currentUser?.avatar?.url || user?.avatar?.url || EmptyAvatar
-                  }
-                />
-                {currentUser?.username === user?.username && (
-=======
                     user?.avatar?.url || EmptyAvatar
                   }
                 />
                 {isCurrentUser && (
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                   <span className="u-edit-prof" title="Edit">
                     <IconAccountEdit
                       fill="gray"
-                      height="24px"
-                      width="24px"
+                      height="28px"
+                      width="28  px"
                       onClick={() => handleClick("/profile/edit")}
                     />
                   </span>
@@ -339,18 +290,10 @@ const fetchUser = useCallback(async()=>{
               </div>
               <div className="user-card-info">
                 <h3 className="modal-username">
-<<<<<<< HEAD
-                  {currentUser?.username || user?.username}
-                </h3>
-
-                {(user && currentUser?.username !== user?.username) ||
-                  (currentUser?.username && (
-=======
                   {user?.username}
                 </h3>
 
                 {!isCurrentUser  && (
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                     <div className="p-cnt-cont">
                       <div
                         title="Message on whatsapp"
@@ -358,7 +301,7 @@ const fetchUser = useCallback(async()=>{
                         onClick={messageUser}
                       >
                         Message&nbsp;
-                        <IconWhatsapp fill="green" />
+                       <Message fontSize="28px"/>
                       </div>
 
                       <div title="Mail" className="usr-mail" onClick={mailUser}>
@@ -366,17 +309,10 @@ const fetchUser = useCallback(async()=>{
                         <IconMinutemailer fill="#fff" />
                       </div>
                     </div>
-<<<<<<< HEAD
-                  ))}
-
-                <div className="user-bio-segment">
-                  <p className="user-bio">{currentUser?.bio || user?.bio}</p>
-=======
                   )}
 
                 <div className="user-bio-segment">
                   <p className="user-bio">{user?.bio}</p>
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                   {
                     <p className="user-sch">
                       <IconSchool height="16" width="16" fill="black" />{" "}
@@ -390,32 +326,18 @@ const fetchUser = useCallback(async()=>{
                       fill="black"
                     />{" "}
                     Joined{" "}
-<<<<<<< HEAD
-                    {moment(currentUser?.createdAt || user?.createdAt).format(
-=======
                     {moment(user?.createdAt).format(
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                       "MMMM YYYY"
                     )}
                   </p>
                 </div>
               </div>
 
-<<<<<<< HEAD
-              {(user && currentUser?.username === user?.username) ||
-                (currentUser?.username && (
-                  <div className="user-interest-segment">
-                    <div className="user-interest-header">
-                      <span>Interests</span>
-                      {(user && currentUser?.username === user?.username) ||
-                        (currentUser?.username && (
-=======
               {isCurrentUser && (
                   <div className="user-interest-segment">
                     <div className="user-interest-header">
                       <span>Interests</span>
                       
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                           <span
                             title="Manage interest"
                             className="manage-interest"
@@ -428,11 +350,7 @@ const fetchUser = useCallback(async()=>{
                               width="20px"
                             />
                           </span>
-<<<<<<< HEAD
-                        ))}
-=======
                     
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                     </div>
                     <div className="user-interest-holder">
                       {userInterest.map((int, _) => (
@@ -450,11 +368,7 @@ const fetchUser = useCallback(async()=>{
                       ))}
                     </div>
                   </div>
-<<<<<<< HEAD
-                ))}
-=======
                 )}
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 
               {pinnedArticles?.length > 0 && (
                 <div className="pinned-article-segment">
@@ -489,24 +403,6 @@ const fetchUser = useCallback(async()=>{
                 </div>
               )}
 
-<<<<<<< HEAD
-
-              {<div className="u-curriculum-segment">
-                
-                
-                
-                
-                
-                
-                </div>}
-
-
-
-              <div className="u-articles-segment">
-                <div className="u-art-head">
-                  {(user && currentUser?.username === user?.username) ||
-                  currentUser?.username ? (
-=======
               {<div className="u-curriculum-segment">
                 
                 
@@ -515,7 +411,6 @@ const fetchUser = useCallback(async()=>{
               <div className="u-articles-segment">
                 <div className="u-art-head">
                   {isCurrentUser ? (
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                     <>
                       <span
                         className={
@@ -550,21 +445,13 @@ const fetchUser = useCallback(async()=>{
                     </span>
                   ) : activeUList === "MY_ARTICLES" &&
                     articles?.length === 0 &&
-<<<<<<< HEAD
-                    user?.username !== currentUser?.username ? (
-=======
                     !isCurrentUser ? (
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                     <span style={{ color: "grey", fontSize: "14px" }}>
                       This user has no stories ☹
                     </span>
                   ) : activeUList === "MY_ARTICLES" &&
                     articles?.length === 0 &&
-<<<<<<< HEAD
-                    user?.username === currentUser?.username ? (
-=======
                     isCurrentUser? (
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                     <>
                       <span style={{ color: "grey", fontSize: "14px" }}>
                         Your story list is empty!
@@ -594,12 +481,7 @@ const fetchUser = useCallback(async()=>{
                         savedBy={art.savedBy}
                         pinnedBy={art.pinnedBy}
                         onProfile={
-<<<<<<< HEAD
-                          user?.username === currentUser?.username &&
-                          activeUList === "MY_ARTICLES"
-=======
                           isCurrentUser
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                         }
                       />
                     ))
@@ -620,12 +502,7 @@ const fetchUser = useCallback(async()=>{
                         savedBy={art.savedBy}
                         pinnedBy={art.pinnedBy}
                         onProfile={
-<<<<<<< HEAD
-                          user?.username === currentUser?.username &&
-                          activeUList === "MY_ARTICLES"
-=======
                           !isCurrentUser
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                         }
                       />
                     ))
@@ -962,15 +839,11 @@ const ProfileRenderer = styled.div`
     flex-wrap: nowrap;
     padding: 5px;
     gap: 5px;
-<<<<<<< HEAD
-    overflow-x: scroll;
-=======
     overflow-x: auto;
   }
 
   .user-interest-holder::-webkit-scrollbar {
     display: none;
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   }
 
   .user-interest-item {

@@ -4,10 +4,7 @@ import { encrypt } from "../utils/cryptic.js";
 const { JWT_SECRETE_KEY, JWT_EXPIRES_IN } = Config.JWT;
 
 export const createToken = (user) => {
-<<<<<<< HEAD
-=======
   
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   if (!user)
     throw new Error(`Missing user; got– ${user}`);
 

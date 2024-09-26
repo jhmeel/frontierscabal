@@ -85,3 +85,54 @@ input::-webkit-inner-spin-button{
 .required{
   color:crimson;
 }
+
+
+.logo_container {
+  box-sizing: border-box;
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(
+    180deg,
+    rgba(248, 248, 248, 0) 50%,
+    #f8f8f888 100%
+  );
+  border: 1px solid #f7f7f8;
+  filter: drop-shadow(0px 0.5px 0.5px #efefef)
+    drop-shadow(0px 1px 0.5px rgba(239, 239, 239, 0.5));
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin:0 auto;
+}
+.l-logo {
+  width: 120px;
+  height: auto;
+}
+
+.h-menu{
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  -moz-backdrop-filter: blur(10px);
+  -o-backdrop-filter: blur(10px);
+  box-shadow: 0 0px 3px rgba(0, 0, 0, 0.2);
+  transform: 0.5s;
+  border-radius: 5px;
+  background-color: #032c3b;
+}
+
+.socials {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-left: 25px;
+  margin-top:5px;
+}
+.socials span {
+  color: #ccc;
+  font-size: 13px;
+}
+.social-links{
+  display: flex;
+  gap:8px;
+}

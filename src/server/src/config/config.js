@@ -1,22 +1,12 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-<<<<<<< HEAD
-
-const Config = {
-  NAME: process.env.NAME || "<FRONTIERSCABAL>",
-  BASE_URL: process.env.BASE_URL,
-  PORT: process.env.PORT || 8000,
-  VERSION: process.env.VERSION,
-  ADMIN: {
-=======
 const Config = {
   NAME: process.env.NAME || '<FRONTIERSCABAL>',
   BASE_URL: process.env.BASE_URL,
   PORT: process.env.PORT || 8000,
   VERSION: process.env.VERSION,
   ADMIN: { 
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
     USERNAME: process.env.ADMIN_USER_NAME,
     PASSWORD: process.env.ADMIN_PASSWORD,
     ADMIN_ID: process.env.AMIN_ID,
@@ -66,15 +56,9 @@ const Config = {
     URL: process.env.DB_URL||'mongodb+srv://Jhmeel:08081434%40Jh@cluster0.ujgpkxo.mongodb.net',
   },
   CLOUDINARY: {
-<<<<<<< HEAD
-    CLOUDINARY_NAME: process.env.CLOUDINARY_NAME,
-    CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
-    CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
-=======
     CLOUDINARY_NAME: process.env.CLOUDINARY_NAME||'fcstore',
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY||"779893887235886",
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET||"sf0M9K2EDJY3_EUrHnXFmUkLrMs",
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   },
   WEBPUSH: {
     VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY||'BP_zBx8Se411U33MhcPWFMPwurhn9mP7YLnQI8CRUJXp35hk3lnYM6ZPfAZ0L4g7Ws7EhBSdqGlcE_nreH7YZNw',

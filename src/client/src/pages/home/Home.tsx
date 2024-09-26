@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import styled, { ThemeProvider } from "styled-components";
+import styled from "styled-components";
 import Banner from "../../components/bannerItem/Banner";
 import { useSelector } from "react-redux";
 import Footer from "../../components/footer/Footer";
@@ -30,7 +30,6 @@ import {
   searchRecentArticle,
 } from "../../actions/article";
 import {
-  searchOngoingEvents,
   clearErrors as clearEventErrors,
 } from "../../actions/event";
 import { isOnline } from "../../utils";
@@ -38,8 +37,9 @@ import axiosInstance from "../../utils/axiosInstance";
 import { ModuleItem } from "../../components/moduleItem/ModuleItem";
 import ModuleItemSkeletonLoader from "../../components/loaders/ModuleItemSkeletonLoader";
 import { RootState } from "../../store";
+import { Box, Grid, Button, Typography } from "@mui/material";
 const Home: React.FC = () => {
-  const { theme } = useSelector((state: RootState) => state.theme);
+ 
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
@@ -50,7 +50,6 @@ const Home: React.FC = () => {
   const [isRandomFetchErr, setIsRandomFetchErr] = useState("");
   const [randomSelectedCategory, setRandomSelectedCategory] = useState("");
   const [randomFetchLoading, setRandomFetchLoading] = useState(false);
-  const [upComingEvents, setUpComingEvents] = useState([]);
   const [userInterest, setUserInterest] = useState([]);
   const [modules, setModules] = useState([]);
   const [moduleFetchErr, setModuleFetchErr] = useState("");
@@ -108,10 +107,7 @@ const Home: React.FC = () => {
     }
   }, [dispatch, userInterest, page]);
 
-  const fetchOngoingEvents = useCallback(() => {
-    dispatch<any>(searchOngoingEvents());
-  }, [dispatch]);
-
+ 
   useEffect(() => {
     if (recentArticleError) {
       dispatch<any>(clearArticleErrors());
@@ -136,15 +132,7 @@ const Home: React.FC = () => {
     isOnline() && getTrendingArticles();
   }, [enqueueSnackbar, trendingFetchErr]);
 
-  useEffect(() => {
-    const getUpComingEvents = async () => {
-      try {
-        const { data } = await axiosInstance().get(`/api/v1/events/upcoming`);
-        setUpComingEvents(data?.event);
-      } catch (err) {}
-    };
-    getUpComingEvents();
-  }, []);
+
   //Random fetch
   useEffect(() => {
     const getRandomArticle = async () => {
@@ -201,13 +189,7 @@ const Home: React.FC = () => {
       setTrendingFetchError("");
     }
   }, [isRandomFetchErr, trendingFetchErr]);
-  //Ongoing event fetch
-  useEffect(() => {
-    if (eventError) {
-      dispatch<any>(clearEventErrors());
-    }
-    isOnline() && fetchOngoingEvents();
-  }, [dispatch, fetchOngoingEvents]);
+  
 
   const handleViewMoreArticle = () => {
     navigate("/blog");
@@ -220,15 +202,39 @@ const Home: React.FC = () => {
   const handleViewMoreModule = () => {
     navigate("/modules");
   };
+
+  const uniqueCreators = trendingArticles.slice(0,10).reduce((acc: any[], article: any) => {
+    if (!acc.some(item => item?.postedBy?.username === article?.postedBy?.username)) {
+      acc.push(article);
+    }
+    return acc;
+  }, []);
+
   return (
     <>
-      <ThemeProvider theme={theme}>
         <HomeRenderer>
           <Banner />
           <Descriptor />
           <div className="msg-holder">
             <MsgItem />
           </div>
+
+          <Section>
+        <SectionTitle>
+          Our Creator
+        </SectionTitle>
+        <Grid container spacing={2} justifyContent="center">
+          {uniqueCreators.map((article) => (
+            <Grid item key={article?.Article.postedBy?.username}>
+              <Box textAlign="center">
+                <TopCreatorAvatar src={article?.Article.postedBy?.avatar.url} />
+                <Typography variant="subtitle2">{article?.Article.postedBy?.username}</Typography>
+              </Box>
+            </Grid>
+          ))}
+        </Grid>
+      </Section>
+
 
           <div className="trending-article-list-header">
             <div className="icon-title-tag">
@@ -292,13 +298,8 @@ const Home: React.FC = () => {
                       <ModuleItem
                         key={i}
                         _id={mod?._id}
-<<<<<<< HEAD
-                        title="Demo title"
-                        description="Demo description"
-=======
                         title="title"
                         description="description"
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
                         banner={testImg}
                       />
                     ))
@@ -312,43 +313,8 @@ const Home: React.FC = () => {
             <FactGenerator />
           </div>
 
-          {/* upcoming events */}
-          <div className="upcoming-events">
-            <div className="upcoming-events-list-header">
-              <div className="icon-title-tag">
-                <IconCalendarEventFill fill="#000" height="20" width="20" />
-                <h2>Upcoming Events</h2>
-              </div>
-
-              <div className="view-more" onClick={handleViewMoreEvents}>
-                <span>View More</span>
-                <IconChevronRight
-                  className="view-more-icon"
-                  fill="#176984"
-                  height="26px"
-                  width="26px"
-                />
-              </div>
-            </div>
-            <div className="upcoming-events-list">
-              {upComingEvents?.length > 0
-                ? upComingEvents.map((eve: any, i: number) => (
-                    <EventItem
-                      id={eve?._id}
-                      slug={eve?.slug}
-                      title={eve?.title}
-                      avatar={eve?.avatar?.url}
-                      description={eve?.description}
-                      category={eve?.category}
-                      createdBy={eve?.createdBy}
-                      key={i}
-                    />
-                  ))
-                : Array(6)
-                    .fill(null)
-                    .map((_, i) => <EventSkeletonLoader key={i} />)}
-            </div>
-          </div>
+        
+           
 
           {/* Recent Articles */}
           <div className="recent-article">
@@ -434,7 +400,6 @@ const Home: React.FC = () => {
           </div>
         </HomeRenderer>
         <Footer />
-      </ThemeProvider>
     </>
   );
 };
@@ -442,12 +407,8 @@ const Home: React.FC = () => {
 export default Home;
 
 const HomeRenderer = styled.div`
-<<<<<<< HEAD
-  width: 100%;
-=======
   max-width: 100%;
   overflow-x:hidden;
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
 
   .msg-holder {
     border-top: 1px solid #ededed;
@@ -501,10 +462,7 @@ const HomeRenderer = styled.div`
     align-items: center;
     overflow-x: scroll;
     padding: 0px 10px 0px 10px;
-<<<<<<< HEAD
-=======
     gap: 5px;
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   }
   .module-header {
     width: 100%;
@@ -546,26 +504,7 @@ const HomeRenderer = styled.div`
     padding-left: 5px;
     border-bottom: 1px solid #ededed;
   }
-  .upcoming-events-list-header h2 {
-    padding: 3px;
-    cursor: pointer;
-    font-size: 18px;
-    color: #000;
-  }
-  .upcoming-events-list {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    overflow-x: scroll;
-    padding: 5px 10px 5px 10px;
-  }
-  .upcoming-events {
-    max-width: 100%;
-    display: flex;
-    margin-top: 5px;
-    flex-direction: column;
-  }
+
 
   .recent-article {
     display: flex;
@@ -582,11 +521,7 @@ const HomeRenderer = styled.div`
     flex-direction: row;
     justify-content: space-between;
     border-bottom: 1px solid #ededed;
-<<<<<<< HEAD
-    padding-left: 5px;
-=======
  
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   }
 
   .recent-article-list-header h2 {
@@ -596,23 +531,14 @@ const HomeRenderer = styled.div`
   }
 
   .recent-article-list-holder {
-<<<<<<< HEAD
-    display: flex;
-=======
    display: flex;
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
     flex-direction: row;
     justify-content: space-around;
     flex-wrap: wrap;
     align-items: center;
-<<<<<<< HEAD
-    max-width: 100%;
-    gap: 10px;
-=======
     width: 90%;
     gap: 10px;
     padding:3px;
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   }
   .random-article {
     display: flex;
@@ -647,10 +573,7 @@ const HomeRenderer = styled.div`
     align-items: center;
     width: 90%;
     gap: 10px;
-<<<<<<< HEAD
-=======
     padding:3px;
->>>>>>> 832ce1e54523d6df4550e5927e27d5ea4093fd7e
   }
   @media (max-width: 767px) {
     .module_fact_cont {
@@ -658,7 +581,7 @@ const HomeRenderer = styled.div`
       justify-content: center;
       align-items: center;
     }
-    .upcoming-events-list-header,
+
     .recent-article-list-header h2,
     .random-article-list-header h2 {
       font-size: 16px;
@@ -674,4 +597,28 @@ const HomeRenderer = styled.div`
       margin-top: 35px;
     }
   }
+`;
+const Section = styled.div`
+  margin: 40px 0;
+`;
+
+const SectionTitle = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px;
+    font-size: 18px;
+    color: #000;  padding: 3px;
+    font-size: 18px;
+`;
+
+const ViewMoreButton = styled(Button)`
+  color: #176984;
+  text-transform: none;
+`;
+
+const TopCreatorAvatar = styled.img`
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
 `;

@@ -18,7 +18,7 @@ class MiddlewaresProvider {
     this.emitter = Emitter.getInstance();
   }
   async init() {
-    const limiter = rateLimit({
+    const limiter = rateLimit({ 
       windowMs: WINDOW_MS,
       max: MAX,
       message: MESSAGE,

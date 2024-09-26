@@ -31,6 +31,7 @@ const MultiTextLoaderRenderer = styled.div`
   align-items: center;
   justify-content: center;
   height: 100vh;
+  z-inndex:100000;
   width: 100%;
 
   .spinner {

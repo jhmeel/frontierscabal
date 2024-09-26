@@ -5,11 +5,10 @@ import {
   IconChevronLeft,
   IconChevronRight,
 } from "../../assets/icons";
-import styled,{ThemeProvider} from "styled-components";
+import styled from "styled-components";
 import { useSelector } from "react-redux";
 
 const Paginator = ({ currentPage, totalPages, onPageChange }) => {
-  const { theme } = useSelector((state: any) => state.theme);
   if (!totalPages) return
 
   function numberRange(start, end) {
@@ -108,7 +107,6 @@ const Paginator = ({ currentPage, totalPages, onPageChange }) => {
 
   return (
     <>
-    <ThemeProvider theme={theme}>
       <PaginatorRenderer>
       <button
           className="pagination__prev"
@@ -132,7 +130,6 @@ const Paginator = ({ currentPage, totalPages, onPageChange }) => {
           )}
         </button>
       </PaginatorRenderer>
-    </ThemeProvider>
     </>
    
      

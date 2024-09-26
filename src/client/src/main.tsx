@@ -5,7 +5,7 @@ import { HashRouter as Router } from "react-router-dom";
 import { PersistGate } from "reduxjs-toolkit-persist/integration/react";
 import { store, persistor } from "./store";
 import { SnackbarProvider } from "notistack";
-import App from "./App.tsx";
+import App from "./App";
 import "./index.css";
 import { Toaster } from "react-hot-toast";
 ReactDOM.createRoot(document.getElementById("root")!).render(

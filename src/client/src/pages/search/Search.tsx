@@ -1,206 +1,285 @@
-import React from "react";
-import EventItem from "../../components/eventItem/EventItem";
-import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
-import axiosInstance from "../../utils/axiosInstance";
-import toast from 'react-hot-toast'
-import styled from "styled-components";
-import UserItem from '../../components/userItem/UserItem'
-import MetaData from "../../MetaData";
-import SpinLoader from "../../components/loaders/SpinLoader";
-import Footer from "../../components/footer/Footer";
-import HorizontalArticleItem from "../../components/horizontalArticleItem/HorizontalArticleItem";
-import StudyMaterialItem from "../../components/studyMaterialItem/StudyMaterialItem";
+import React, { useState, useEffect } from 'react';
+import {
+  Container,
+  Typography,
+  TextField,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
+  InputAdornment,
+  IconButton,
+  Chip,
+  Grid,
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
+import {
+  Search as SearchIcon,
+  History as HistoryIcon,
+  Refresh as RefreshIcon,
+} from '@mui/icons-material';
+import axiosInstance from '../../utils/axiosInstance';
+import toast from 'react-hot-toast';
+import SpinLoader from '../../components/loaders/SpinLoader';
+import UserItem from '../../components/userItem/UserItem';
+import HorizontalArticleItem from '../../components/horizontalArticleItem/HorizontalArticleItem';
+import StudyMaterialItem from '../../components/studyMaterialItem/StudyMaterialItem';
+import Footer from '../../components/footer/Footer';
+
+const SearchContainer = styled(Container)(({ theme }) => ({
+  marginTop: theme.spacing(8),
+  marginBottom: theme.spacing(8),
+}));
+
+const SearchBar = styled(TextField)(({ theme }) => ({
+  marginBottom: theme.spacing(4),
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '30px',
+    '&.Mui-focused fieldset': {
+      borderColor: theme.palette.primary.main,
+      borderWidth: '2px',
+    },
+  },
+}));
+
+const HistoryPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginTop: theme.spacing(4),
+  borderRadius: '16px',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+}));
+
+const TrendingPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  marginTop: theme.spacing(4),
+  borderRadius: '16px',
+  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+  backgroundColor: theme.palette.primary.light,
+}));
+
+const StyledChip = styled(Chip)(({ theme }) => ({
+  margin: theme.spacing(0.5),
+  fontWeight: 500,
+  '&:hover': {
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.common.white,
+  },
+}));
 
 const Search = () => {
-  const location = useLocation();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [trendingTopics] = useState([
+    'AI Ethics',
+    'Quantum Computing',
+    'Climate Change',
+    'Space Tourism',
+    'Blockchain',
+  ]);
   const [loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<any>(null);
-  const [searchQuery, setSearchQuery] = useState<string|null>("");
 
   useEffect(() => {
-    const search = location.search;
-    setSearchQuery(new URLSearchParams(search).get("query"));
-    const handleSearch = async () => {
+    const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+    setSearchHistory(history);
+  }, []);
+
+  const handleSearch = async (event) => {
+    event.preventDefault();
+    if (searchTerm.trim()) {
+      const updatedHistory = [searchTerm, ...searchHistory.slice(0, 4)]; // Show only top 5
+      setSearchHistory(updatedHistory);
+      localStorage.setItem('searchHistory', JSON.stringify(updatedHistory));
+
       try {
         setLoading(true);
-        const { data } = await axiosInstance().get(
-          `/api/v1/search-cabal?q=${searchQuery}`
-        );
-
+        const { data } = await axiosInstance().get(`/api/v1/search-cabal?q=${searchTerm}`);
         setLoading(false);
         setSearchResult(data);
-      } catch (err:any) {
+      } catch (err: any) {
         setLoading(false);
         toast.error(err.message);
       }
-    };
-    searchQuery && handleSearch();
-  }, [location, searchQuery, toast]);
+    }
+  };
+
+  const handleClearHistory = () => {
+    setSearchHistory([]);
+    localStorage.removeItem('searchHistory');
+  };
 
   return (
     <>
-      <MetaData title="Search" />
-      {loading && <SpinLoader />}
+      <SearchContainer maxWidth="lg">
+        <Typography variant="h3" gutterBottom align="center" sx={{ fontWeight: 700, mb: 4 }}>
+          Explore Frontierscabal
+        </Typography>
 
-      <SearchRenderer>
-        <div className="srh-res-holder">
-          {searchResult?.articles?.length == 0 &&
-            searchResult?.events?.length == 0 &&
-            searchResult?.pastQuestions?.length == 0 &&
-            searchResult?.courseMaterials?.length == 0 &&
-            searchResult?.users?.length == 0 && (
-              <div className="srh-res-notfound">
-                <h3>{`No result found for "${searchQuery}"`}</h3>
-                <p className="srh-res-p-notfound">
-                  Try searching with a generic keyword!
-                </p>
-              </div>
+        <form onSubmit={handleSearch}>
+          <SearchBar
+            fullWidth
+            variant="outlined"
+            placeholder="What are you curious about today?"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <IconButton type="submit" edge="end">
+                    <SearchIcon color="action" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </form>
+
+        {!searchResult && (
+          <Grid container spacing={4}>
+            <Grid item xs={12} md={6}>
+              <HistoryPaper elevation={3}>
+                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                  <HistoryIcon sx={{ mr: 1 }} /> Recent Searches
+                  {searchHistory.length > 0 && (
+                    <IconButton onClick={handleClearHistory} size="small" sx={{ ml: 'auto' }}>
+                      <RefreshIcon />
+                    </IconButton>
+                  )}
+                </Typography>
+                {searchHistory.length > 0 ? (
+                  <List>
+                    {searchHistory.slice(0, 5).map((term, index) => ( 
+                      
+                      <ListItem button key={index} onClick={() => setSearchTerm(term)}>
+                        <ListItemText primary={term} />
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Typography variant="body2" color="textSecondary">
+                    Your search history will appear here.
+                  </Typography>
+                )}
+              </HistoryPaper>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <TrendingPaper elevation={3}>
+                <Typography variant="h6" gutterBottom>
+                  Trending Topics
+                </Typography>
+                {trendingTopics.map((topic) => (
+                  <StyledChip
+                    key={topic}
+                    label={topic}
+                    onClick={() => setSearchTerm(topic)}
+                    clickable
+                  />
+                ))}
+              </TrendingPaper>
+            </Grid>
+          </Grid>
+        )}
+
+        {loading && <SpinLoader />}
+
+        {searchResult && (
+          <Grid container spacing={1}>
+            {/* Render Users */}
+            {searchResult?.users?.length > 0 && (
+              <>
+                <Grid item xs={12}>
+                  <Typography variant="h5" gutterBottom>
+                    People
+                  </Typography>
+                </Grid>
+                {searchResult?.users.map((usr: any, i: number) => (
+                  <Grid item xs={12} sm={6} md={6} key={i}>
+                    <UserItem username={usr?.username} bio={usr?.bio} img={usr?.avatar?.url} />
+                  </Grid>
+                ))}
+              </>
             )}
-          {searchResult?.users?.length > 0 && (
-            <>
-              <span className="srh-res-hd">People</span>
-              {searchResult?.users.map((usr:any, i: number) => (
-                <UserItem
-                  key={i}
-                  username={usr?.username}
-                  bio={usr?.bio}
-                  img={usr?.avatar?.url}
-                />
-              ))}
-            </>
-          )}{" "}
-          {searchResult?.articles?.length > 0 && (
-            <>
-              <span className="srh-res-hd">Stories</span>
-              {searchResult?.articles.map((art:any, i:number) => (
-                <HorizontalArticleItem
-                  id={art._id}
-                  title={art.title}
-                  slug={art.slug}
-                  image={art.image?.url}
-                  caption={art.sanitizedHtml}
-                  category={art.category}
-                  postedBy={art.postedBy}
-                  readDuration={art.readDuration}
-                  key={i}
-                />
-              ))}
-            </>
-          )}
-          {searchResult?.events?.length > 0 && (
-            <>
-              <span className="srh-res-hd">Events</span>
-              {searchResult?.events.map((eve:any, i:number) => (
-                <EventItem
-                  key={i}
-                  id={eve?._id}
-                  slug={eve?.slug}
-                  title={eve?.title}
-                  avatar={eve?.avatar.url}
-                  description={eve?.description}
-                  category={eve?.category}
-                  createdBy={eve?.createdBy.username}
-                />
-              ))}
-            </>
-          )}
-          {searchResult?.pastQuestions?.length > 0 && (
-            <>
-              <span className="srh-res-hd">PQ&A</span>
-              {searchResult?.pastQuestions.map((pq:any, i: number) => (
-                <StudyMaterialItem
-                  key={i}
-                  _id={pq?._id}
-                  tag={pq?.courseCode}
-                  courseTitle={pq?.courseTitle}
-                  sch={pq?.school}
-                  session={pq?.session}
-                  downloads={pq?.downloads}
-                  postedBy={pq?.postedBy}
-                />
-              ))}
-            </>
-          )}
-          {searchResult?.courseMaterials?.length > 0 && (
-            <>
-              <span className="srh-res-hd">Course Materials</span>
-              {searchResult?.courseMaterials.map((cm: any, i:number) => (
-                <StudyMaterialItem
-                  key={i}
-                   _id={cm?._id}
-                  tag={cm?.courseCode}
-                  courseTitle={cm?.courseTitle}
-                  session={cm?.session}
-                  downloads={cm?.downloads}
-                  postedBy={cm?.postedBy}
-                  type="Course Material"
-                />
-              ))}
-            </>
-          )}
-          {!loading && !searchResult && (
-            <span className="srh-res-ept">
-              Try searching for people, stories, event, pastquestion, module, lesson or course
-              Material...
-            </span>
-          )}
-        </div>
-      </SearchRenderer>
+
+            {/* Render Articles */}
+            {searchResult?.articles?.length > 0 && (
+              <>
+                <Grid item xs={12}>
+                  <Typography variant="h5" gutterBottom>
+                    Stories
+                  </Typography>
+                </Grid>
+                {searchResult?.articles.map((art: any, i: number) => (
+                  <Grid item xs={12} key={i}>
+                    <HorizontalArticleItem
+                      id={art._id}
+                      title={art.title}
+                      slug={art.slug}
+                      image={art.image?.url}
+                      caption={art.sanitizedHtml}
+                      category={art.category}
+                      postedBy={art.postedBy}
+                      readDuration={art.readDuration}
+                    />
+                  </Grid>
+                ))}
+              </>
+            )}
+
+            {/* Render Past Questions */}
+            {searchResult?.pastQuestions?.length > 0 && (
+              <>
+                <Grid item xs={12}>
+                  <Typography variant="h5" gutterBottom>
+                    PQ&A
+                  </Typography>
+                </Grid>
+                {searchResult?.pastQuestions.map((pq: any, i: number) => (
+                  <Grid item xs={12} sm={6} md={6} key={i}>
+                    <StudyMaterialItem
+                      _id={pq?._id}
+                      tag={pq?.courseCode}
+                      courseTitle={pq?.courseTitle}
+                      sch={pq?.school}
+                      session={pq?.session}
+                      downloads={pq?.downloads}
+                      postedBy={pq?.postedBy}
+                    />
+                  </Grid>
+                ))}
+              </>
+            )}
+
+            {/* Render Course Materials */}
+            {searchResult?.courseMaterials?.length > 0 && (
+              <>
+                <Grid item xs={12}>
+                  <Typography variant="h5" gutterBottom>
+                    Course Materials
+                  </Typography>
+                </Grid>
+                {searchResult?.courseMaterials.map((cm: any, i: number) => (
+                  <Grid item xs={12} sm={6} md={6} key={i}>
+                    <StudyMaterialItem
+                      _id={cm?._id}
+                      tag={cm?.courseCode}
+                      courseTitle={cm?.courseTitle}
+                      sch={cm?.school}
+                      session={cm?.session}
+                      downloads={cm?.downloads}
+                      postedBy={cm?.postedBy}
+                      type='CM'
+                    />
+                  </Grid>
+                ))}
+              </>
+            )}
+          </Grid>
+        )}
+      </SearchContainer>
       <Footer />
     </>
   );
 };
 
 export default Search;
-
-
-const SearchRenderer = styled.div`
-  width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-
-.srh-res-holder {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-.srh-res-hd {
-  text-align: left;
-  color: black;
-  font-size: medium;
-  font-weight: 700;
-  padding: 5px;
-}
-.srh-res-notfound {
-  text-align: center;
-}
-.srh-res-p-notfound {
-  color: #176984;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-}
-.srh-rec{
-  margin-top: 10px;
-  display: flex;
-  flex-direction: column;
-}
-.srh-rec-ul{
-  list-style:circle;
-  cursor: pointer;
-}
-.srh-res-ept{
-  font-size: 12px;
-  color: grey;
-  margin-top: 5px;
-  text-align: center;
-  padding: 0 5px;
-}
-
-
-`

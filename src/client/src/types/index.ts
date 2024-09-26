@@ -1,6 +1,6 @@
 export type ROLE = "FC:ADMIN" | "FC:SUPER:ADMIN" | "FC:USER";
 export type STATUS = "SUCCESS" | "ERROR" | "LOADING";
-export type ACTIVETHEME = "SYSTEM" | "DARK" | "LIGHT";
+export type ACTIVETHEME = "DARK" | "LIGHT";
 export type CACHEABLE = "FC:IRCACHE:EDITOR" | "FC:IRCACHE:LESSON";
 
 export interface ACTION {
