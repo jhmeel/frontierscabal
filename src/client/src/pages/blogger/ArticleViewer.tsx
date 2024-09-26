@@ -44,6 +44,7 @@ import { FormattedCount, errorParser } from '../../utils';
 import { isOnline } from '../../utils';
 import axiosInstance from '../../utils/axiosInstance';
 import { RootState } from '../../store';
+import SpinLoader from '../../components/loaders/SpinLoader';
 
 const StyledArticleViewer = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
@@ -209,7 +210,7 @@ const ArticleViewer: React.FC = () => {
   };
 
   if (articleLoading) {
-    return <Typography>Loading...</Typography>;
+    return <SpinLoader/>
   }
 
   return (
