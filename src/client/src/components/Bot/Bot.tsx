@@ -14,7 +14,7 @@ import { jelly } from "ldrs";
 const BotWrapper = styled.div`
   position: fixed;
   bottom: 30px;
-  right: 20px;
+  right: 10px;
   z-index: 10000;
   pointer-events: none;
 `;
@@ -46,12 +46,12 @@ const bounceEffect = keyframes`
 const BotButton = styled(animated.button)`
   position: absolute;
   bottom: 0;
-  right: 10px;
+  right: 2px;
   background-color: #3498db;
   color: white;
   border: none;
-  width: 60px;
-  height: 60px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   cursor: pointer;
   font-size: 24px;
@@ -422,7 +422,7 @@ const Bot = () => {
     <BotWrapper>
       <animated.div style={buttonSpring}>
         <BotButton onClick={handleToggle}>
-          <VscRobot /> 
+          <VscRobot size={18} /> 
         </BotButton>
       </animated.div>
       <animated.div style={botSpring}>

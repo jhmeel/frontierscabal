@@ -268,11 +268,10 @@ export default Header;
 
 const StyledAppBar = styled(AppBar)`
   background: rgba(251, 251, 251, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  -moz-backdrop-filter: blur(10px);
-  -o-backdrop-filter: blur(10px);
   border-bottom: 1px solid #ededed;
+  height: 60px;
+  box-shadow: none;
+
 
   .logo {
     height: 80px;
@@ -367,7 +366,7 @@ const NotificationBadge = styled.span`
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #176984;
+  background-color:crimson;
   top: -2px;
   left: 18px;
   color: #fff;

@@ -25,22 +25,22 @@ export const getTheme = (mode: 'light' | 'dark') => {
     typography: {
      
       h1: {
-        fontSize: '2rem',
+        fontSize: '1.5rem',
         fontWeight: 700,
       },
       h2: {
-        fontSize: '1.5rem',
+        fontSize: '1rem',
         fontWeight: 600,
       },
       h3: {
-        fontSize: '1.25rem',
+        fontSize: '0.8rem',
         fontWeight: 600,
       },
       body1: {
-        fontSize: '1rem',
+        fontSize: '0.875rem',
       },
       body2: {
-        fontSize: '0.875rem',
+        fontSize: '0.675rem',
       },
     },
     components: {
@@ -49,7 +49,7 @@ export const getTheme = (mode: 'light' | 'dark') => {
           root: {
             backgroundColor: colors.cardBackground,
             borderRadius: 16,
-            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+            border:'1px solid #ededed'
           },
         },
       },

@@ -99,7 +99,6 @@ const BannerContainer = styled(animated.div)`
   max-width:100%;
   display: flex;
   justify-content: center;
-  align-items: center;
   overflow: hidden;
   position: relative;
 `;
@@ -165,6 +164,11 @@ const CtaButton = styled.button`
     transform: translateY(-3px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
   }
+
+  @media(max-width:768px){
+    position:absolute;
+    left:25px;
+  }
 `;
 
 const ImageWrapper = styled.div`
@@ -178,7 +182,7 @@ const ImageWrapper = styled.div`
   bottom:-25px;
   width: 100%;
   @media(max-width:768px){
-    width:50%;
+    width:70%;
     right:-15px;
   }
 `;

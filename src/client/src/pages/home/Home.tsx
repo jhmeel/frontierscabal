@@ -531,14 +531,11 @@ const HomeRenderer = styled.div`
   }
 
   .recent-article-list-holder {
-   display: flex;
+    display: flex;
     flex-direction: row;
     justify-content: space-around;
-    flex-wrap: wrap;
-    align-items: center;
-    width: 90%;
     gap: 10px;
-    padding:3px;
+    flex-wrap: wrap;
   }
   .random-article {
     display: flex;
@@ -569,11 +566,8 @@ const HomeRenderer = styled.div`
     display: flex;
     flex-direction: row;
     justify-content: space-around;
-    flex-wrap: wrap;
-    align-items: center;
-    width: 90%;
     gap: 10px;
-    padding:3px;
+    flex-wrap: wrap;
   }
   @media (max-width: 767px) {
     .module_fact_cont {

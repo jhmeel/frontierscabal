@@ -10,9 +10,8 @@ import { RootState } from "../../store";
 const NotificationPage: React.FC = (): React.ReactElement => {
   const [timeframe, setTimeFrame] = useState("Today");
   const [menuOpen, setIsMenuOpen] = useState(false);
-  const { theme } = useSelector((state: RootState) => state.theme);
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(1);
 
   const notificationService = NotificationManager.getInstance();
 
@@ -42,7 +41,7 @@ const NotificationPage: React.FC = (): React.ReactElement => {
   return (
     <>
       <MetaData title="Notifications" />
-      <ThemeProvider theme={theme}>
+    
         <NotificationRenderer>
           <div className="notification-header">
             <span>Notifications</span>
@@ -82,7 +81,7 @@ const NotificationPage: React.FC = (): React.ReactElement => {
           </div>
         </NotificationRenderer>
         <Footer />
-      </ThemeProvider>
+  
     </>
   );
 };

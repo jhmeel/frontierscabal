@@ -53,7 +53,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { app as firebaseApp } from "../../firebase";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  backgroundColor: theme.palette.primary.main,
+  backgroundColor: "#3498db",
   color: theme.palette.primary.contrastText,
 }));
 
@@ -109,10 +109,9 @@ const StyledInputContainer = styled(Box)(({ theme }) => ({
 const StyledPreviewContainer = styled(motion.div)(({ theme }) => ({
   position: "absolute",
   bottom: "100%",
-  left:"0",
+  left: "0",
   width: "100%",
   padding: theme.spacing(1),
-
 }));
 
 const StyledAttachment = styled(motion.div)(({ theme }) => ({
@@ -163,7 +162,7 @@ const ChatRoom: React.FC = () => {
     null
   );
   const [errorMessage, setErrorMessage] = useState("");
-  
+
   const [referencedMessage, setReferencedMessage] = useState<any>(null);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
@@ -223,54 +222,53 @@ const ChatRoom: React.FC = () => {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    try{
-
-    if (newMessage.trim() || attachedFiles.length > 0) {
-      const newMessageRef = await addDoc(
-        collection(
-          getFirestore(firebaseApp),
-          "chatrooms",
-          `RID:${user?._id}|${selectedUser?._id}`,
-          "messages"
-        ),
-        {
-          text: newMessage.trim(),
-          attachments: attachedFiles.map((file) => ({
-            name: file.name,
-            url: "",
-          })),
-          sender: {
-            _id: user?._id,
-            name: user?.username,
-            avatar: user?.avatar.url,
-          },
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          isRead: false,
-          referencedMessage: referencedMessage,
-        }
-      );
-
-      setNewMessage("");
-      setAttachedFiles([]);
-      setReferencedMessage(null);
-
-      for (const file of attachedFiles) {
-        const fileRef = ref(
-          getStorage(firebaseApp),
-          `chatroom/${newMessageRef.id}/${file.name}`
+    try {
+      if (newMessage.trim() || attachedFiles.length > 0) {
+        const newMessageRef = await addDoc(
+          collection(
+            getFirestore(firebaseApp),
+            "chatrooms",
+            `RID:${user?._id}|${selectedUser?._id}`,
+            "messages"
+          ),
+          {
+            text: newMessage.trim(),
+            attachments: attachedFiles.map((file) => ({
+              name: file?.name || null,
+              url: "",
+            })),
+            sender: {
+              _id: user?._id,
+              name: user?.username,
+            },
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            isRead: false,
+            referencedMessage: referencedMessage,
+          }
         );
-        await uploadBytes(fileRef, file);
-        const downloadURL = await getDownloadURL(fileRef);
-        await updateDoc(newMessageRef, {
-          "attachments.$[].url": downloadURL,
-        });
+
+        setNewMessage("");
+        setAttachedFiles([]);
+        setReferencedMessage(null);
+        if (attachedFiles.length) {
+          for (const file of attachedFiles) {
+            const fileRef = ref(
+              getStorage(firebaseApp),
+              `chatroom/${newMessageRef.id}/${file.name}`
+            );
+            await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(fileRef);
+            await updateDoc(newMessageRef, {
+              "attachments.$[].url": downloadURL,
+            });
+          }
+        }
       }
+    } catch (err: any) {
+      console.log(err)
+      setErrorMessage(err.message);
     }
-  }
-  catch(err:any){
-    setErrorMessage(err.message)
-  }
   };
 
   const handleEditMessage = async (messageId: string, newText: string) => {
@@ -325,7 +323,6 @@ const ChatRoom: React.FC = () => {
   };
 
   const handleShareMessage = (message: any) => {
-  
     setErrorMessage("Sharing message:", message);
   };
 
@@ -357,8 +354,6 @@ const ChatRoom: React.FC = () => {
     setReferencedMessage(message);
   };
 
-
-
   const handleRemoveReference = () => {
     setReferencedMessage(null);
   };
@@ -375,9 +370,9 @@ const ChatRoom: React.FC = () => {
           <IconButton edge="start" color="inherit" onClick={() => navigate(-1)}>
             <ArrowBack />
           </IconButton>
-          <Box display="flex" alignItems="center">
-            <Avatar src={selectedUser?.avatar?.url} />
-            <Typography variant="h6" sx={{ ml: 2 }}>
+          <Box display="flex" alignItems="center"  onClick={() => navigate(`/profile/${selectedUser?.username}`)}>
+            <Avatar src={selectedUser?.avatar?.url} style={{width:'35px',height:'35px'}}/>
+            <Typography variant="body1" sx={{ ml: 2 }}>
               {selectedUser?.username}
             </Typography>
           </Box>
@@ -424,7 +419,6 @@ const ChatRoom: React.FC = () => {
                 </div>
               ))}
               <Typography variant="caption" sx={{ mt: 1, display: "block" }}>
-            
                 {new Date(message.createdAt.toDate()).toLocaleString()}
               </Typography>
             </StyledMessageBubble>
@@ -644,7 +638,7 @@ const ChatRoom: React.FC = () => {
       <Snackbar
         open={!!errorMessage}
         autoHideDuration={6000}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} 
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
         onClose={() => setErrorMessage("")}
       >
         <Alert
