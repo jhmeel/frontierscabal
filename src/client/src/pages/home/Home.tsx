@@ -1,60 +1,117 @@
 import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import Banner from "../../components/bannerItem/Banner";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { useSnackbar } from "notistack";
+import axios from "axios";
+import {
+  Box,
+  Grid,
+  Typography,
+  Button,
+  Container,
+  CircularProgress,
+  Tabs,
+  Tab,
+  Drawer,
+  IconButton,
+  Slider,
+  TextField,
+  InputAdornment,
+  Paper,
+  Chip,
+} from "@mui/material";
+import {
+  TrendingUp as TrendingUpIcon,
+  Article as ArticleIcon,
+  VideoLibrary as VideoLibraryIcon,
+  ChevronRight as ChevronRightIcon,
+  Book as BookIcon,
+  Close as CloseIcon,
+  PlayArrow as PlayArrowIcon,
+  Pause as PauseIcon,
+  Search as SearchIcon,
+  Code as CodeIcon,
+  Science as ScienceIcon,
+  Newspaper as NewspaperIcon,
+  School as SchoolIcon,
+  EmojiObjects as PersonalDevIcon,
+  AutoStories as FictionIcon,
+  AttachMoney as FinanceIcon,
+  Checkroom as FashionIcon,
+  Museum as CultureIcon,
+  Restaurant as FoodIcon,
+  Star as StarIcon,
+} from "@mui/icons-material";
 import Footer from "../../components/footer/Footer";
+import VerticalArticleItemSkeletonLoader from "../../components/loaders/VerticalArticleItemSkeletonLoader";
+import VerticalArticleItem from "../../components/verticalArticleItem/VerticalArticleItem";
+import Banner from "../../components/bannerItem/Banner";
 import Descriptor from "../../components/descriptor/Descriptor";
 import MsgItem from "../../components/msgItem/MsgItem";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { useSnackbar } from "notistack";
-import VerticalArticleItem from "../../components/verticalArticleItem/VerticalArticleItem";
-import VerticalArticleItemSkeletonLoader from "../../components/loaders/VerticalArticleItemSkeletonLoader";
-import {
-  IconArrowTrendUp,
-  IconArticleFill,
-  IconCalendarEventFill,
-  IconChevronRight,
-  IconClockRotateLeft,
-  IconVideoTwentyFour,
-} from "../../assets/icons";
+import ModuleItemSkeletonLoader from "../../components/loaders/ModuleItemSkeletonLoader";
+import { ModuleItem } from "../../components/moduleItem/ModuleItem";
 import FactGenerator from "../../components/factGen";
-import testImg from "../../assets/images/online_article.svg";
-import EventItem from "../../components/eventItem/EventItem";
-import EventSkeletonLoader from "../../components/loaders/EventSkeletonLoader";
-import HorizontalArticleItem from "../../components/horizontalArticleItem/HorizontalArticleItem";
-import HorizontalArticleItemSkeletonLoader from "../../components/loaders/HorizontalArticleItemSkeletonLoader";
-import LocalForageProvider from "../../utils/localforage";
+import { isOnline } from "../../utils";
+import axiosInstance from "../../utils/axiosInstance";
 import {
   clearErrors as clearArticleErrors,
   searchRecentArticle,
 } from "../../actions/article";
-import {
-  clearErrors as clearEventErrors,
-} from "../../actions/event";
-import { isOnline } from "../../utils";
-import axiosInstance from "../../utils/axiosInstance";
-import { ModuleItem } from "../../components/moduleItem/ModuleItem";
-import ModuleItemSkeletonLoader from "../../components/loaders/ModuleItemSkeletonLoader";
 import { RootState } from "../../store";
-import { Box, Grid, Button, Typography } from "@mui/material";
+import LocalForageProvider from "../../utils/localforage";
+import HorizontalArticleItemSkeletonLoader from "../../components/loaders/HorizontalArticleItemSkeletonLoader";
+import HorizontalArticleItem from "../../components/horizontalArticleItem/HorizontalArticleItem";
+
 const Home: React.FC = () => {
- 
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
+
   const [trendingArticles, setTrendingArticles] = useState([]);
-  const [trendingFetchErr, setTrendingFetchError] = useState("");
   const [trendingLoading, setTrendingLoading] = useState(false);
   const [randomFetchArticle, setRandomFetchArticle] = useState([]);
-  const [isRandomFetchErr, setIsRandomFetchErr] = useState("");
   const [randomSelectedCategory, setRandomSelectedCategory] = useState("");
   const [randomFetchLoading, setRandomFetchLoading] = useState(false);
   const [userInterest, setUserInterest] = useState([]);
   const [modules, setModules] = useState([]);
-  const [moduleFetchErr, setModuleFetchErr] = useState("");
   const [moduleLoading, setModuleLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [popularBooks, setPopularBooks] = useState([]);
+  const [booksLoading, setBooksLoading] = useState(false);
+
+  const [bookCategories, setBookCategories] = useState([
+    "Fiction",
+    "Non-fiction",
+    "Science",
+    "Technology",
+    "Business",
+  ]);
+  const [selectedCategory, setSelectedCategory] = useState("Fiction");
+  const [categoryBooks, setCategoryBooks] = useState<any[]>([]);
+  const [selectedBook, setSelectedBook] = useState<any>(null);
+  const [isReading, setIsReading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [libraryPickOfTheDay, setLibraryPickOfTheDay] = useState<any>(null);
+
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.user);
+
+  const [categories, setCategories] = useState({
+    Tech: false,
+    Science: false,
+    News: false,
+    Education: false,
+    Personal_dev: false,
+    Fiction: false,
+    Finance: false,
+    Fashion: false,
+    Culture: false,
+    Food: false,
+  });
 
   const {
     error: recentArticleError,
@@ -62,78 +119,68 @@ const Home: React.FC = () => {
     loading: recentArticleLoading,
   } = useSelector((state: RootState) => state.articleSearch);
 
-  const {
-    loading: eventsLoading,
-    events,
-    error: eventError,
-  } = useSelector((state: RootState) => state.eventSearch);
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.user);
+  useEffect(() => {
+    if (isAuthenticated && user?.username) {
+      LocalForageProvider.getItem(`FC:${user.username}:INTERESTS`, (err, val: any) => {
+        if (val) {
+          const parsedVal = JSON.parse(val);
+          setCategories(prevCategories => ({
+            ...prevCategories,
+            ...parsedVal,
+          }));
+        }
+      });
+    }
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
-    LocalForageProvider.getItem("FC:HAS:WELCOME:USER", (err, res) => {
-      if (isAuthenticated && user?.username && !res) {
-        enqueueSnackbar(`Welcome ${user?.username}!`, {
-          variant: "success",
-          anchorOrigin: {
-            vertical: "top",
-            horizontal: "center",
-          },
-          style: {
-            backgroundColor: "#176984",
-            color: "#fff",
-          },
-        });
-        LocalForageProvider.setItem("FC:HAS:WELCOME:USER", true);
+    const fetchCategoryBooks = async () => {
+      try {
+        setBooksLoading(true);
+        const response = await axios.get(
+          `https://www.googleapis.com/books/v1/volumes?q=subject:${selectedCategory}&orderBy=newest&maxResults=10`
+        );
+        setCategoryBooks(response.data.items);
+        setBooksLoading(false);
+      } catch (error) {
+        console.error("Error fetching category books:", error);
+        setBooksLoading(false);
       }
-    });
-  }, [isAuthenticated, user, enqueueSnackbar]);
+    };
+
+    fetchCategoryBooks();
+  }, [selectedCategory]);
 
   useEffect(() => {
-    LocalForageProvider.getItem("FC:USER:INTERESTS", (err, val: string) => {
-      val = JSON.parse(val);
-      val &&
-        setUserInterest(Object.keys(val).filter((key) => val[key] === true));
-    });
+    const fetchLibraryPickOfTheDay = async () => {
+      try {
+        const response = await axios.get(
+          "https://www.googleapis.com/books/v1/volumes?q=subject:fiction&orderBy=newest&maxResults=1"
+        );
+        setLibraryPickOfTheDay(response.data.items[0]);
+      } catch (error) {
+        console.error("Error fetching library pick of the day:", error);
+      }
+    };
+
+    fetchLibraryPickOfTheDay();
   }, []);
 
-  //Recent fetch
-  const fetchRecentArticles = useCallback(() => {
-    if (!userInterest || userInterest.length === 0) {
-      setUserInterest(["Personal Dev", "Tech", "Science", "Culture"]);
-      dispatch<any>(searchRecentArticle(userInterest, page));
-      return;
-    } else {
-      dispatch<any>(searchRecentArticle(userInterest, page));
-    }
-  }, [dispatch, userInterest, page]);
-
- 
-  useEffect(() => {
-    if (recentArticleError) {
-      dispatch<any>(clearArticleErrors());
-    }
-    isOnline() && fetchRecentArticles();
-  }, [dispatch, enqueueSnackbar, fetchRecentArticles]);
-
-  //Trending fetch
   useEffect(() => {
     const getTrendingArticles = async () => {
       try {
         setTrendingLoading(true);
         const { data } = await axiosInstance().get(`/api/v1/article/trending`);
         setTrendingLoading(false);
-
         setTrendingArticles(data?.articles);
       } catch (err: any) {
         setTrendingLoading(false);
-        setTrendingFetchError(err.message);
+        enqueueSnackbar(err.message, { variant: "error" });
       }
     };
     isOnline() && getTrendingArticles();
-  }, [enqueueSnackbar, trendingFetchErr]);
+  }, [enqueueSnackbar]);
 
-
-  //Random fetch
   useEffect(() => {
     const getRandomArticle = async () => {
       try {
@@ -158,14 +205,12 @@ const Home: React.FC = () => {
         setRandomFetchArticle(data?.articles);
       } catch (err: any) {
         setRandomFetchLoading(false);
-        setIsRandomFetchErr(err.message);
+        enqueueSnackbar(err.message, { variant: "error" });
       }
     };
 
     isOnline() && getRandomArticle();
-  }, [enqueueSnackbar, isRandomFetchErr]);
-
-  //Fetch Modules
+  }, [enqueueSnackbar, page]);
 
   useEffect(() => {
     const getModules = async () => {
@@ -176,434 +221,438 @@ const Home: React.FC = () => {
         setModuleLoading(false);
       } catch (err: any) {
         setModuleLoading(false);
-        setModuleFetchErr(err.message);
+        enqueueSnackbar(err.message, { variant: "error" });
       }
     };
     isOnline() && getModules();
-  }, [enqueueSnackbar, moduleFetchErr]);
+  }, [enqueueSnackbar]);
 
-  useEffect(() => {
-    if (isRandomFetchErr) {
-      setIsRandomFetchErr("");
-    } else if (trendingFetchErr) {
-      setTrendingFetchError("");
+  const handleCategoryChange = (event: React.SyntheticEvent, newValue: string) => {
+    setSelectedCategory(newValue);
+  };
+
+  const handleBookSelect = (book: any) => {
+    setSelectedBook(book);
+    setIsReading(true);
+    LocalForageProvider.getItem(`book-progress-${book.id}`, (err, val: any) => {
+      if (val) {
+        setCurrentTime(val.currentTime);
+      }
+    });
+  };
+
+  const handleCloseReading = () => {
+    setIsReading(false);
+    if (audio) {
+      LocalForageProvider.setItem(`book-progress-${selectedBook.id}`, {
+        currentTime: audio.currentTime,
+      });
     }
-  }, [isRandomFetchErr, trendingFetchErr]);
-  
-
-  const handleViewMoreArticle = () => {
-    navigate("/blog");
   };
 
-  const handleViewMoreEvents = () => {
-    navigate("/events");
-  };
-
-  const handleViewMoreModule = () => {
-    navigate("/modules");
-  };
-
-  const uniqueCreators = trendingArticles.slice(0,10).reduce((acc: any[], article: any) => {
-    if (!acc.some(item => item?.postedBy?.username === article?.postedBy?.username)) {
-      acc.push(article);
+  const handlePlayPause = () => {
+    if (audio) {
+      if (isPlaying) {
+        audio.pause();
+      } else {
+        audio.play();
+      }
+      setIsPlaying(!isPlaying);
+    } else if (selectedBook) {
+      const newAudio = new Audio(selectedBook.volumeInfo.previewLink);
+      newAudio.addEventListener('loadedmetadata', () => {
+        setDuration(newAudio.duration);
+      });
+      newAudio.addEventListener('timeupdate', () => {
+        setCurrentTime(newAudio.currentTime);
+        LocalForageProvider.setItem(`book-progress-${selectedBook.id}`, {
+          currentTime: newAudio.currentTime,
+        });
+      });
+      setAudio(newAudio);
+      newAudio.play();
+      setIsPlaying(true);
     }
-    return acc;
-  }, []);
+  };
+
+  const handleSeek = (event: Event, newValue: number | number[]) => {
+    if (audio && typeof newValue === 'number') {
+      audio.currentTime = newValue;
+      setCurrentTime(newValue);
+    }
+  };
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleSearch = async () => {
+    try {
+      setBooksLoading(true);
+      const response = await axios.get(
+        `https://www.googleapis.com/books/v1/volumes?q=${searchTerm}&maxResults=10`
+      );
+      setCategoryBooks(response.data.items);
+      console.log(response.data.items)
+      setBooksLoading(false);
+    } catch (error) {
+      console.error("Error searching books:", error);
+      setBooksLoading(false);
+    }
+  };
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "Tech":
+        return <CodeIcon />;
+      case "Science":
+        return <ScienceIcon />;
+      case "News":
+        return <NewspaperIcon />;
+      case "Education":
+        return <SchoolIcon />;
+      case "Personal_dev":
+        return <PersonalDevIcon />;
+      case "Fiction":
+        return <FictionIcon />;
+      case "Finance":
+        return <FinanceIcon />;
+      case "Fashion":
+        return <FashionIcon />;
+      case "Culture":
+        return <CultureIcon />;
+      case "Food":
+        return <FoodIcon />;
+      default:
+        return <ArticleIcon />;
+    }
+  };
+
+  const handleViewMore = (route: string) => () => {
+    navigate(route);
+  };
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
 
   return (
-    <>
-        <HomeRenderer>
-          <Banner />
-          <Descriptor />
-          <div className="msg-holder">
-            <MsgItem />
-          </div>
-
-          <Section>
+    <HomeWrapper>
+      <Banner />
+      <Descriptor />
+      
+      <Section>
         <SectionTitle>
-          Our Creator
+          <Box display="flex" alignItems="center">
+            <BookIcon />
+            <Typography variant="h5" component="h2" ml={1}>Library Pick of the Day</Typography>
+          </Box>
         </SectionTitle>
-        <Grid container spacing={2} justifyContent="center">
-          {uniqueCreators.map((article) => (
-            <Grid item key={article?.Article.postedBy?.username}>
-              <Box textAlign="center">
-                <TopCreatorAvatar src={article?.Article.postedBy?.avatar.url} />
-                <Typography variant="subtitle2">{article?.Article.postedBy?.username}</Typography>
-              </Box>
+        {libraryPickOfTheDay && (
+          <LibraryPickCard>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={4}>
+                <BookCover
+                  src={libraryPickOfTheDay.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/128x192'}
+                  alt={libraryPickOfTheDay.volumeInfo.title}
+                />
+              </Grid>
+              <Grid item xs={12} md={8}>
+                <Typography variant="h4">{libraryPickOfTheDay.volumeInfo.title}</Typography>
+                <Typography variant="subtitle1">{libraryPickOfTheDay.volumeInfo.authors?.join(', ')}</Typography>
+                <Typography variant="body1" mt={2}>
+                  {libraryPickOfTheDay.volumeInfo.description}
+                </Typography>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => handleBookSelect(libraryPickOfTheDay)}
+                  sx={{ mt: 2 }}
+                >
+                  Read Now
+                </Button>
+              </Grid>
             </Grid>
-          ))}
+          </LibraryPickCard>
+        )}
+      </Section>
+      <MsgItemWrapper>
+        <MsgItem />
+      </MsgItemWrapper>
+      {isAuthenticated && (
+        <Section>
+          <SectionTitle>
+            <Box display="flex" alignItems="center">
+              <ArticleIcon />
+              <Typography variant="h5" component="h2" ml={1}>Following</Typography>
+            </Box>
+          </SectionTitle>
+          <CategoriesScrollContainer>
+            {Object.entries(categories).map(([category, isSelected]) => (
+              isSelected && (
+                <CategoryChip key={category} icon={getCategoryIcon(category)} label={category.replace('_', ' ')} />
+              )
+            ))}
+          </CategoriesScrollContainer>
+        </Section>
+      )}
+
+      <Section>
+        <SectionTitle>
+          <Box display="flex" alignItems="center">
+            <TrendingUpIcon />
+            <Typography variant="h5" component="h2" ml={1}>Top Stories</Typography>
+          </Box>
+          <ViewMoreButton
+            endIcon={<ChevronRightIcon />}
+            onClick={handleViewMore("/blog")}
+          >
+            View More
+          </ViewMoreButton>
+        </SectionTitle>
+        <TrendingArticlesWrapper>
+          {trendingLoading
+            ? Array(10)
+                .fill(null)
+                .map((_, i) => <VerticalArticleItemSkeletonLoader key={i} />)
+            : trendingArticles.map((art: any, i: number) => (
+                <VerticalArticleItem
+                  _id={art.Article._id}
+                  title={art.Article.title}
+                  slug={art.Article.slug}
+                  image={art.Article.image?.url}
+                  caption={art.Article.content}
+                  category={art.Article.category}
+                  postedBy={art.Article.postedBy}
+                  date={art.Article.createdAt}
+                  savedBy={art.Article.savedBy}
+                  readDuration={art.Article.readDuration}
+                  key={i}
+                />
+              ))}
+        </TrendingArticlesWrapper>
+      </Section>
+
+      <Section>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <SectionTitle>
+              <Box display="flex" alignItems="center">
+                <VideoLibraryIcon />
+                <Typography variant="h5" component="h2" ml={1}>Modules</Typography>
+              </Box>
+              <ViewMoreButton
+                endIcon={<ChevronRightIcon />}
+                onClick={handleViewMore("/modules")}
+              >
+                View More
+              </ViewMoreButton>
+            </SectionTitle>
+            <ModuleListWrapper>
+              {moduleLoading
+                ? Array(10)
+                    .fill(null)
+                    .map((_, i) => <ModuleItemSkeletonLoader key={i} />)
+                : modules.map((mod: any, i: number) => (
+                    <ModuleItem
+                      key={i}
+                      _id={mod?._id}
+                      title={mod?.title}
+                      description={mod?.description}
+                      banner={mod?.banner}
+                    />
+                  ))}
+            </ModuleListWrapper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <FactGenerator />
+          </Grid>
         </Grid>
       </Section>
 
+      <Section>
+        <SectionTitle>
+          <Box display="flex" alignItems="center">
+            <BookIcon />
+            <Typography variant="h5" component="h2" ml={1}>Books by Category</Typography>
+          </Box>
+        </SectionTitle>
+        <SearchBarWrapper>
+          <TextField
+            fullWidth
+            variant="outlined"
+            placeholder="Search books..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            onClick={handleSearch}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </SearchBarWrapper>
+        <Tabs
+          value={selectedCategory}
+          onChange={handleCategoryChange}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          {bookCategories.map((category) => (
+            <Tab key={category} label={category} value={category} />
+          ))}
+        </Tabs>
+        <Grid container spacing={2} mt={2}>
+          {booksLoading ? (
+            <CircularProgress />
+          ) : (
+            categoryBooks?.map((book: any) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={book.id}>
+                <BookCard onClick={() => handleBookSelect(book)}>
+                  <BookCover src={book.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/128x192'} alt={book.volumeInfo.title} />
+                  <Typography variant="subtitle1">{book.volumeInfo.title}</Typography>
+                  <Typography variant="body2">{book.volumeInfo.authors?.join(', ')}</Typography>
+                  <Typography variant="caption">{book.volumeInfo.publishedDate}</Typography>
+                  <RatingWrapper>
+                    <StarIcon />
+                    <Typography variant="body2">{book.volumeInfo.averageRating || 'N/A'}</Typography>
+                  </RatingWrapper>
+                </BookCard>
+              </Grid>
+            ))
+          )}
+        </Grid>
+      </Section>
 
-          <div className="trending-article-list-header">
-            <div className="icon-title-tag">
-              <IconArrowTrendUp fill="#000" height="20" width="20" />{" "}
-              <h2>Top Stories</h2>
-            </div>
+     
 
-            <div className="view-more" onClick={handleViewMoreArticle}>
-              <span>View More</span>
-              <IconChevronRight
-                className="view-more-icon"
-                fill="#176984"
-                height="26px"
-                width="26px"
-              />
-            </div>
-          </div>
-
-          <div className="trending-articles">
-            {trendingArticles?.length
-              ? trendingArticles.map((art: any, i: number) => (
-                  <VerticalArticleItem
-                    _id={art.Article._id}
-                    title={art.Article.title}
-                    slug={art.Article.slug}
-                    image={art.Article.image?.url}
-                    caption={art.Article.content}
-                    category={art.Article.category}
-                    postedBy={art.Article.postedBy}
-                    date={art.Article.createdAt}
-                    savedBy={art.Article.savedBy}
-                    readDuration={art.Article.readDuration}
-                    key={i}
-                  />
+      <Section>
+        <SectionTitle>
+          <Box display="flex" alignItems="center">
+            <ArticleIcon />
+            <Typography variant="h5" component="h2" ml={1}>Recent Stories</Typography>
+          </Box>
+          <ViewMoreButton
+            endIcon={<ChevronRightIcon />}
+            onClick={handleViewMore("/blog")}
+          >
+            View More
+          </ViewMoreButton>
+        </SectionTitle>
+        <Grid container spacing={2}>
+          {recentArticleLoading
+            ? Array(12)
+                .fill(null)
+                .map((_, i) => (
+                  <Grid item xs={12} sm={6} md={4} key={i}>
+                    <HorizontalArticleItemSkeletonLoader />
+                  </Grid>
                 ))
-              : Array(10)
-                  .fill(null)
-                  .map((_, i) => <VerticalArticleItemSkeletonLoader key={i} />)}
-          </div>
-          <div className="module_fact_cont">
-            <div className="module_cont">
-              <div className="module-header">
-                <div className="icon-title-tag">
-                  <IconVideoTwentyFour fill="#000" height="20" width="20" />
-                  <h2>Module</h2>
-                </div>
-
-                <div className="view-more" onClick={handleViewMoreModule}>
-                  <span>View More</span>
-                  <IconChevronRight
-                    className="view-more-icon"
-                    fill="#176984"
-                    height="26px"
-                    width="26px"
+            : recentArticles?.map((art: any, i: number) => (
+                <Grid item xs={12} sm={6} md={4} key={i}>
+                  <HorizontalArticleItem
+                    id={art._id}
+                    title={art.title}
+                    slug={art.slug}
+                    image={art.image?.url}
+                    caption={art.content}
+                    category={art.category}
+                    postedBy={art.postedBy}
+                    savedBy={art?.savedBy}
+                    readDuration={art.readDuration}
+                    pinnedBy={art.pinnedBy}
                   />
-                </div>
-              </div>
-              <div className="module_list">
-                {modules.length
-                  ? modules.map((mod: any, i: number) => (
-                      <ModuleItem
-                        key={i}
-                        _id={mod?._id}
-                        title="title"
-                        description="description"
-                        banner={testImg}
-                      />
-                    ))
-                  : Array(10)
-                      .fill(null)
-                      .map((_: any, i: number) => (
-                        <ModuleItemSkeletonLoader key={i} />
-                      ))}
-              </div>
-            </div>
-            <FactGenerator />
-          </div>
+                </Grid>
+              ))}
+        </Grid>
+      </Section>
 
-        
-           
+      <Drawer
+        anchor="bottom"
+        open={isReading}
+        onClose={handleCloseReading}
+        PaperProps={{
+          style: { maxHeight: '80vh' },
+        }}
+      >
+        <ReadingDrawerContent>
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseReading}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <CloseIcon />
+          </IconButton>
+          {selectedBook && (
+            <>
+              <Typography variant="h4" component="h2" gutterBottom>
+                {selectedBook.volumeInfo.title}
+              </Typography>
+              <Typography variant="subtitle1" gutterBottom>
+                By {selectedBook.volumeInfo.authors?.join(', ')}
+              </Typography>
+              <BookContent>
+                <Typography variant="body1">
+                  {selectedBook.volumeInfo.description || "No preview available."}
+                </Typography>
+              </BookContent>
+            </>
+          )}
+        </ReadingDrawerContent>
+      </Drawer>
 
-          {/* Recent Articles */}
-          <div className="recent-article">
-            <div className="recent-article-list-header">
-              <div className="icon-title-tag">
-                <IconClockRotateLeft height="18" width="18" fill="#000" />
-                <h2>Recent Stories</h2>
-              </div>
-              <div className="view-more" onClick={handleViewMoreArticle}>
-                <span>View More</span>
-                <IconChevronRight
-                  className="view-more-icon"
-                  fill="#176984"
-                  height="26px"
-                  width="26px"
-                />
-              </div>
-            </div>
-            <div className="recent-article-list-holder">
-              {recentArticles?.length
-                ? recentArticles.map((art: any, i: number) => (
-                    <HorizontalArticleItem
-                      id={art._id}
-                      title={art.title}
-                      slug={art.slug}
-                      image={art.image?.url}
-                      caption={art.content}
-                      category={art.category}
-                      postedBy={art.postedBy}
-                      savedBy={art?.savedBy}
-                      readDuration={art.readDuration}
-                      pinnedBy={art.pinnedBy}
-                      key={i}
-                    />
-                  ))
-                : Array(12)
-                    .fill(null)
-                    .map((_, i) => (
-                      <HorizontalArticleItemSkeletonLoader key={i} />
-                    ))}
-            </div>
-          </div>
+      {selectedBook && (
+        <AudioControlsWrapper>
+          <IconButton onClick={handlePlayPause}>
+            {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+          </IconButton>
+          <Slider
+            value={currentTime}
+            max={duration}
+            onChange={handleSeek}
+            aria-labelledby="continuous-slider"
+          />
+          <Typography variant="caption">
+            {formatTime(currentTime)} / {formatTime(duration)}
+          </Typography>
+        </AudioControlsWrapper>
+      )}
 
-          {/* Random Article Category */}
-          <div className="random-article">
-            <div className="random-article-list-header">
-              <div className="icon-title-tag">
-                <IconArticleFill height="20" width="20" fill="#000" />
-                <h2>{randomSelectedCategory}</h2>
-              </div>
-              <div className="view-more" onClick={handleViewMoreArticle}>
-                <span>View More</span>
-                <IconChevronRight
-                  className="view-more-icon"
-                  fill="#176984"
-                  height="26px"
-                  width="26px"
-                />
-              </div>
-            </div>
-            <div className="random-article-list-holder">
-              {randomFetchArticle?.length
-                ? randomFetchArticle.map((art: any, i: number) => (
-                    <HorizontalArticleItem
-                      id={art._id}
-                      title={art.title}
-                      slug={art.slug}
-                      image={art.image?.url}
-                      caption={art.content}
-                      category={art.category}
-                      postedBy={art.postedBy}
-                      savedBy={art?.savedBy}
-                      readDuration={art.readDuration}
-                      key={i}
-                    />
-                  ))
-                : Array(12)
-                    .fill(null)
-                    .map((_, i) => (
-                      <HorizontalArticleItemSkeletonLoader key={i} />
-                    ))}
-            </div>
-          </div>
-        </HomeRenderer>
-        <Footer />
-    </>
+      <Footer />
+    </HomeWrapper>
   );
 };
 
 export default Home;
 
-const HomeRenderer = styled.div`
+const HomeWrapper = styled.div`
   max-width: 100%;
-  overflow-x:hidden;
-
-  .msg-holder {
-    border-top: 1px solid #ededed;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-  }
-  .trending-article-list-header {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    border-top: 1px solid #ededed;
-    padding-left: 5px;
-  }
-  .trending-article-list-header h2 {
-    padding: 3px;
-    font-size: 18px;
-    color: #000;
-  }
-  .icon-title-tag {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .view-more {
-    padding: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 9;
-    cursor: pointer;
-  }
-  .view-more span {
-    color: #176984;
-    font-size: 12px;
-    font-family: 500;
-  }
-  .view-more-icon {
-    border-radius: 50%;
-    padding: 6px;
-    cursor: pointer;
-    z-index: 9;
-  }
-  .trending-articles {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    overflow-x: scroll;
-    padding: 0px 10px 0px 10px;
-    gap: 5px;
-  }
-  .module-header {
-    width: 100%;
-    position: absolute;
-    top: 5px;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    border-top: 1px solid #ededed;
-    padding-left: 5px;
-  }
-  .module_fact_cont {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    width: 100%;
-    border-top: 1px solid #ededed;
-  }
-
-  .module_cont {
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    width: 70%;
-  }
-  .module_list {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    overflow-x: scroll;
-    padding: 0px 10px 0px 10px;
-  }
-  .upcoming-events-list-header {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    padding-left: 5px;
-    border-bottom: 1px solid #ededed;
-  }
-
-
-  .recent-article {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-top: 5px;
-    max-width: 100%;
-    gap: 5px;
-  }
-  .recent-article-list-header {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    border-bottom: 1px solid #ededed;
- 
-  }
-
-  .recent-article-list-header h2 {
-    padding: 3px;
-    font-size: 18px;
-    color: #000;
-  }
-
-  .recent-article-list-holder {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .random-article {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    margin-top: 5px;
-    margin-bottom: 10px;
-    max-width: 100%;
-    gap: 5px;
-  }
-  .random-article-list-header {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    border-bottom: 1px solid #ededed;
-    padding-left: 5px;
-  }
-
-  .random-article-list-header h2 {
-    padding: 3px;
-    font-size: 18px;
-    color: #000;
-  }
-
-  .random-article-list-holder {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  @media (max-width: 767px) {
-    .module_fact_cont {
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .recent-article-list-header h2,
-    .random-article-list-header h2 {
-      font-size: 16px;
-    }
-    h2,
-    .module-header h2 {
-      font-size: 16px;
-    }
-    .module_cont {
-      width: 100%;
-    }
-    .module_list {
-      margin-top: 35px;
-    }
-  }
-`;
-const Section = styled.div`
-  margin: 40px 0;
+  overflow-x: hidden;
 `;
 
-const SectionTitle = styled.div`
+const MsgItemWrapper = styled.div`
+  border-top: 1px solid #ededed;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+`;
+
+const Section = styled(Container)`
+  margin-top: 40px;
+  margin-bottom: 40px;
+`;
+
+const SectionTitle = styled(Box)`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 3px;
-    font-size: 18px;
-    color: #000;  padding: 3px;
-    font-size: 18px;
+  margin-bottom: 20px;
 `;
 
 const ViewMoreButton = styled(Button)`
@@ -611,8 +660,132 @@ const ViewMoreButton = styled(Button)`
   text-transform: none;
 `;
 
-const TopCreatorAvatar = styled.img`
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+const TrendingArticlesWrapper = styled.div`
+  display: flex;
+  overflow-x: auto;
+  gap: 16px;
+  padding-bottom: 16px;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+  }
+`;
+
+const ModuleListWrapper = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+`;
+
+const BookCard = styled(Paper)`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-4px);
+  }
+`;
+
+const BookCover = styled.img`
+  width: 128px;
+  height: 192px;
+  object-fit: cover;
+  margin-bottom: 8px;
+  border-radius: 4px;
+`;
+
+const RatingWrapper = styled(Box)`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+`;
+
+const ReadingDrawerContent = styled(Box)`
+  padding: 32px;
+  position: relative;
+`;
+
+const BookContent = styled(Box)`
+  margin-top: 24px;
+  margin-bottom: 24px;
+  max-height: 50vh;
+  overflow-y: auto;
+  padding-right: 16px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+  }
+`;
+
+const AudioControlsWrapper = styled(Paper)`
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background-color: white;
+  z-index: 1000;
+`;
+
+const SearchBarWrapper = styled(Box)`
+  margin-bottom: 16px;
+`;
+
+const CategoriesScrollContainer = styled(Box)`
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding-bottom: 16px;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #888;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background-color: #f1f1f1;
+  }
+`;
+
+const CategoryChip = styled(Chip)`
+  &:hover {
+    background-color: #e0e0e0;
+  }
+`;
+
+const LibraryPickCard = styled(Paper)`
+  padding: 24px;
+  margin-top: 16px;
 `;

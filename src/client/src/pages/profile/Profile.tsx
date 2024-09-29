@@ -99,7 +99,7 @@ const fetchUser = useCallback(async()=>{
   }, [fetchArticles, fetchUser]);
 
   useEffect(() => {
-    LocalForageProvider.getItem("FC:USER:INTERESTS", (err, val: any) => {
+    LocalForageProvider.getItem(`FC:${currentUser?.username}:INTERESTS`, (err, val: any) => {
       val = JSON.parse(val);
       val &&
         setUserInterest(Object.keys(val).filter((key) => val[key] === true));

@@ -9,6 +9,7 @@ import { RootState } from "../../store";
 
 const Personalize = () => {
   const navigate = useNavigate();
+  let { user } = useSelector((state: RootState) => state.user);
   const [categories, setCategories] = useState({
     Tech: false,
     Science: false,
@@ -36,11 +37,12 @@ const Personalize = () => {
       [catg]: !prevCatg[catg],
     }));
   };
+  
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     LocalForageProvider.setItem(
-      "FC:USER:INTERESTS",
+     `FC:${user?.username}:INTERESTS`,
       JSON.stringify(categories)
     );
     navigate("/");
