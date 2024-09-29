@@ -3,9 +3,8 @@ import NotificationItem from "../../components/notificationItem/NotificationItem
 import MetaData from "../../MetaData";
 import Footer from "../../components/footer/Footer";
 import { NotificationManager } from "../../lib/notificationManager/NotificationManager";
-import styled, { ThemeProvider } from "styled-components";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
+import styled from "styled-components";
+
 
 const NotificationPage: React.FC = (): React.ReactElement => {
   const [timeframe, setTimeFrame] = useState("Today");

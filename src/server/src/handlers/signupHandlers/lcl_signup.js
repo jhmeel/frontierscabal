@@ -31,7 +31,7 @@ const lcl_signup = catchAsync(async (req, res, next) => {
 
   // Create new user
   const user = await User.create(newUser);
-
+    
   createSession(user, 200, res, next);
   //notify newuser for successful signup!
 });
