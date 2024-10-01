@@ -16,7 +16,7 @@ const dependencyList = [
   new MiddlewaresProvider(app),
   new RouteProvider(app),
 ];
- 
+  
 const core = Core.getInstance(app, Config);
 
 core.addDependency(dependencyList);

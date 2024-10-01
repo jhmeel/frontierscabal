@@ -12,8 +12,6 @@ import {
   ListItemText,
   Divider,
 } from '@mui/material';
-import NoteAddIcon from '@mui/icons-material/NoteAdd';
-
 import {
   IconNotifications,
   IconHamburgerMenu,
@@ -24,14 +22,13 @@ import {
   IconSquareTwitter,
   Icon402Facebook2,
   Icon458Linkedin,
-  IconMinutemailer,
   IconBookshelf,
   IconBxsBookmarks,
-  IconAddOutline,
   IconProfile,
   IconVideoTwentyFour,
   IconBxSearchAlt,
 } from '../../assets/icons';
+import ForumIcon from '@mui/icons-material/Forum';
 import { Assistant } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { genRandomColor, genUniqueShortname } from '../../utils';
@@ -42,6 +39,8 @@ import { RoughNotation } from 'react-rough-notation';
 import Config from '../../config/Config';
 import fcabal from "../../assets/logos/fcabal.png";
 import getToken from '../../utils/getToken';
+import MessageIcon from '@mui/icons-material/Message';
+import { VscCommentDiscussion } from 'react-icons/vsc';
 
 const Header: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -188,7 +187,29 @@ const Header: React.FC = () => {
                 <ListItemText primary="Blog" />
               </ListItemButton>
             </ListItem>
-          
+
+            {user?.username && authToken !== undefined && (
+              <ListItem disablePadding component={Link} to={`/chats`}>
+                <ListItemButton>
+                  <ListItemIcon>
+                    <MessageIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Chat" />
+                </ListItemButton>
+              </ListItem>
+            )}
+           
+           {user?.username && authToken !== undefined && (
+              <ListItem disablePadding component={Link} to={`/discuss`}>
+                <ListItemButton>
+                  <ListItemIcon>
+                    <ForumIcon />
+                  </ListItemIcon>
+                  <ListItemText primary="Discuss" />
+                </ListItemButton>
+              </ListItem>
+            )}
+           
             {user?.username && authToken !== undefined && (
               <ListItem disablePadding component={Link} to={`/profile/${user?.username}`}>
                 <ListItemButton>
@@ -200,16 +221,7 @@ const Header: React.FC = () => {
               </ListItem>
             )}
            
-            {user?.role && ['FC:SUPER:ADMIN', 'FC:ADMIN'].includes(user?.role) && authToken !== undefined && (
-              <ListItem disablePadding component={Link} to="/study-material/new">
-                <ListItemButton>
-                  <ListItemIcon>
-                    <IconAddOutline fontSize={20}/>
-                  </ListItemIcon>
-                  <ListItemText primary="Upload Study Material" />
-                </ListItemButton>
-              </ListItem>
-            )}
+            
             {user?.username && authToken !== undefined && (
               <ListItem disablePadding component={Link} to="/bookmarks">
                 <ListItemButton>
@@ -268,7 +280,7 @@ export default Header;
 
 const StyledAppBar = styled(AppBar)`
   background: rgba(251, 251, 251, 0.8);
-  border-bottom: 1px solid #ededed;
+  border-bottom: 2px solid #ededed;
   height: 60px;
   box-shadow: none;
 
@@ -284,6 +296,7 @@ const StyledAppBar = styled(AppBar)`
     display: flex;
     align-items: center;
     margin-left: auto;
+    margin-right: 5px;
   }
 `;
 

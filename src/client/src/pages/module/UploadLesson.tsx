@@ -8,6 +8,15 @@ import { useParams } from "react-router-dom";
 import getToken from "../../utils/getToken";
 import { useSnackbar } from "notistack";
 import toast from "react-hot-toast";
+import {
+  TextField,
+  Button,
+  CircularProgress,
+  Typography,
+  Box,
+  IconButton,
+} from "@mui/material";
+import Footer from "../../components/footer/Footer";
 
 const UploadLesson = ({
   lessonId,
@@ -31,6 +40,7 @@ const UploadLesson = ({
   const [lessonIndex, setLessonIndex] = useState<string>("");
   const [lessonUrlActive, setLessonUrlActive] = useState<boolean>(false);
   const { enqueueSnackbar } = useSnackbar();
+
   useEffect(() => {
     if (updateTitle && updateAim && updateLessonUrl && updateLessonIndex) {
       setTitle(updateTitle);
@@ -38,7 +48,7 @@ const UploadLesson = ({
       setLessonIndex(updateLessonIndex);
       setLessonUrl(updateLessonUrl);
     }
-  }, []);
+  }, [updateTitle, updateAim, updateLessonUrl, updateLessonIndex]);
 
   const [material, setMaterial] = useState<{
     name: string;
@@ -71,14 +81,13 @@ const UploadLesson = ({
 
   const handleMaterialChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const reader = new FileReader();
-
     reader.onload = () => {
       setMaterial({
         file: reader.result as string,
-        name: event.target.files[0].name,
+        name: event.target.files![0].name,
       });
     };
-    reader.readAsDataURL(event.target.files[0]);
+    reader.readAsDataURL(event.target.files![0]);
   };
 
   const handleUpload = async (e: ChangeEvent<HTMLFormElement>) => {
@@ -89,7 +98,7 @@ const UploadLesson = ({
 
     if (!response) {
       toast.error(
-        "Invalid lesson URL.\n The URL may be broken; please recopy and paste it"
+        "Invalid lesson URL. The URL may be broken; please recopy and paste it."
       );
       return;
     }
@@ -97,14 +106,14 @@ const UploadLesson = ({
     setLessonUrlActive(true);
 
     if (!title || !aim) {
-      toast.error("Incomplete lesson details.\n Please fill in the form");
+      toast.error("Incomplete lesson details. Please fill in the form.");
       return;
     }
 
     const splittedTitle = title.split(":");
     if (splittedTitle.length !== 2 || !splittedTitle[0].startsWith("L")) {
       toast.error(
-        "Incompatible lesson title.\n The title should contain lesson count in this format -> L1: lesson title"
+        "Incompatible lesson title. The title should contain lesson count in this format -> L1: lesson title"
       );
       return;
     }
@@ -133,7 +142,6 @@ const UploadLesson = ({
         );
         enqueueSnackbar(data.message, { variant: "success" });
       } else {
-        //update lesson
         const { data } = await axiosInstance(authToken).put(
           `api/v1/module/lesson/update/${lessonId}`,
           formData,
@@ -156,21 +164,16 @@ const UploadLesson = ({
   const handlePaste = async () => {
     try {
       const url = await navigator.clipboard.readText();
-
       if (!url) return;
-
       const { response, loading } = await isYouTubeVideoActive(url);
-
-      if (loading) {
-        setLessonUrlValidationLoading(loading);
-      }
+      setLessonUrlValidationLoading(loading);
 
       if (response) {
         setLessonUrlActive(true);
         setLessonUrl(url);
       } else {
         toast.error(
-          "Invalid lesson URL.\n The URL may be broken; please recopy and paste it"
+          "Invalid lesson URL. The URL may be broken; please recopy and paste it."
         );
       }
     } catch (error) {
@@ -179,74 +182,84 @@ const UploadLesson = ({
   };
 
   return (
+    <>
+    
     <CreateLessonWrapper>
+    <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
+    {action === "UPDATE" ? `Update Lesson` : `Create Lesson`}
+        </Typography>
       <LessonForm onSubmit={handleUpload}>
-        <div className="input-cont">
-          <label htmlFor="title">Title<span className="required">*</span></label>
-          <input
-            type="text"
-            id="title"
-            value={title}
-            autoFocus
+        <TextField
+          label="Title"
+          variant="outlined"
+          value={title}
+          fullWidth
+          required
+          placeholder="L1: Introduction to web3.0"
+          onChange={handleTitleChange}
+          margin="normal"
+        />
+        <TextField
+          label="Aim"
+          variant="outlined"
+          value={aim}
+          fullWidth
+          required
+          multiline
+          rows={4}
+          onChange={handleAimChange}
+          margin="normal"
+        />
+        <Box display="flex" alignItems="center" position="relative">
+          <TextField
+            label="Lesson URL (YouTube)"
+            variant="outlined"
+            value={lessonUrl}
+            fullWidth
             required
-            placeholder="L1: Introduction to web3.0"
-            onChange={handleTitleChange}
+            disabled={lessonUrlActive}
+            onChange={handleLessonUrlChange}
+            margin="normal"
           />
-        </div>
-        <div className="input-cont">
-          <label htmlFor="aim">Aim<span className="required">*</span></label>
-          <textarea required id="aim" value={aim} onChange={handleAimChange} />
-        </div>
-        <div className="input-cont">
-          <div>
-            <label htmlFor="video" title="Lesson Youtube url">
-              Lesson URL (Youtube)<span className="required">*</span>
-            </label>
-            <span
-              title={!lessonUrlActive ? "Paste" : "Active"}
-              className="verified"
-            >
-              {!lessonUrl && !lessonUrlActive ? (
-                <IconPaste onClick={handlePaste} className="icon" />
-              ) : lessonUrlValidationLoading ? (
-                <RDotLoader />
-              ) : (
-                lessonUrlActive && <SuccessIcon className="icon" />
-              )}
-            </span>
-            <input
-              type="text"
-              autoFocus
-              required
-              value={lessonUrl}
-              disabled={lessonUrlActive}
-              onChange={handleLessonUrlChange}
-            />
-          </div>
-        </div>
-        <div className="material-cont">
-          <div>
-            {" "}
-            <label htmlFor="material" title="Select Material">
+          <IconButton onClick={handlePaste} disabled={lessonUrlActive}>
+            {lessonUrlValidationLoading ? (
+              <CircularProgress size={24} />
+            ) : lessonUrlActive ? (
+              <SuccessIcon />
+            ) : (
+              <IconPaste />
+            )}
+          </IconButton>
+        </Box>
+        <Box>
+          <label htmlFor="material">
+            <Typography variant="body2">
               {material.name ? `✔ ${material.name}` : "Select Lesson Material"}
-            </label>
-            <input
-              type="file"
-              id="material"
-              accept=".pdf"
-              onChange={handleMaterialChange}
-            />
-          </div>
-        </div>
-        <button
-          className="upload-btn"
+            </Typography>
+          </label>
+          <input
+            type="file"
+            id="material"
+            accept=".pdf"
+            onChange={handleMaterialChange}
+            style={{ display: "none" }}
+          />
+        </Box>
+        <Button
+          variant="contained"
+          color="primary"
           type="submit"
-          disabled={uploadProgress > 0 ? true : false}
+          fullWidth
+          disabled={uploadProgress > 0}
+          sx={{ mt: 2 }}
         >
-          {action == "UPDATE" ? `Update` : `Create`}
-        </button>
+          {action === "UPDATE" ? `Update` : `Create`}
+        </Button>
       </LessonForm>
+      
     </CreateLessonWrapper>
+   
+    <Footer/></>
   );
 };
 
@@ -255,132 +268,11 @@ export default UploadLesson;
 const CreateLessonWrapper = styled.div`
   max-width: 600px;
   margin: 0 auto;
-  overflow: hidden;
 `;
 
 const LessonForm = styled.form`
-  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 10px 5px;
+  padding: 10px;
   border-radius: 5px;
-  max-width: 600px;
-  @media (max-width: 767px) {
-    & {
-      width: 100%;
-      margin: 0 auto;
-    }
-  }
-  .input-cont {
-    width: 100%;
-    height: fit-content;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin: 5px 10px;
-  }
-  .verified {
-    position: absolute;
-    bottom: 30px;
-    right: 90px;
-  }
-  .input-cont label {
-    font-size: 14px;
-    color: #000000;
-    font-weight: 600;
-    width: 90%;
-  }
-  .input-cont input,
-  .input-cont textarea {
-    width: 90%;
-    height: auto;
-    border-radius: 8px;
-    outline: none;
-    border: 1px solid #e5e5e5;
-    filter: drop-shadow(0px 1px 0px #efefef)
-      drop-shadow(0px 1px 0.5px rgba(239, 239, 239, 0.5));
-    transition: all 0.3s cubic-bezier(0.15, 0.83, 0.66, 1);
-    padding: 10px;
-    font-size: medium;
-  }
-  input:focus,
-  textarea:focus {
-    border: 2px solid #176984;
-  }
-  #video,
-  #material {
-    display: none;
-  }
-
-  .video-cont label {
-    border: 1px solid #ededed;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 13px;
-    color: grey;
-    font-weight: 500;
-    background: #fff;
-    cursor: pointer;
-  }
-  ::placeholder {
-    font-size: 12px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-      sans-serif;
-  }
-  .material-cont label {
-    font-size: 12px;
-    color: grey;
-    font-weight: 500;
-    cursor: pointer;
-  }
-  .video-cont,
-  .material-cont {
-    width: 90%;
-    height: fit-content;
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    margin: 5px 10px;
-  }
-  video,
-  img {
-    height: 50px;
-    width: 50px;
-    border-radius: 5px;
-    border: 1px solid #ededed;
-  }
-  .icon {
-    position: absolute;
-    height: 16px;
-    width: 16px;
-    cursor: pointer;
-    fill: #176984;
-    z-index: 10;
-  }
-  .tick {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9;
-  }
-  .upload-btn {
-    padding: 8px 16px;
-    background: #176984;
-    color: #fff;
-    cursor: pointer;
-    width: fit-content;
-    font-size: 12px;
-    margin-left: 10px;
-    border-radius: 4px;
-    border: none;
-  }
-  .upload-btn:hover {
-    transform: scale(1.01);
-    transition: transform 0.3s ease-out;
-  }
 `;

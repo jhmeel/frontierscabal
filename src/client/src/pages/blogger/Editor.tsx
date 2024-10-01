@@ -3,7 +3,7 @@ import MarkdownEditor from "../../components/markdownEditor/MarkdownEditor";
 import MetaData from "../../MetaData";
 import CustomEditor from "../../components/customTextEditor/CustomTextEditor";
 import { IconCaretDown } from "../../assets/icons";
-import styled, { ThemeProvider } from "styled-components";
+import styled from "styled-components";
 const EditorPage = () => {
   const [activeEditor, setActiveEditor] = useState("Custom");
   const [isTabOpen, setIsTabOpened] = useState(false);

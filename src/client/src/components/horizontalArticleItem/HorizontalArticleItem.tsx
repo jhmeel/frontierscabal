@@ -15,6 +15,7 @@ import { RootState } from "../../store";
 
 import defaultImage from "../../assets/images/group_study.svg";
 import emptyAvatar from "../../assets/images/empty_avatar.png";
+import { MoreVert } from "@mui/icons-material";
 
 interface HorizontalArticleItemProps {
   id: string;
@@ -183,7 +184,7 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
         {onProfile ? (
           <MenuContainer ref={menuRef}>
             <MenuIcon onClick={() => setIsMenuOpen(!isMenuOpen)}>
-              <FaEllipsisH size={20} />
+            <MoreVert  />
             </MenuIcon>
             <AnimatePresence>
               {isMenuOpen && (

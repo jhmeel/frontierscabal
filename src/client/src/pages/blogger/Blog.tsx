@@ -190,7 +190,7 @@ const BlogPage: React.FC = () => {
             }}
             style={{ marginRight: theme.spacing(2) }}
           />
-          <IconButton color="primary" onClick={() => navigate('/article/new')}>
+          <IconButton color="primary" onClick={() => navigate('/blog/article/new')}>
             <CreateIcon />
           </IconButton>
         </Toolbar>

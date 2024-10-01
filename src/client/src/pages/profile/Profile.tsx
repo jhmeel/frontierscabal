@@ -78,19 +78,21 @@ const Profile: React.FC = () => {
 
   const fetchArticles = useCallback(async () => {
     const authToken = await getToken();
-    let username: string = params?.username || await LocalForageProvider.getItem("FC:USERNAME") 
+    let username: string =
+      params?.username || (await LocalForageProvider.getItem("FC:USERNAME"));
     if (activeUList === "MY_ARTICLES" && authToken && username) {
-      dispatch<any>(getUserArticles(authToken,username));
+      dispatch<any>(getUserArticles(authToken, username));
     } else if (activeUList === "READING_LIST" && authToken) {
       dispatch<any>(getBookmarkedArticle(authToken, page));
     }
   }, [activeUList, dispatch, page, params?.username]);
 
-const fetchUser = useCallback(async()=>{
-  const authToken = await getToken();
-  let username: string = params?.username || await LocalForageProvider.getItem("FC:USERNAME") 
-  username && dispatch<any>(await getUserDetails(username, authToken));
-},[])
+  const fetchUser = useCallback(async () => {
+    const authToken = await getToken();
+    let username: string =
+      params?.username || (await LocalForageProvider.getItem("FC:USERNAME"));
+    username && dispatch<any>(await getUserDetails(username, authToken));
+  }, []);
   useEffect(() => {
     if (isOnline()) {
       fetchArticles();
@@ -99,11 +101,14 @@ const fetchUser = useCallback(async()=>{
   }, [fetchArticles, fetchUser]);
 
   useEffect(() => {
-    LocalForageProvider.getItem(`FC:${currentUser?.username}:INTERESTS`, (err, val: any) => {
-      val = JSON.parse(val);
-      val &&
-        setUserInterest(Object.keys(val).filter((key) => val[key] === true));
-    });
+    LocalForageProvider.getItem(
+      `FC:${currentUser?.username}:INTERESTS`,
+      (err, val: any) => {
+        val = JSON.parse(val);
+        val &&
+          setUserInterest(Object.keys(val).filter((key) => val[key] === true));
+      }
+    );
   }, []);
   useEffect(() => {
     if (logoutError) {
@@ -200,83 +205,78 @@ const fetchUser = useCallback(async()=>{
             <div className="user-card">
               <div className="user-card-header">
                 {isCurrentUser && (
-                    <>
-                      <span
-                        ref={ptabRef}
-                        className="u-setting"
-                        title="Setting"
-                        onClick={togglePTab}
-                      >
-                        <IconSetting height="20" width="20" fill="#000" />
-                      </span>
-                      {isPTabOpen && (
-                        <div className="u-nav-tab">
-                          <ul id="u-ul">
-                            <li
-                              title="Create Module"
-                              onClick={() => handleClick("/module/new")}
-                            >
-                              <IconPlayCircle className="u-ul-icon" />
-                              Create Module
-                            </li>
-                            <li
-                              title="Edit profile"
-                              onClick={() => handleClick("/profile/edit")}
-                            >
-                              <IconAccountEdit className="u-ul-icon" />
-                              Edit profile
-                            </li>
-                            <li
-                              title="Reset password"
-                              onClick={() => handleClick("/password/update")}
-                            >
-                              <PasswordIcon className="u-ul-icon" />
-                              Reset password
-                            </li>
-                            <li
-                              title="Bookmarked Articles"
-                              onClick={() => handleClick("/bookmarks")}
-                            >
-                              <IconBxsBookmarks className="u-ul-icon" />
-                              Bookmarked Articles
-                            </li>
+                  <>
+                    <span
+                      ref={ptabRef}
+                      className="u-setting"
+                      title="Setting"
+                      onClick={togglePTab}
+                    >
+                      <IconSetting height="20" width="20" fill="#000" />
+                    </span>
+                    {isPTabOpen && (
+                      <div className="u-nav-tab">
+                        <ul id="u-ul">
+                          <li
+                            title="Create Module"
+                            onClick={() => handleClick("/module/new")}
+                          >
+                            <IconPlayCircle className="u-ul-icon" />
+                            Create Module
+                          </li>
+                          <li
+                            title="Edit profile"
+                            onClick={() => handleClick("/profile/edit")}
+                          >
+                            <IconAccountEdit className="u-ul-icon" />
+                            Edit profile
+                          </li>
+                          <li
+                            title="Reset password"
+                            onClick={() => handleClick("/password/update")}
+                          >
+                            <PasswordIcon className="u-ul-icon" />
+                            Reset password
+                          </li>
+                          <li
+                            title="Bookmarked Articles"
+                            onClick={() => handleClick("/bookmarks")}
+                          >
+                            <IconBxsBookmarks className="u-ul-icon" />
+                            Bookmarked Articles
+                          </li>
 
-                            <li
-                              title="Invite friends"
-                              onClick={() => handleFriendInvite()}
-                            >
-                              <IconLinkAdd className="u-ul-icon" />
-                              Invite friends
+                          <li
+                            title="Invite friends"
+                            onClick={() => handleFriendInvite()}
+                          >
+                            <IconLinkAdd className="u-ul-icon" />
+                            Invite friends
+                          </li>
+                          {user?.username && (
+                            <li onClick={showConfirmation}>
+                              <IconLogout fill="#000" className="u-ul-icon" />
+                              Logout
                             </li>
-                            {user?.username && (
-                              <li onClick={showConfirmation}>
-                                <IconLogout fill="#000" className="u-ul-icon" />
-                                Logout
-                              </li>
-                            )}
-                            <li className="ref-url" title="Referral url">
-                              {referralUrl.slice(0, referralUrl.length / 3)}
-                              <span title="Copy" onClick={copyCode}>
-                                <IconContentCopy
-                                  className="ref-copy-icon"
-                                  fill="#fff"
-                                />
-                              </span>
-                            </li>
-                          </ul>
-                        </div>
-                      )}
-                    </>
-                  )}
+                          )}
+                          <li className="ref-url" title="Referral url">
+                            {referralUrl.slice(0, referralUrl.length / 3)}
+                            <span title="Copy" onClick={copyCode}>
+                              <IconContentCopy
+                                className="ref-copy-icon"
+                                fill="#fff"
+                              />
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="user-card-img">
-                <img
-                  loading="lazy"
-                  src={
-                    user?.avatar?.url || EmptyAvatar
-                  }
-                />
+                <img loading="lazy" src={user?.avatar?.url || EmptyAvatar} />
                 {isCurrentUser && (
                   <span className="u-edit-prof" title="Edit">
                     <IconAccountEdit
@@ -289,86 +289,76 @@ const fetchUser = useCallback(async()=>{
                 )}
               </div>
               <div className="user-card-info">
-                <h3 className="modal-username">
-                  {user?.username}
-                </h3>
+                <h3 className="modal-username">{user?.username}</h3>
 
-                {!isCurrentUser  && (
-                    <div className="p-cnt-cont">
-                      <div
-                        title="Message on whatsapp"
-                        className="usr-msg"
-                        onClick={messageUser}
-                      >
-                        Message&nbsp;
-                       <Message fontSize="28px"/>
-                      </div>
-
-                      <div title="Mail" className="usr-mail" onClick={mailUser}>
-                        Email&nbsp;
-                        <IconMinutemailer fill="#fff" />
-                      </div>
+                {!isCurrentUser && (
+                  <div className="p-cnt-cont">
+                    <div
+                      title="Message on whatsapp"
+                      className="usr-msg"
+                      onClick={messageUser}
+                    >
+                      Message&nbsp;
+                      <Message fontSize="28px" />
                     </div>
-                  )}
+
+                    <div title="Mail" className="usr-mail" onClick={mailUser}>
+                      Email&nbsp;
+                      <IconMinutemailer fill="#fff" />
+                    </div>
+                  </div>
+                )}
 
                 <div className="user-bio-segment">
                   <p className="user-bio">{user?.bio}</p>
-                  {
-                    <p className="user-sch">
-                      <IconSchool height="16" width="16" fill="black" />{" "}
-                      {currentUser?.school || user?.school}
-                    </p>
-                  }
+                  {(currentUser?.school ||
+                    user?.school) && (
+                      <p className="user-sch">
+                        <IconSchool height="16" width="16" fill="black" />{" "}
+                        {currentUser?.school || user?.school}
+                      </p>
+                    )}
                   <p className="user-joined-date">
                     <IconCalendarEventFill
                       height="16"
                       width="16"
                       fill="black"
                     />{" "}
-                    Joined{" "}
-                    {moment(user?.createdAt).format(
-                      "MMMM YYYY"
-                    )}
+                    Joined {moment(user?.createdAt).format("MMMM YYYY")}
                   </p>
                 </div>
               </div>
 
               {isCurrentUser && (
-                  <div className="user-interest-segment">
-                    <div className="user-interest-header">
-                      <span>Interests</span>
-                      
-                          <span
-                            title="Manage interest"
-                            className="manage-interest"
-                            onClick={() => navigate("/personalize")}
-                          >
-                            Manage
-                            <IconBxEditAlt
-                              fill="gray"
-                              height="20px"
-                              width="20px"
-                            />
-                          </span>
-                    
-                    </div>
-                    <div className="user-interest-holder">
-                      {userInterest.map((int, _) => (
-                        <div
-                          key={int}
-                          className="user-interest-item"
-                          onClick={() => {
-                            (user &&
-                              currentUser?.username === user?.username) ||
-                              (currentUser?.username && navigate("/bookmarks"));
-                          }}
-                        >
-                          {int}
-                        </div>
-                      ))}
-                    </div>
+                <div className="user-interest-segment">
+                  <div className="user-interest-header">
+                    <span>Interests</span>
+
+                    <span
+                      title="Manage interest"
+                      className="manage-interest"
+                      onClick={() => navigate("/personalize")}
+                    >
+                      Manage
+                      <IconBxEditAlt fill="gray" height="20px" width="20px" />
+                    </span>
                   </div>
-                )}
+                  <div className="user-interest-holder">
+                    {userInterest.map((int, _) => (
+                      <div
+                        key={int}
+                        className="user-interest-item"
+                        onClick={() => {
+                          (user && currentUser?.username === user?.username) ||
+                            (currentUser?.username && navigate("/bookmarks"));
+                        }}
+                      >
+                        {int}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {pinnedArticles?.length > 0 && (
                 <div className="pinned-article-segment">
@@ -403,10 +393,7 @@ const fetchUser = useCallback(async()=>{
                 </div>
               )}
 
-              {<div className="u-curriculum-segment">
-                
-                
-                </div>}
+              {<div className="u-curriculum-segment"></div>}
 
               <div className="u-articles-segment">
                 <div className="u-art-head">
@@ -451,7 +438,7 @@ const fetchUser = useCallback(async()=>{
                     </span>
                   ) : activeUList === "MY_ARTICLES" &&
                     articles?.length === 0 &&
-                    isCurrentUser? (
+                    isCurrentUser ? (
                     <>
                       <span style={{ color: "grey", fontSize: "14px" }}>
                         Your story list is empty!
@@ -480,9 +467,7 @@ const fetchUser = useCallback(async()=>{
                         key={i}
                         savedBy={art.savedBy}
                         pinnedBy={art.pinnedBy}
-                        onProfile={
-                          isCurrentUser
-                        }
+                        onProfile={isCurrentUser}
                       />
                     ))
                   ) : (
@@ -501,9 +486,7 @@ const fetchUser = useCallback(async()=>{
                         key={i}
                         savedBy={art.savedBy}
                         pinnedBy={art.pinnedBy}
-                        onProfile={
-                          !isCurrentUser
-                        }
+                        onProfile={!isCurrentUser}
                       />
                     ))
                   )}

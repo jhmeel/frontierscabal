@@ -31,7 +31,7 @@ const Config = {
     VERIFY_TOKEN_EXPIRY: Date.now() + 10 * 60 * 1000, //10mins
   },
  CACHE:{
-
+ 
  },
   LOGGER: {
     MAX_FILE_SIZE: 10 << 20, //,10mb

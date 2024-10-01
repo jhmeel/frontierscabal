@@ -8,6 +8,39 @@ export interface ACTION {
   payload?: any;
 }
 
+  
+export interface JoinRequest {
+  id: string;
+  discussionId: string;
+  userId: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: any;
+}
+export interface Discussion {
+  id: string;
+  title: string;
+  description: string;
+  creatorId: string;
+  isPrivate: boolean;
+  isOpen: boolean;
+  participants: string[];
+  createdAt: any;
+  lastActivityAt: any;
+  tags: string[];
+}
+
+export interface DiscussionMessage {
+  id: string;
+  discussionId: string;
+  senderId: string;
+  content: string;
+  fileUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  replyTo?: string;
+  reactions: { [key: string]: string[] };
+}
+
 export type ARTICLE = {
   title?: string;
   content?: string;
@@ -261,6 +294,7 @@ export interface EVENT_ROOT_STATE {
   };
 }
 export type USER = {
+  _id?:string;
   username?: string;
   shortname?: string;
   email?: string;

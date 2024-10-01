@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import styled from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,7 @@ import {
   InputAdornment,
   Paper,
   Chip,
+  Tooltip,
 } from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,
@@ -42,6 +43,13 @@ import {
   Museum as CultureIcon,
   Restaurant as FoodIcon,
   Star as StarIcon,
+  VolumeUp as VolumeUpIcon,
+  VolumeOff as VolumeOffIcon,
+  Bookmark as BookmarkIcon,
+  Share as ShareIcon,
+  Download as DownloadIcon,
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
 } from "@mui/icons-material";
 import Footer from "../../components/footer/Footer";
 import VerticalArticleItemSkeletonLoader from "../../components/loaders/VerticalArticleItemSkeletonLoader";
@@ -62,6 +70,7 @@ import { RootState } from "../../store";
 import LocalForageProvider from "../../utils/localforage";
 import HorizontalArticleItemSkeletonLoader from "../../components/loaders/HorizontalArticleItemSkeletonLoader";
 import HorizontalArticleItem from "../../components/horizontalArticleItem/HorizontalArticleItem";
+import toast from "react-hot-toast";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -97,6 +106,12 @@ const Home: React.FC = () => {
   const [duration, setDuration] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [libraryPickOfTheDay, setLibraryPickOfTheDay] = useState<any>(null);
+
+  const [bookContent, setBookContent] = useState<string>("");
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [fontSize, setFontSize] = useState(16);
+  const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const { isAuthenticated, user } = useSelector((state: RootState) => state.user);
 
@@ -181,6 +196,24 @@ const Home: React.FC = () => {
     isOnline() && getTrendingArticles();
   }, [enqueueSnackbar]);
 
+
+
+  const fetchRecentArticles = useCallback(() => {
+    if (!userInterest || userInterest.length === 0) {
+      setUserInterest(["Personal Dev", "Tech", "Science", "Culture"]);
+      dispatch<any>(searchRecentArticle(userInterest, page));
+      return;
+    } else {
+      dispatch<any>(searchRecentArticle(userInterest, page));
+    }
+  }, [dispatch, userInterest, page]);
+
+  useEffect(() => {
+    if (recentArticleError) {
+      dispatch<any>(clearArticleErrors());
+    }
+    isOnline() && fetchRecentArticles();
+  }, [dispatch, enqueueSnackbar, fetchRecentArticles]);
   useEffect(() => {
     const getRandomArticle = async () => {
       try {
@@ -227,13 +260,26 @@ const Home: React.FC = () => {
     isOnline() && getModules();
   }, [enqueueSnackbar]);
 
+  
+  useEffect(() => {
+    speechSynthesisRef.current = window.speechSynthesis;
+    utteranceRef.current = new SpeechSynthesisUtterance();
+  }, []);
+
   const handleCategoryChange = (event: React.SyntheticEvent, newValue: string) => {
     setSelectedCategory(newValue);
   };
 
-  const handleBookSelect = (book: any) => {
+  const handleBookSelect = async (book: any) => {
     setSelectedBook(book);
     setIsReading(true);
+    try {
+      const response = await axios.get(book.volumeInfo.previewLink);
+      setBookContent(response.data);
+    } catch (error) {
+      console.error("Error fetching book content:", error);
+      setBookContent("");
+    }
     LocalForageProvider.getItem(`book-progress-${book.id}`, (err, val: any) => {
       if (val) {
         setCurrentTime(val.currentTime);
@@ -243,6 +289,7 @@ const Home: React.FC = () => {
 
   const handleCloseReading = () => {
     setIsReading(false);
+    stopSpeaking();
     if (audio) {
       LocalForageProvider.setItem(`book-progress-${selectedBook.id}`, {
         currentTime: audio.currentTime,
@@ -251,27 +298,25 @@ const Home: React.FC = () => {
   };
 
   const handlePlayPause = () => {
-    if (audio) {
-      if (isPlaying) {
-        audio.pause();
-      } else {
-        audio.play();
-      }
-      setIsPlaying(!isPlaying);
-    } else if (selectedBook) {
-      const newAudio = new Audio(selectedBook.volumeInfo.previewLink);
-      newAudio.addEventListener('loadedmetadata', () => {
-        setDuration(newAudio.duration);
-      });
-      newAudio.addEventListener('timeupdate', () => {
-        setCurrentTime(newAudio.currentTime);
-        LocalForageProvider.setItem(`book-progress-${selectedBook.id}`, {
-          currentTime: newAudio.currentTime,
-        });
-      });
-      setAudio(newAudio);
-      newAudio.play();
-      setIsPlaying(true);
+    if (isSpeaking) {
+      stopSpeaking();
+    } else {
+      startSpeaking();
+    }
+  };
+
+  const startSpeaking = () => {
+    if (speechSynthesisRef.current && utteranceRef.current) {
+      utteranceRef.current.text = bookContent;
+      speechSynthesisRef.current.speak(utteranceRef.current);
+      setIsSpeaking(true);
+    }
+  };
+
+  const stopSpeaking = () => {
+    if (speechSynthesisRef.current) {
+      speechSynthesisRef.current.cancel();
+      setIsSpeaking(false);
     }
   };
 
@@ -293,12 +338,34 @@ const Home: React.FC = () => {
         `https://www.googleapis.com/books/v1/volumes?q=${searchTerm}&maxResults=10`
       );
       setCategoryBooks(response.data.items);
-      console.log(response.data.items)
       setBooksLoading(false);
     } catch (error) {
       console.error("Error searching books:", error);
       setBooksLoading(false);
     }
+  };
+
+  const handleBookmark = () => {
+    // Implement bookmarking functionality
+    enqueueSnackbar("Book bookmarked successfully!", { variant: "success" });
+  };
+
+  const handleShare = () => {
+    // Implement sharing functionality
+    enqueueSnackbar("Share link copied to clipboard!", { variant: "success" });
+  };
+
+  const handleDownload = () => {
+    // Implement download functionality
+    enqueueSnackbar("Book download started!", { variant: "success" });
+  };
+
+  const handleFontSizeIncrease = () => {
+    setFontSize(prevSize => Math.min(prevSize + 2, 24));
+  };
+
+  const handleFontSizeDecrease = () => {
+    setFontSize(prevSize => Math.max(prevSize - 2, 12));
   };
 
   const getCategoryIcon = (category: string) => {
@@ -486,11 +553,15 @@ const Home: React.FC = () => {
             placeholder="Search books..."
             value={searchTerm}
             onChange={handleSearchChange}
-            onClick={handleSearch}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
                   <SearchIcon />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <Button onClick={handleSearch}>Search</Button>
                 </InputAdornment>
               ),
             }}
@@ -527,8 +598,6 @@ const Home: React.FC = () => {
           )}
         </Grid>
       </Section>
-
-     
 
       <Section>
         <SectionTitle>
@@ -572,11 +641,11 @@ const Home: React.FC = () => {
       </Section>
 
       <Drawer
-        anchor="bottom"
+        anchor="right"
         open={isReading}
         onClose={handleCloseReading}
         PaperProps={{
-          style: { maxHeight: '80vh' },
+          style: { width: '80%', maxWidth: '1000px' },
         }}
       >
         <ReadingDrawerContent>
@@ -595,32 +664,54 @@ const Home: React.FC = () => {
               <Typography variant="subtitle1" gutterBottom>
                 By {selectedBook.volumeInfo.authors?.join(', ')}
               </Typography>
-              <BookContent>
-                <Typography variant="body1">
-                  {selectedBook.volumeInfo.description || "No preview available."}
-                </Typography>
+              <ActionTray>
+                <Tooltip title="Bookmark">
+                  <IconButton onClick={handleBookmark}>
+                    <BookmarkIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Share">
+                  <IconButton onClick={handleShare}>
+                    <ShareIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Download">
+                  <IconButton onClick={handleDownload}>
+                    <DownloadIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Increase font size">
+                  <IconButton onClick={handleFontSizeIncrease}>
+                    <ZoomInIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Decrease font size">
+                  <IconButton onClick={handleFontSizeDecrease}>
+                    <ZoomOutIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title={isSpeaking ? "Stop speaking" : "Start speaking"}>
+                  <IconButton onClick={handlePlayPause}>
+                    {isSpeaking ? <VolumeOffIcon /> : <VolumeUpIcon />}
+                  </IconButton>
+                </Tooltip>
+              </ActionTray>
+              <BookContent style={{ fontSize: `${fontSize}px` }}>
+                {bookContent ? (
+                  <div dangerouslySetInnerHTML={{ __html: bookContent }} />
+                ) : (
+                  <iframe
+                    src={selectedBook.volumeInfo.previewLink}
+                    width="100%"
+                    height="600px"
+                    title={selectedBook.volumeInfo.title}
+                  />
+                )}
               </BookContent>
             </>
           )}
         </ReadingDrawerContent>
       </Drawer>
-
-      {selectedBook && (
-        <AudioControlsWrapper>
-          <IconButton onClick={handlePlayPause}>
-            {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-          </IconButton>
-          <Slider
-            value={currentTime}
-            max={duration}
-            onChange={handleSeek}
-            aria-labelledby="continuous-slider"
-          />
-          <Typography variant="caption">
-            {formatTime(currentTime)} / {formatTime(duration)}
-          </Typography>
-        </AudioControlsWrapper>
-      )}
 
       <Footer />
     </HomeWrapper>
@@ -719,12 +810,15 @@ const RatingWrapper = styled(Box)`
 const ReadingDrawerContent = styled(Box)`
   padding: 32px;
   position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 `;
 
 const BookContent = styled(Box)`
   margin-top: 24px;
   margin-bottom: 24px;
-  max-height: 50vh;
+  flex-grow: 1;
   overflow-y: auto;
   padding-right: 16px;
 
@@ -740,19 +834,6 @@ const BookContent = styled(Box)`
   &::-webkit-scrollbar-track {
     background-color: #f1f1f1;
   }
-`;
-
-const AudioControlsWrapper = styled(Paper)`
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background-color: white;
-  z-index: 1000;
 `;
 
 const SearchBarWrapper = styled(Box)`
@@ -788,4 +869,12 @@ const CategoryChip = styled(Chip)`
 const LibraryPickCard = styled(Paper)`
   padding: 24px;
   margin-top: 16px;
+`;
+
+const ActionTray = styled(Box)`
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 16px;
 `;

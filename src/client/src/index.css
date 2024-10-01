@@ -136,3 +136,12 @@ input::-webkit-inner-spin-button{
   display: flex;
   gap:8px;
 }
+.pay-btn{
+  border:none;
+  padding:10px 20px;
+  width:100%;
+  color:#fff;
+  font-weight:700;
+  background:transparent;
+
+}
