@@ -1,20 +1,31 @@
-import React, { useEffect, useState } from "react";
-import styled from "styled-components";
+import React, { useEffect, useState, ChangeEvent } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate, Link } from "react-router-dom";
+import { styled } from "@mui/system";
 import {
-  IconCaretDown,
-  IconMinutemailer,
-  IconRemoveFill,
-} from "../../assets/icons";
-import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+  Avatar,
+  Box,
+  Button,
+  IconButton,
+  Typography,
+  TextField,
+  CircularProgress,
+  Menu,
+  MenuItem,
+} from "@mui/material";
+import {
+  Delete as DeleteIcon,
+  ExpandMore as ExpandMoreIcon,
+  Reply as ReplyIcon,
+  MoreVert as MoreVertIcon,
+} from "@mui/icons-material";
 import moment from "moment";
+import { RootState } from "../../store";
 import {
   deleteComment,
   addCommentReply,
   clearErrors,
 } from "../../actions/article";
-import getToken from "../../utils/getToken";
-import { useDispatch } from "react-redux";
 import {
   DELETE_COMMENT_RESET,
   NEW_COMMENT_REPLY_RESET,
@@ -22,13 +33,34 @@ import {
 import { FormattedCount } from "../../utils/formatter";
 import emptyImage from "../../assets/images/empty_avatar.png";
 import ReplyItem from "../replyItem/ReplyItem";
-import RDotLoader from "../loaders/RDotLoader";
-import SpinLoader from "../loaders/SpinLoader";
-import toast from "react-hot-toast";
 import { closeSnackbar, enqueueSnackbar } from "notistack";
-import { RootState } from "../../store";
+import getToken from "../../utils/getToken";
+import toast from "react-hot-toast";
 
-const CommentItem = ({
+interface Reply {
+  _id: string;
+  user: {
+    username: string;
+    avatar?: {
+      url?: string;
+    };
+  };
+  date: string;
+  replyText: string;
+}
+
+interface CommentItemProps {
+  articleId: string;
+  commentId: string;
+  ownersName: string;
+  commenterName: string;
+  commenterPic: string;
+  date: string;
+  comment: string;
+  replies: Reply[];
+}
+
+const CommentItem: React.FC<CommentItemProps> = ({
   articleId,
   commentId,
   ownersName,
@@ -39,22 +71,25 @@ const CommentItem = ({
   replies,
 }) => {
   const { user } = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [showReply, setShowReply] = useState(false);
   const [replyInputedText, setReplyInputedText] = useState("");
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
   const {
     error: deleteCommentError,
     loading: deleteCommentLoading,
     success: deleteCommentSuccess,
   } = useSelector((state: RootState) => state.deleteComment);
-  const { theme } = useSelector((state: RootState) => state.theme);
+
   const {
     error: replyError,
     loading: replyLoading,
     success: replySuccess,
   } = useSelector((state: RootState) => state.newCommentReply);
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
   useEffect(() => {
     if (replyError) {
       toast.error("Error, try again...");
@@ -77,7 +112,15 @@ const CommentItem = ({
       dispatch({ type: DELETE_COMMENT_RESET });
       window.location.reload();
     }
-  }, [dispatch, deleteCommentError, deleteCommentSuccess, toast]);
+  }, [dispatch, deleteCommentError, deleteCommentSuccess]);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
 
   const showAuthDialogue = () => {
     enqueueSnackbar("Please signup to complete your action!", {
@@ -85,40 +128,39 @@ const CommentItem = ({
       persist: true,
       action: (key) => (
         <>
-          <button
-            className="snackbar-btn"
+          <Button
             onClick={() => {
-              closeSnackbar();
+              closeSnackbar(key);
               navigate("/signup");
             }}
+            color="primary"
           >
             Signup
-          </button>
-          <button className="snackbar-btn" onClick={() => closeSnackbar()}>
-            Cancel
-          </button>
+          </Button>
+          <Button onClick={() => closeSnackbar(key)}>Cancel</Button>
         </>
       ),
     });
   };
+
   const removeComment = async () => {
+    handleMenuClose();
     const authToken = await getToken();
     enqueueSnackbar("Are you sure you want to remove your comment?", {
-      variant: "info",
+      variant: "warning",
       persist: true,
       action: (key) => (
         <>
-          <button
-            className="snackbar-btn"
-            onClick={() =>
-              dispatch<any>(deleteComment(authToken, articleId, commentId))
-            }
+          <Button
+            onClick={() => {
+              dispatch<any>(deleteComment(authToken, articleId, commentId));
+              closeSnackbar(key);
+            }}
+            color="primary"
           >
-            Proceed
-          </button>
-          <button className="snackbar-btn" onClick={() => closeSnackbar()}>
-            cancle
-          </button>
+            Confirm
+          </Button>
+          <Button onClick={() => closeSnackbar(key)}>Cancel</Button>
         </>
       ),
     });
@@ -127,9 +169,11 @@ const CommentItem = ({
   const handleShowReply = () => {
     setShowReply(!showReply);
   };
-  const handleReplyTextChange = (e) => {
+
+  const handleReplyTextChange = (e: ChangeEvent<HTMLInputElement>) => {
     setReplyInputedText(e.target.value);
   };
+
   const handleReply = async () => {
     const authToken = await getToken();
     if (!authToken) {
@@ -140,268 +184,211 @@ const CommentItem = ({
       addCommentReply(authToken, articleId, commentId, replyInputedText)
     );
   };
-  return (
-    <>
 
-        <CommentItemRenderer>
-          {deleteCommentLoading && <SpinLoader />}
-          <div className="comment-container">
-            {user?.username === commenterName ||
-            user?.role === "FC:SUPER:ADMIN" ? (
-              <span
-                title="remove"
-                className="comment-rmv-icon"
-                onClick={removeComment}
-              >
-                <IconRemoveFill />
-              </span>
-            ) : (
-              commenterName === ownersName && (
-                <span className="comm-owner-tag">Author</span>
-              )
-            )}
-            <div className="user-pic-holder">
-              <div className="user-pic">
-                <img src={commenterPic || emptyImage} alt={commenterName} />
-              </div>
-              <div className="user-info">
-                <Link to={`/profile/${commenterName}`}>
-                  <span className="commenter-name">{`@${commenterName}`}</span>
-                </Link>
-                <p className="comment-date">{moment(date).fromNow()}</p>
-              </div>
-            </div>
-            <p className="comment-content">{comment}</p>
-          </div>
-          <div className="comment-footer">
-            <span className="comment-reply-txt" onClick={handleShowReply}>
-              {`${FormattedCount(replies?.length) || ""} ${
-                replies?.length > 1 ? "replies" : "reply"
-              }`}
-              <IconCaretDown />
-            </span>
-          </div>
-          {showReply && (
-            <div className="replies">
-              <div className="reply-header">
-                <h3 className="reply-hd-txt">
-                  {replies?.length >= 1 && "Replies"}
-                </h3>
-              </div>
-              <div className="reply-holder">
-                {replies?.length > 0 &&
-                  replies.map((rep, i) => (
-                    <ReplyItem
-                      articleId={articleId}
-                      commentId={commentId}
-                      replyId={rep?._id}
-                      replyerName={rep?.user.username}
-                      replyerPic={rep?.user.avatar?.url || emptyImage}
-                      date={rep?.date}
-                      replyText={rep?.replyText}
-                      key={i}
-                    />
-                  ))}
-              </div>
-              <div className="textarea-holder">
-                <input
-                  title="Reply"
-                  className="reply-text-area"
-                  onChange={handleReplyTextChange}
-                  placeholder={`replying to @${commenterName}`}
-                  autoFocus={true}
-                />
-                {replyInputedText && (
-                  <button
-                    type="submit"
-                    className="add-rply-btn"
-                    onClick={handleReply}
-                  >
-                    {replyLoading ? (
-                      <RDotLoader />
-                    ) : (
-                      <span title="Reply">
-                        <IconMinutemailer fill="#fff" />
-                        &nbsp;Reply
-                      </span>
-                    )}
-                  </button>
-                )}
-              </div>
-            </div>
+  return (
+    <StyledCommentItem>
+      {deleteCommentLoading && (
+        <CircularProgress size={24} className="delete-loader" />
+      )}
+      <Box className="comment-container">
+        {(user?.username === commenterName ||
+          user?.role === "FC:SUPER:ADMIN") && (
+          <IconButton
+            aria-label="more"
+            className="comment-more-icon"
+            onClick={handleMenuOpen}
+            size="small"
+          >
+            <MoreVertIcon fontSize="small" />
+          </IconButton>
+        )}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          disablePortal
+          PaperProps={{
+            style: { zIndex: 1500 },
+          }}
+        >
+          <MenuItem onClick={removeComment}>
+            <DeleteIcon fontSize="small" style={{ marginRight: "8px" }} />
+            Delete
+          </MenuItem>
+        </Menu>
+
+        {commenterName === ownersName && (
+          <Typography variant="caption" className="comment-owner-tag">
+            Author
+          </Typography>
+        )}
+
+        <Box display="flex" alignItems="center" className="user-info">
+          <Avatar
+            src={commenterPic || emptyImage}
+            alt={commenterName}
+            className="user-avatar"
+          />
+          <Box ml={1}>
+            <Typography
+              variant="subtitle2"
+              component={Link}
+              to={`/profile/${commenterName}`}
+              className="commenter-name"
+            >
+              @{commenterName}
+            </Typography>
+            <Typography variant="caption" color="textSecondary">
+              {moment(date).fromNow()}
+            </Typography>
+          </Box>
+        </Box>
+
+        <Typography variant="body1" className="comment-content">
+          {comment}
+        </Typography>
+      </Box>
+
+      <Box className="comment-footer">
+        <Button
+          size="small"
+          onClick={handleShowReply}
+          endIcon={<ExpandMoreIcon />}
+        >
+          {`${FormattedCount(replies?.length) || "0"} ${
+            replies?.length > 1 ? "replies" : "reply"
+          }`}
+        </Button>
+      </Box>
+
+      {showReply && (
+        <Box className="replies">
+          {replies?.length >= 1 && (
+            <Typography variant="subtitle1" className="reply-header">
+              Replies
+            </Typography>
           )}
-        </CommentItemRenderer>
-    </>
+          <Box className="reply-holder">
+            {replies?.length > 0 &&
+              replies.map((rep, i) => (
+                <ReplyItem
+                  articleId={articleId}
+                  commentId={commentId}
+                  replyId={rep?._id}
+                  replyerName={rep?.user.username}
+                  replyerPic={rep?.user.avatar?.url || emptyImage}
+                  date={rep?.date}
+                  replyText={rep?.replyText}
+                  key={i}
+                />
+              ))}
+          </Box>
+          <Box className="reply-input">
+            <TextField
+              variant="outlined"
+              fullWidth
+              placeholder={`Replying to @${commenterName}`}
+              value={replyInputedText}
+              onChange={handleReplyTextChange}
+              size="small"
+            />
+            {replyInputedText && (
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={handleReply}
+                startIcon={
+                  replyLoading ? <CircularProgress size={16} /> : <ReplyIcon />
+                }
+                disabled={replyLoading}
+              >
+                Reply
+              </Button>
+            )}
+          </Box>
+        </Box>
+      )}
+    </StyledCommentItem>
   );
 };
 
 export default CommentItem;
-const CommentItemRenderer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  max-width: 600px;
-  min-width: 550px;
-  overflow: hidden;
-  height: fit-content;
-  border: 1px solid #ededed;
-  padding: 6px 20px;
-  margin-top: 5px;
-  border-radius: 8px;
-  background-color: #fff;
-  @media (max-width: 767px) {
-    & {
-      min-width: 330px;
-      max-width: 400px;
-    }
-  }
-  .comment-container {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: fit-content;
-  }
-  .user-info {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-  }
 
-  .user-pic {
-    width: 38px;
-    height: 38px;
-    position: relative;
-    border-radius: 50%;
-    border: 1px solid #176984;
-  }
-  .user-pic img {
-    position: absolute;
-    left: 0;
-    top: 0;
-    border-radius: 50%;
-    height: 100%;
-    width: 100%;
-  }
-  .commenter-name {
-    font-size: 12px;
-    font-weight: 700;
-    color: #176984;
-  }
-  .comment-date {
-    font-weight: 700;
-    font-size: 10px;
-    color: #6e6e6e;
-  }
-
-  .comment-content {
-    font-size: 14px;
-    width: 100%;
-    text-align: start;
-    color: #6e6e6e;
-    font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS",
-      sans-serif;
-    margin-bottom: 10px;
-  }
-  .comment-rmv-icon {
-    position: absolute;
-    height: 20px;
-    width: 20px;
-    top: 5px;
-    right: 10px;
-    cursor: pointer;
-  }
-  .comm-owner-tag {
-    width: fit-content;
-    height: fit-content;
-    padding: 3px 6px;
-    align-self: flex-end;
-    cursor: pointer;
-    background-color: #176984;
-    color: #fff;
-    border-radius: 5px;
-    font-size: 10px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-      sans-serif;
-  }
-  .comment-footer {
-    width: 100%;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .reply-text-area:focus {
-    outline: none;
-  }
-  .comment-reply-txt {
-    font-size: 14px;
-    cursor: pointer;
-    font-weight: 700;
-    color: black;
-  }
-  .replies {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    width: 100%;
-    position: relative;
-  }
-  .reply-holder {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 10px;
-    max-height: 320px;
-    overflow-y: scroll;
-  }
-
-  .textarea-holder {
-    width: 100%;
-    padding: 10px;
-  }
-  .reply-text-area {
-    border: none;
-    padding: 10px;
-    background-color: transparent;
-    color: #000;
-    width: 100%;
-    height: 30px;
-    font-size: 14px;
-    border-bottom: 1px solid #ccc;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  }
-  .add-rply-btn {
-    padding: 5px 10px;
-    border-radius: 4px;
-    background-color: #176984;
-    color: #fff;
-    font-size: 12px;
-    border: none;
-    margin-top: 5px;
-    cursor: pointer;
-    transition: 0.3s ease-out;
-  }
-  .add-rply-btn:hover {
-    transform: scale(1.02);
-  }
-  .add-rply-btn span {
-    color: #fff;
-  }
-
-  .snackbar-btn {
-    padding: 6px 12px;
-    color: #000;
-    border: none;
-    border-radius: 5px;
-    margin-right: 5px;
-    cursor: pointer;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-      sans-serif;
-  }
-`;
+const StyledCommentItem = styled(Box)(({ theme }) => ({
+  display: "flex",
+  flexDirection: "column",
+  position: "relative",
+  width: "100%",
+  maxWidth: "600px",
+  padding: theme.spacing(2),
+  marginBottom: theme.spacing(2),
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: theme.palette.background.paper,
+  border: `1px solid ${theme.palette.divider}`,
+  [theme.breakpoints.down("sm")]: {
+    maxWidth: "100%",
+  },
+  ".delete-loader": {
+    position: "absolute",
+    top: theme.spacing(1),
+    right: theme.spacing(1),
+  },
+  ".comment-more-icon": {
+    position: "absolute",
+    top: theme.spacing(1),
+    right: theme.spacing(1),
+  },
+  ".comment-owner-tag": {
+    position: "absolute",
+    top: theme.spacing(1),
+    right: theme.spacing(1),
+    backgroundColor: theme.palette.primary.main,
+    color: theme.palette.common.white,
+    padding: theme.spacing(0.5, 1),
+    borderRadius: theme.shape.borderRadius,
+  },
+  ".user-info": {
+    marginBottom: theme.spacing(1),
+  },
+  ".user-avatar": {
+    width: theme.spacing(4),
+    height: theme.spacing(4),
+  },
+  ".commenter-name": {
+    textDecoration: "none",
+    color: theme.palette.primary.main,
+    "&:hover": {
+      textDecoration: "underline",
+    },
+  },
+  ".comment-content": {
+    marginBottom: theme.spacing(1),
+    color: theme.palette.text.primary,
+  },
+  ".comment-footer": {
+    display: "flex",
+    justifyContent: "flex-end",
+  },
+  ".replies": {
+    marginTop: theme.spacing(2),
+    ".reply-header": {
+      marginBottom: theme.spacing(1),
+    },
+    ".reply-holder": {
+      maxHeight: 320,
+      overflowY: "auto",
+      marginBottom: theme.spacing(1),
+    },
+    ".reply-input": {
+      display: "flex",
+      alignItems: "center",
+      gap: theme.spacing(1),
+      marginTop: theme.spacing(1),
+      [theme.breakpoints.down("sm")]: {
+        flexDirection: "column",
+        alignItems: "stretch",
+      },
+    },
+  },
+}));

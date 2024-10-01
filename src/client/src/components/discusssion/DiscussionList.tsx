@@ -7,6 +7,8 @@ import {
   deleteDoc,
   doc,
   addDoc,
+  arrayUnion,
+  updateDoc,
 } from "firebase/firestore";
 import {
   Card,
@@ -29,6 +31,9 @@ import {
   FormControl,
   Box,
   Container,
+  AppBar,
+  Toolbar,
+  Icon,
 } from "@mui/material";
 import { db } from "../../firebase";
 import { Discussion, USER } from "../../types";
@@ -38,8 +43,9 @@ import {
   MoreVert,
   Search as SearchIcon,
   Add as AddIcon,
+  Close as CloseIcon,
 } from "@mui/icons-material";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Alert } from "@mui/material";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -48,12 +54,9 @@ import toast from "react-hot-toast";
 const StyledCard = styled(Card)`
   margin: 16px 0;
   background-color: #ffffff;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease-in-out;
+  border-radius: 8px;
+  border:1px solid #ededed;
 
-  &:hover {
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-  }
 `;
 
 const TagContainer = styled.div`
@@ -72,7 +75,7 @@ const TopBar = styled.div`
   top: 0;
   z-index: 1;
   background-color: #f5f5f5;
-  padding: 16px 0;
+  padding: 8px 0;
 `;
 
 const SearchBar = styled(TextField)`
@@ -95,6 +98,19 @@ const MessageBubble = styled.div`
   word-wrap: break-word;
   align-self: flex-start;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const DrawerContainer = styled(Box)`
+  background-color: #fff;
+  padding: 16px;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+`;
+
+const CloseButton = styled(IconButton)`
+  position: absolute;
+  top: 8px;
+  right: 8px;
 `;
 
 interface DiscussionListProps {
@@ -158,7 +174,7 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
 
   const handleShareDiscussion = () => {
     if (selectedDiscussion) {
-      const shareURL = `${window.location.origin}/discuss/${selectedDiscussion.id}`;
+      const shareURL = `${window.location.origin}/discuss-room/${selectedDiscussion.id}`;
       navigator.clipboard.writeText(shareURL);
       toast.success("Discussion link copied to clipboard");
     }
@@ -184,7 +200,6 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
       setReportCategory("");
       setReportDetails("");
       setDrawerOpen(false);
-
       toast.success("Report submitted successfully");
     }
   };
@@ -201,23 +216,37 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
     setFilteredDiscussions(filtered);
   };
 
+  const handleJoinDiscussion = async (discussionId: string) => {
+    if (currentUser?._id) {
+      const discussionRef = doc(db, "discussions", discussionId);
+      await updateDoc(discussionRef, {
+        participants: arrayUnion(currentUser._id),
+        lastActivityAt: new Date(),
+      });
+      navigate(`/discuss-room/${discussionId}`);
+    }
+  };
+
   const handleCreateDiscussion = () => {
     navigate("/discuss/create");
   };
-  const isValidDate = (date) => {
+
+  const isValidDate = (date: string) => {
     const d = new Date(date).getTime();
-    if (!isNaN(d)) {
-      new Date(date).toLocaleDateString()
-    }
-    return ''
+    return !isNaN(d) ? new Date(date).toLocaleDateString() : "";
   };
+
   return (
     <Container maxWidth="md">
+      <Typography variant="h5" fontWeight={600} marginBottom={2}>
+        Discuss
+      </Typography>
       <DiscussionListWrapper>
         <TopBar>
           <SearchBar
             label="Search Discussions"
             variant="outlined"
+            size="small"
             value={searchTerm}
             onChange={handleSearchChange}
             InputProps={{
@@ -231,6 +260,7 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
           <Button
             variant="contained"
             color="primary"
+            size="small"
             style={{ marginLeft: "5px" }}
             onClick={handleCreateDiscussion}
           >
@@ -259,19 +289,23 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
                   </IconButton>
                 )
               }
-              title={<Typography variant="h6">{discussion.title}</Typography>}
+              title={
+                <Typography variant="h6" fontSize="1rem">
+                  {discussion.title}
+                </Typography>
+              }
               subheader={
                 <Typography variant="subtitle2" color="textSecondary">
                   {`${discussion.participants.length} participant${
                     discussion.participants.length > 1 ? "s" : ""
-                  } •  ${isValidDate(discussion.lastActivityAt)}`}
+                  } • ${isValidDate(discussion.lastActivityAt)}`}
                 </Typography>
               }
             />
 
             <CardContent>
               <MessageBubble>
-                <Typography variant="body1" color="textPrimary">
+                <Typography variant="body2" color="textPrimary">
                   {discussion.description}
                 </Typography>
               </MessageBubble>
@@ -288,99 +322,103 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
               </TagContainer>
             </CardContent>
 
-            <CardActions>
+            <CardActions
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                padding: "16px",
+              }}
+            >
               <Button
-                component={Link}
-                to={`/discuss/${discussion.id}`}
                 variant="contained"
                 color="primary"
-                fullWidth
+                size="small"
+                onClick={() => {
+                  if (discussion.participants.includes(currentUser?._id)) {
+                    navigate(`/discuss-room/${discussion.id}`);
+                  } else {
+                    handleJoinDiscussion(discussion.id);
+                  }
+                }}
               >
                 {discussion.participants.includes(currentUser?._id)
-                  ? "View Discussion"
-                  : "Join Discussion"}
+                  ? "View"
+                  : "Join"}
               </Button>
             </CardActions>
-
-            <Menu
-              anchorEl={menuAnchorEl}
-              open={Boolean(menuAnchorEl)}
-              onClose={handleMenuClose}
-            >
-              {discussion.creatorId === currentUser?._id && (
-                <MenuItem onClick={handleDeleteDiscussion}>
-                  Delete Discussion
-                </MenuItem>
-              )}
-              <MenuItem onClick={handleReportDiscussion}>
-                Report Discussion
-              </MenuItem>
-              <MenuItem onClick={handleShareDiscussion}>
-                Share Discussion
-              </MenuItem>
-            </Menu>
           </StyledCard>
         ))}
 
+        <Menu
+          anchorEl={menuAnchorEl}
+          open={Boolean(menuAnchorEl)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={handleDeleteDiscussion}>Delete</MenuItem>
+          <MenuItem onClick={handleShareDiscussion}>Share</MenuItem>
+          <MenuItem onClick={handleReportDiscussion}>Report</MenuItem>
+        </Menu>
+
+        <Drawer
+          anchor="bottom"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          variant="temporary"
+        >
+          <DrawerContainer>
+            <CloseButton onClick={() => setDrawerOpen(false)}>
+              <CloseIcon />
+            </CloseButton>
+            <Typography variant="h6">Report Discussion</Typography>
+            <FormControl fullWidth margin="normal">
+              <InputLabel id="report-category-label">Category</InputLabel>
+              <Select
+                labelId="report-category-label"
+                value={reportCategory}
+                onChange={(e) => setReportCategory(e.target.value)}
+                fullWidth
+              >
+                <MuiMenuItem value="Inappropriate Content">
+                  Inappropriate Content
+                </MuiMenuItem>
+                <MuiMenuItem value="Spam">Spam</MuiMenuItem>
+                <MuiMenuItem value="Other">Other</MuiMenuItem>
+              </Select>
+            </FormControl>
+            <TextField
+              label="Details"
+              variant="outlined"
+              fullWidth
+              multiline
+              rows={4}
+              value={reportDetails}
+              onChange={(e) => setReportDetails(e.target.value)}
+              margin="normal"
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={submitReport}
+              fullWidth
+            >
+              Submit Report
+            </Button>
+          </DrawerContainer>
+        </Drawer>
+
         <Snackbar
           open={deleteConfirmationOpen}
-          autoHideDuration={6000}
+          autoHideDuration={3000}
           onClose={() => setDeleteConfirmationOpen(false)}
         >
           <Alert
-            severity="success"
             onClose={() => setDeleteConfirmationOpen(false)}
+            severity="success"
+            sx={{ width: "100%" }}
           >
             Discussion deleted successfully!
           </Alert>
         </Snackbar>
-
-        <Drawer
-          anchor="right"
-          open={drawerOpen}
-          onClose={() => setDrawerOpen(false)}
-        >
-          <Box padding={3} width={350}>
-            <Typography variant="h6" gutterBottom>
-              Report Discussion
-            </Typography>
-
-            <FormControl fullWidth margin="normal">
-              <InputLabel>Category</InputLabel>
-              <Select
-                value={reportCategory}
-                onChange={(e) => setReportCategory(e.target.value as string)}
-              >
-                <MuiMenuItem value="Spam">Spam</MuiMenuItem>
-                <MuiMenuItem value="Harassment">Harassment</MuiMenuItem>
-                <MuiMenuItem value="Inappropriate Content">
-                  Inappropriate Content
-                </MuiMenuItem>
-                <MuiMenuItem value="Other">Other</MuiMenuItem>
-              </Select>
-            </FormControl>
-
-            <TextField
-              label="Details"
-              multiline
-              rows={4}
-              fullWidth
-              margin="normal"
-              value={reportDetails}
-              onChange={(e) => setReportDetails(e.target.value)}
-            />
-
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={submitReport}
-              disabled={!reportCategory || !reportDetails}
-            >
-              Submit Report
-            </Button>
-          </Box>
-        </Drawer>
       </DiscussionListWrapper>
     </Container>
   );

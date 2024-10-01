@@ -46,7 +46,12 @@ import {
   serverTimestamp,
   where,
 } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../../store";
 import getToken from "../../utils/getToken";
@@ -78,19 +83,18 @@ const StyledMessageBubble = styled(motion.div)(({ theme, isCurrentUser }) => ({
   maxWidth: "60%",
   width: "fit-content",
   padding: theme.spacing(2),
-  borderRadius: "20px",
-  backgroundColor: isCurrentUser
-    ? theme.palette.primary.main
-    : theme.palette.grey[200],
-  color: isCurrentUser
-    ? theme.palette.primary.contrastText
-    : theme.palette.text.primary,
+  borderTopRightRadius: "20px",
+  borderTopLeftRadius: "20px",
+  borderBottomRightRadius: isCurrentUser ? "0" : "20px",
+  borderBottomLeftRadius: isCurrentUser ? "20px" : "0",
+  backgroundColor: isCurrentUser ? "#3498db" : "#f0f0f0",
+  color: isCurrentUser ? "white" : "#333",
   alignSelf: isCurrentUser ? "flex-end" : "flex-start",
   marginBottom: theme.spacing(1),
   position: "relative",
   cursor: "pointer",
   transition: "all 0.3s ease",
-  boxShadow: theme.shadows[1],
+  border: "1px solid #ededed",
   "&:hover": {
     boxShadow: theme.shadows[3],
   },
@@ -145,7 +149,7 @@ const StyledAttachmentRemoveButton = styled(IconButton)(({ theme }) => ({
 }));
 
 const StyledMenuPopover = styled(Popover)(({ theme }) => ({
-  '& .MuiPopover-paper': {
+  "& .MuiPopover-paper": {
     borderRadius: theme.shape.borderRadius,
     boxShadow: theme.shadows[3],
   },
@@ -153,14 +157,14 @@ const StyledMenuPopover = styled(Popover)(({ theme }) => ({
 
 const StyledMenuItem = styled(ListItem)(({ theme }) => ({
   padding: theme.spacing(1, 2),
-  '&:hover': {
+  "&:hover": {
     backgroundColor: theme.palette.action.hover,
   },
 }));
 
 const StyledMenuItemText = styled(ListItemText)(({ theme }) => ({
-  '& .MuiTypography-root': {
-    fontSize: '0.875rem',
+  "& .MuiTypography-root": {
+    fontSize: "0.875rem",
   },
 }));
 
@@ -173,11 +177,11 @@ const RecentChatsContainer = styled(Box)(({ theme }) => ({
 }));
 
 const ChatPreview = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
+  display: "flex",
+  alignItems: "center",
   padding: theme.spacing(1),
-  cursor: 'pointer',
-  '&:hover': {
+  cursor: "pointer",
+  "&:hover": {
     backgroundColor: theme.palette.action.hover,
   },
 }));
@@ -211,9 +215,13 @@ const ChatRoom: React.FC = () => {
   const [newMessage, setNewMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [isEditingMessage, setIsEditingMessage] = useState<string | null>(null);
-  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(
+    null
+  );
   const [errorMessage, setErrorMessage] = useState("");
-  const [referencedMessage, setReferencedMessage] = useState<Message | null>(null);
+  const [referencedMessage, setReferencedMessage] = useState<Message | null>(
+    null
+  );
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -232,7 +240,9 @@ const ChatRoom: React.FC = () => {
   const fetchUser = useCallback(async () => {
     if (username) {
       const authToken = (await getToken()) as string;
-      dispatch<any>(await getUserDetails(username, authToken || user.accessToken));
+      dispatch<any>(
+        await getUserDetails(username, authToken || user.accessToken)
+      );
     }
   }, [dispatch, username, user?.accessToken]);
 
@@ -246,15 +256,23 @@ const ChatRoom: React.FC = () => {
 
   useEffect(() => {
     if (selectedUser && user) {
-      const chatroomId = [user._id, selectedUser._id].sort().join('|');
-      const messagesRef = collection(getFirestore(firebaseApp), "chatrooms", chatroomId, "messages");
+      const chatroomId = [user._id, selectedUser._id].sort().join("|");
+      const messagesRef = collection(
+        getFirestore(firebaseApp),
+        "chatrooms",
+        chatroomId,
+        "messages"
+      );
       const q = query(messagesRef, orderBy("createdAt", "asc"));
       const unsubscribe = onSnapshot(q, (snapshot) => {
         setMessages(
-          snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          } as Message))
+          snapshot.docs.map(
+            (doc) =>
+              ({
+                id: doc.id,
+                ...doc.data(),
+              } as Message)
+          )
         );
       });
       return unsubscribe;
@@ -282,8 +300,12 @@ const ChatRoom: React.FC = () => {
           updatedAt: serverTimestamp(),
         };
 
-        const chatroomId = [user?._id, selectedUser?._id].sort().join('|');
-        const chatroomRef = doc(getFirestore(firebaseApp), "chatrooms", chatroomId);
+        const chatroomId = [user?._id, selectedUser?._id].sort().join("|");
+        const chatroomRef = doc(
+          getFirestore(firebaseApp),
+          "chatrooms",
+          chatroomId
+        );
         const messagesRef = collection(chatroomRef, "messages");
 
         const newMessageRef = await addDoc(messagesRef, messageData);
@@ -294,11 +316,16 @@ const ChatRoom: React.FC = () => {
               getStorage(firebaseApp),
               `chatroom/${chatroomId}/${newMessageRef.id}/${file.name}`
             );
-            await uploadBytes(fileRef, file);
+            await uploadBytesResumable(fileRef, file);
             const downloadURL = await getDownloadURL(fileRef);
-            messageData.attachments?.push({ name: file.name, url: downloadURL });
+            messageData.attachments?.push({
+              name: file.name,
+              url: downloadURL,
+            });
           }
-          await updateDoc(newMessageRef, { attachments: messageData.attachments });
+          await updateDoc(newMessageRef, {
+            attachments: messageData.attachments,
+          });
         }
 
         // Update the chatroom document
@@ -333,9 +360,15 @@ const ChatRoom: React.FC = () => {
 
   const handleEditMessage = async (messageId: string, newText: string) => {
     if (user && selectedUser) {
-      const chatroomId = [user._id, selectedUser._id].sort().join('|');
+      const chatroomId = [user._id, selectedUser._id].sort().join("|");
       await updateDoc(
-        doc(getFirestore(firebaseApp), "chatrooms", chatroomId, "messages", messageId),
+        doc(
+          getFirestore(firebaseApp),
+          "chatrooms",
+          chatroomId,
+          "messages",
+          messageId
+        ),
         {
           text: newText,
           updatedAt: serverTimestamp(),
@@ -347,9 +380,15 @@ const ChatRoom: React.FC = () => {
 
   const handleDeleteMessage = async (messageId: string) => {
     if (user && selectedUser) {
-      const chatroomId = [user._id, selectedUser._id].sort().join('|');
+      const chatroomId = [user._id, selectedUser._id].sort().join("|");
       await deleteDoc(
-        doc(getFirestore(firebaseApp), "chatrooms", chatroomId, "messages", messageId)
+        doc(
+          getFirestore(firebaseApp),
+          "chatrooms",
+          chatroomId,
+          "messages",
+          messageId
+        )
       );
       setDeletingMessageId(null);
     }
@@ -423,8 +462,15 @@ const ChatRoom: React.FC = () => {
           <IconButton edge="start" color="inherit" onClick={() => navigate(-1)}>
             <ArrowBack />
           </IconButton>
-          <Box display="flex" alignItems="center" onClick={() => navigate(`/profile/${selectedUser?.username}`)}>
-            <Avatar src={selectedUser?.avatar?.url} style={{width:'35px',height:'35px'}}/>
+          <Box
+            display="flex"
+            alignItems="center"
+            onClick={() => navigate(`/profile/${selectedUser?.username}`)}
+          >
+            <Avatar
+              src={selectedUser?.avatar?.url}
+              style={{ width: "35px", height: "35px" }}
+            />
             <Typography variant="body1" sx={{ ml: 2 }}>
               {selectedUser?.username}
             </Typography>
@@ -458,29 +504,38 @@ const ChatRoom: React.FC = () => {
               }}
             >
               <Typography variant="body2">{message.text}</Typography>
-              {message.attachments && message.attachments.map((attachment, index) => (
-                <Box key={index} mt={1}>
-                  {attachment.url.match(/\.(jpeg|jpg|gif|png)$/) ? (
-                    <img
-                      src={attachment.url}
-                      alt={attachment.name}
-                      style={{ maxWidth: '100%', maxHeight: '200px', objectFit: 'contain' }}
-                    />
-                  ) : (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      href={attachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {attachment.name}
-                    </Button>
-                  )}
-                </Box>
-              ))}
-              <Typography variant="caption" sx={{ mt: 1, display: "block", fontSize: '0.7rem' }}>
-                {message.createdAt && new Date(message.createdAt.toDate()).toLocaleString()}
+              {message.attachments &&
+                message.attachments.map((attachment, index) => (
+                  <Box key={index} mt={1}>
+                    {attachment.url.match(/\.(jpeg|jpg|gif|png)$/) ? (
+                      <img
+                        src={attachment.url}
+                        alt={attachment.name}
+                        style={{
+                          maxWidth: "100%",
+                          maxHeight: "200px",
+                          objectFit: "contain",
+                        }}
+                      />
+                    ) : (
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        href={attachment.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {attachment.name}
+                      </Button>
+                    )}
+                  </Box>
+                ))}
+              <Typography
+                variant="caption"
+                sx={{ mt: 1, display: "block", fontSize: "0.7rem" }}
+              >
+                {message.createdAt &&
+                  new Date(message.createdAt.toDate()).toLocaleString()}
               </Typography>
             </StyledMessageBubble>
           ))}
@@ -498,7 +553,10 @@ const ChatRoom: React.FC = () => {
             >
               {referencedMessage && (
                 <Box display="flex" alignItems="center" mb={1}>
-                  <Typography variant="body2" sx={{ flex: 1, fontSize: '0.8rem' }}>
+                  <Typography
+                    variant="body2"
+                    sx={{ flex: 1, fontSize: "0.8rem" }}
+                  >
                     Replying to: {referencedMessage.text}
                   </Typography>
                   <IconButton size="small" onClick={handleRemoveReference}>
@@ -527,7 +585,12 @@ const ChatRoom: React.FC = () => {
                         height="100%"
                         bgcolor="grey.200"
                       >
-                        <Typography variant="caption" sx={{ fontSize: '0.7rem' }}>{file.name}</Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{ fontSize: "0.7rem" }}
+                        >
+                          {file.name}
+                        </Typography>
                       </Box>
                     )}
                     <StyledAttachmentRemoveButton
@@ -606,9 +669,6 @@ const ChatRoom: React.FC = () => {
                   handleClosePopover();
                 }}
               >
-                <ListItemIcon>
-                  <EditIcon fontSize="small" />
-                </ListItemIcon>
                 <StyledMenuItemText primary="Edit" />
               </StyledMenuItem>
               <StyledMenuItem
@@ -618,9 +678,6 @@ const ChatRoom: React.FC = () => {
                   handleClosePopover();
                 }}
               >
-                <ListItemIcon>
-                  <DeleteIcon fontSize="small" />
-                </ListItemIcon>
                 <StyledMenuItemText primary="Delete" />
               </StyledMenuItem>
             </>
@@ -632,9 +689,6 @@ const ChatRoom: React.FC = () => {
               handleClosePopover();
             }}
           >
-            <ListItemIcon>
-              <ShareIcon fontSize="small" />
-            </ListItemIcon>
             <StyledMenuItemText primary="Share" />
           </StyledMenuItem>
         </List>

@@ -53,6 +53,7 @@ export const registerUser = (userData: FormData|Record<string, any>) => async (d
   try {
     dispatch({ type: REGISTER_USER_REQUEST });
     const { data } = await axiosInstance().post("/api/v1/signup", userData);
+    console.log(data)
     dispatch({
       type: REGISTER_USER_SUCCESS,
       payload: data,

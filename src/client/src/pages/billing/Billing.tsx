@@ -105,7 +105,7 @@ const plans: Plan[] = [
   },
   {
     title: 'Weekly Plan',
-    price: '₦5,000',
+    price: '₦3,000',
     description: 'Full access for 7 days',
     features: [
       { text: 'All Free Plan features', included: true },
@@ -117,7 +117,7 @@ const plans: Plan[] = [
   },
   {
     title: 'Monthly Plan',
-    price: '₦18,000',
+    price: '₦12,000',
     description: 'Full access for 30 days',
     features: [
       { text: 'All Weekly Plan features', included: true },
@@ -128,7 +128,7 @@ const plans: Plan[] = [
   },
   {
     title: 'Annual Plan',
-    price: '₦180,000',
+    price: '₦144,000',
     description: 'Full access for 365 days',
     features: [
       { text: 'All Monthly Plan features', included: true },

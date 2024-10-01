@@ -1,10 +1,10 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { useSnackbar } from 'notistack';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import styled from 'styled-components';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useSnackbar } from "notistack";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import styled from "styled-components";
 import {
   Button,
   TextField,
@@ -14,20 +14,21 @@ import {
   Divider,
   Box,
   useMediaQuery,
-  ThemeProvider,
-useTheme
-} from '@mui/material';
-import { Visibility, VisibilityOff, Google as GoogleIcon } from '@mui/icons-material';
+  useTheme,
+} from "@mui/material";
+import {
+  Visibility,
+  VisibilityOff,
+  Google as GoogleIcon,
+} from "@mui/icons-material";
 
-import { clearErrors, registerUser } from '../../actions/user';
-import { isOnline } from '../../utils';
-import getToken from '../../utils/getToken';
-import { RootState } from '../../store';
-import MetaData from '../../MetaData';
-import RDotLoader from '../../components/loaders/RDotLoader';
+import { clearErrors, registerUser } from "../../actions/user";
+import { isOnline } from "../../utils";
+import getToken from "../../utils/getToken";
+import { RootState } from "../../store";
+import MetaData from "../../MetaData";
+import RDotLoader from "../../components/loaders/RDotLoader";
 import fcabal from "../../assets/logos/fcabal.png";
-
-
 
 const FormContainer = styled.div`
   display: flex;
@@ -59,19 +60,19 @@ const Logo = styled.img`
 
 const validationSchema = Yup.object({
   username: Yup.string()
-    .required('Username is required')
-    .min(3, 'Username should be at least 3 characters')
-    .max(15, 'Username should not exceed 15 characters'),
+    .required("Username is required")
+    .min(3, "Username should be at least 3 characters")
+    .max(15, "Username should not exceed 15 characters"),
   phonenumber: Yup.string()
-    .required('Phone number is required')
-    .matches(/^\d{11}$/, 'Please enter a valid 11-digit phone number'),
+    .required("Phone number is required")
+    .matches(/^\d{11}$/, "Please enter a valid 11-digit phone number"),
   email: Yup.string()
-    .required('Email is required')
-    .email('Invalid email address'),
+    .required("Email is required")
+    .email("Invalid email address"),
   password: Yup.string()
-    .required('Password is required')
-    .min(6, 'Password should be at least 6 characters')
-    .max(30, 'Password should not exceed 30 characters'),
+    .required("Password is required")
+    .min(6, "Password should be at least 6 characters")
+    .max(30, "Password should not exceed 30 characters"),
 });
 
 const Signup: React.FC = () => {
@@ -79,15 +80,15 @@ const Signup: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { loading, isAuthenticated, error } = useSelector(
     (state: RootState) => state.user
   );
 
-  const [showPassword, setShowPassword] = React.useState(false);
-  const [authToken, setAuthToken] = React.useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [authToken, setAuthToken] = useState("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     const setToken = async () => {
       const token = await getToken();
       setAuthToken(token);
@@ -97,45 +98,48 @@ const Signup: React.FC = () => {
 
   const formik = useFormik({
     initialValues: {
-      username: '',
-      phonenumber: '',
-      email: '',
-      password: '',
+      username: "",
+      phonenumber: "",
+      email: "",
+      password: "",
     },
     validationSchema,
     onSubmit: (values) => {
       if (isOnline()) {
         dispatch<any>(registerUser(values));
       } else {
-        enqueueSnackbar('No internet connection', { variant: 'error' });
+        enqueueSnackbar("No internet connection", { variant: "error" });
       }
     },
   });
 
   const handleGoogleSignup = () => {
-
-    console.log('Sign up with Google');
+    console.log("Sign up with Google");
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (error) {
-      enqueueSnackbar(error, { variant: 'error' });
+      enqueueSnackbar(error, { variant: "error" });
       dispatch<any>(clearErrors());
     }
     if (isAuthenticated && authToken) {
-      enqueueSnackbar('Signed up successfully!', { variant: 'success' });
-      navigate('/personalize');
+      enqueueSnackbar("Signed up successfully!", { variant: "success" });
+      navigate("/personalize");
     }
   }, [dispatch, error, isAuthenticated, authToken, navigate, enqueueSnackbar]);
 
   return (
-<>
+    <>
       <MetaData title="Signup" />
       <FormContainer>
-         <Box component="form" onSubmit={formik.handleSubmit} sx={{ width: isMobile ? '90%' : '30%' }}>
-        <div className="logo_container">
-          <img className="l-logo" src={fcabal} alt="frontierscabal" />
-        </div>
+        <Box
+          component="form"
+          onSubmit={formik.handleSubmit}
+          sx={{ width: isMobile ? "90%" : "30%" }}
+        >
+          <div className="logo_container">
+            <img className="l-logo" src={fcabal} alt="frontierscabal" />
+          </div>
           <Typography variant="h4" fontWeight={800} gutterBottom>
             Sign up
           </Typography>
@@ -159,7 +163,9 @@ const Signup: React.FC = () => {
             label="Phone Number"
             value={formik.values.phonenumber}
             onChange={formik.handleChange}
-            error={formik.touched.phonenumber && Boolean(formik.errors.phonenumber)}
+            error={
+              formik.touched.phonenumber && Boolean(formik.errors.phonenumber)
+            }
             helperText={formik.touched.phonenumber && formik.errors.phonenumber}
             disabled={loading}
             margin="normal"
@@ -181,7 +187,7 @@ const Signup: React.FC = () => {
             id="password"
             name="password"
             label="Password"
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             value={formik.values.password}
             onChange={formik.handleChange}
             error={formik.touched.password && Boolean(formik.errors.password)}
@@ -209,11 +215,14 @@ const Signup: React.FC = () => {
             type="submit"
             disabled={loading}
           >
-            {loading ? <RDotLoader /> : 'Sign Up'}
+            {loading ? <RDotLoader /> : "Sign Up"}
           </StyledButton>
           <Box mt={2}>
             <Typography variant="body2" align="center">
-              Already have an account? <a style={{ color: "crimson", fontWeight: 600 }} href="/#/login">Log in</a>
+              Already have an account?{" "}
+              <a style={{ color: "crimson", fontWeight: 600 }} href="/#/login">
+                Log in
+              </a>
             </Typography>
           </Box>
           <StyledDivider>OR</StyledDivider>
@@ -227,18 +236,26 @@ const Signup: React.FC = () => {
           </StyledButton>
           <Box mt={2}>
             <Typography variant="body2" align="center">
-              By clicking sign up, you agree to our{' '}
-              <a style={{ color: "crimson", fontWeight: 600 }} href="/terms-of-service">Terms of Service</a> and{' '}
-              <a style={{ color: "crimson", fontWeight: 600 }} href="/privacy-policy">Privacy Policy</a>.
+              By clicking sign up, you agree to our{" "}
+              <a
+                style={{ color: "crimson", fontWeight: 600 }}
+                href="/terms-of-service"
+              >
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a
+                style={{ color: "crimson", fontWeight: 600 }}
+                href="/privacy-policy"
+              >
+                Privacy Policy
+              </a>
+              .
             </Typography>
           </Box>
-         
-   
         </Box>
       </FormContainer>
-  
-      </>
-
+    </>
   );
 };
 

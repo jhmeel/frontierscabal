@@ -5,14 +5,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Container, Grid, Typography, Button, Card, CardContent, 
   CardMedia, Chip, TextField, Drawer, IconButton, useMediaQuery,
-  useTheme, AppBar, Toolbar, InputAdornment
+  useTheme, AppBar, Toolbar, InputAdornment,
+  Box
 } from '@mui/material';
 import { 
   FilterList as FilterListIcon,
   ChevronLeft as ChevronLeftIcon,
   ChevronRight as ChevronRightIcon,
   Search as SearchIcon,
-  Create as CreateIcon
+  Create as CreateIcon,
+  ArrowForward
 } from '@mui/icons-material';
 import { styled } from '@mui/system';
 import { 
@@ -27,45 +29,42 @@ import axiosInstance from '../../utils/axiosInstance';
 import VerticalArticleItem from '../../components/verticalArticleItem/VerticalArticleItem';
 import Footer from '../../components/footer/Footer';
 
-const StyledBanner = styled('div')(({ theme }) => ({
-  height: '50vh',
-  position: 'relative',
+
+const Section = styled('section')(({ theme }) => ({
   marginBottom: theme.spacing(4),
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
+}));
+
+
+const StyledBanner = styled(Card)(({ theme }) => ({
+  position: 'relative',
+  height: 400,
   display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  color: 'white',
-  '&::before': {
+  flexDirection: 'column',
+  justifyContent: 'flex-end',
+  borderRadius: 4,
+  overflow: 'hidden',
+  '&::after': {
     content: '""',
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%)',
   },
 }));
 
-const StyledCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  display: 'flex',
-  flexDirection: 'column',
-  transition: 'transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out',
-  '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow: theme.shadows[8],
-  },
-}));
-
-const StyledCardMedia = styled(CardMedia)(({ theme }) => ({
-  paddingTop: '56.25%', // 16:9 aspect ratio
-}));
-
-const StyledCardContent = styled(CardContent)( {
-  flexGrow: 1,
+const FeaturedArticleContent = styled(CardContent)({
+  position: 'relative',
+  zIndex: 1,
+  color: 'white',
 });
+
+const CategoryChip = styled(Chip)(({ theme }) => ({
+  marginBottom: theme.spacing(1),
+  fontSize:'0.5rem',
+  fontWeight: 600,
+}));
 
 const BlogPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -188,50 +187,42 @@ const BlogPage: React.FC = () => {
                 </InputAdornment>
               ),
             }}
-            style={{ marginRight: theme.spacing(2) }}
+         
           />
           <IconButton color="primary" onClick={() => navigate('/blog/article/new')}>
             <CreateIcon />
           </IconButton>
         </Toolbar>
       </AppBar>
+      
 
       <Container maxWidth="lg" style={{ marginTop: theme.spacing(4) }}>
-        <StyledBanner style={{ backgroundImage: `url(${trendingArticles[currentBannerIndex]?.Article.image?.url})` }}>
-          <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', padding: theme.spacing(2) }}>
-            <Typography variant="h2" component="h1" gutterBottom>
+        
+      <Section>
+        <StyledBanner>
+          <CardMedia
+            component="img"
+            height="400"
+            image={trendingArticles[currentBannerIndex]?.Article.image?.url}
+            alt={trendingArticles[currentBannerIndex]?.Article.title}
+          />
+          <FeaturedArticleContent>
+            <CategoryChip label={trendingArticles[currentBannerIndex]?.Article.category} color="primary" />
+            <Typography variant="h4" gutterBottom>
               {trendingArticles[currentBannerIndex]?.Article.title}
             </Typography>
-            <Typography variant="subtitle1" gutterBottom>
-              {trendingArticles[currentBannerIndex]?.Article.description?.slice(0, 100)}...
-            </Typography>
-            <Button 
-              variant="contained" 
-              color="primary" 
-              onClick={() => navigate(`/blog/article/${trendingArticles[currentBannerIndex]?.Article.slug}`)}
-              style={{ marginTop: theme.spacing(2) }}
-            >
-              Read More
-            </Button>
-          </div>
-          {!isMobile && (
-            <>
-              <IconButton 
-                style={{ position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)' }} 
-                onClick={() => setCurrentBannerIndex(prev => prev === 0 ? trendingArticles.length - 1 : prev - 1)}
-              >
-                <ChevronLeftIcon style={{ fontSize: 40, color: 'white' }} />
-              </IconButton>
-              <IconButton 
-                style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)' }} 
-                onClick={() => setCurrentBannerIndex(prev => (prev + 1) % trendingArticles.length)}
-              >
-                <ChevronRightIcon style={{ fontSize: 40, color: 'white' }} />
-              </IconButton>
-            </>
-          )}
+           
+            <Box display="flex" justifyContent="space-between" alignItems="center">
+              <Typography variant="caption">
+                {trendingArticles[currentBannerIndex]?.Article.readDuration}
+              </Typography>
+              <Button  onClick={() => navigate(`/blog/article/${trendingArticles[currentBannerIndex]?.Article.slug}`)}  variant="contained" style={{fontSize:"0.6rem"}} color="primary" endIcon={<ArrowForward/>}>
+                Read More
+              </Button>
+            </Box>
+          </FeaturedArticleContent>
         </StyledBanner>
-
+      </Section>
         <Grid container spacing={4} justifyContent="center" >
           {articles?.map((art) => (
             <Grid item key={art._id}  justifyContent="center">
@@ -268,7 +259,7 @@ const BlogPage: React.FC = () => {
               onClick={() => handleCategorySelect(category)}
               style={{ justifyContent: 'flex-start', marginBottom: theme.spacing(1) }}
               variant={selectedCategory === category ? 'contained' : 'text'}
-              color="primary"
+            color="primary"
             >
               {category}
             </Button>

@@ -3,8 +3,8 @@ import NotificationItem from "../../components/notificationItem/NotificationItem
 import MetaData from "../../MetaData";
 import Footer from "../../components/footer/Footer";
 import { NotificationManager } from "../../lib/notificationManager/NotificationManager";
-import styled from "styled-components";
-
+import { Box, Typography, Card, CardContent, Grid } from "@mui/material";
+import { styled } from "@mui/system";
 
 const NotificationPage: React.FC = (): React.ReactElement => {
   const [timeframe, setTimeFrame] = useState("Today");
@@ -27,6 +27,7 @@ const NotificationPage: React.FC = (): React.ReactElement => {
   const toggleTimeFrameMenu = () => {
     setIsMenuOpen(!menuOpen);
   };
+
   const handleTimeframeSelection = (tf: string) => {
     setTimeFrame(tf);
     toggleTimeFrameMenu();
@@ -40,82 +41,94 @@ const NotificationPage: React.FC = (): React.ReactElement => {
   return (
     <>
       <MetaData title="Notifications" />
-    
-        <NotificationRenderer>
-          <div className="notification-header">
-            <span>Notifications</span>
-          </div>
+      <NotificationRenderer>
+        <Box className="notification-header">
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>
+            Notifications
+          </Typography>
+        </Box>
 
-          <div className="notifications-holder">
-            {notifications?.length > 0 ? (
-              notifications
-                .sort((a, b) => b?.date - a?.date)
-                .map((not: any, i: number) => (
-                  <NotificationItem
-                    key={i}
-                    id={not?._id}
-                    type={not?.type}
-                    message={not?.message}
-                    slug={not?.slug}
-                    date={not?.date}
-                    avatar={not?.image || not?.avatar}
-                    entityname={
-                      not?.articleFrom || not?.eventFrom || not?.username
-                    }
-                  />
-                ))
-            ) : (
-              <span
-                style={{
-                  fontWeight: 600,
-                  color: "gray",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                }}
-              >
-                <p>No notifications</p>
-              </span>
-            )}
-          </div>
-        </NotificationRenderer>
-        <Footer />
-  
+        <Box className="notifications-holder">
+          {notifications?.length > 0 ? (
+            notifications
+              .sort((a, b) => b?.date - a?.date)
+              .map((not: any, i: number) => (
+                <Card sx={{ margin: 2, width: "100%", maxWidth: "600px" }} key={i}>
+                  <CardContent>
+                    <NotificationItem
+                      id={not?._id}
+                      type={not?.type}
+                      message={not?.message}
+                      slug={not?.slug}
+                      date={not?.date}
+                      avatar={not?.image || not?.avatar}
+                      entityname={
+                        not?.articleFrom || not?.eventFrom || not?.username
+                      }
+                    />
+                  </CardContent>
+                </Card>
+              ))
+          ) : (
+            <Typography
+              sx={{
+                fontWeight: 600,
+                color: "gray",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: 4,
+              }}
+            >
+              No notifications yet
+            </Typography>
+          )}
+        </Box>
+      </NotificationRenderer>
+      <Footer />
     </>
   );
 };
 
 export default NotificationPage;
 
-const NotificationRenderer = styled.div`
-  max-width: 600px;
+const NotificationRenderer = styled(Box)`
+  max-width: 1000px;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   margin: 0 auto;
+  padding: 16px;
 
   .notification-header {
-    margin-top: 10px;
+    margin-top: 5px;
     width: 100%;
     height: fit-content;
-    padding-left: 10px;
-    border-bottom: 0.5px solid #ededed;
+    padding-left: 16px;
+    border-bottom: 1px solid #ededed;
     font-weight: 600;
     position: relative;
-  }
-  .notification-header span {
-    font-size: medium;
-    font-weight: 600;
-    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    @media (max-width: 600px) {
+      padding-left: 8px;
+      font-size: 18px;
+    }
   }
 
   .notifications-holder {
-    padding: 4px 8px;
+    padding: 16px;
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
-    margin-top: 10px;
+    margin-top: 20px;
+
+    @media (max-width: 600px) {
+      padding: 8px;
+    }
   }
 `;

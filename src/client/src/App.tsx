@@ -149,7 +149,7 @@ function App() {
     });
   }, [pathname]);
 
-  const regex = /^\/(biller|chat|login|signup|password\/forgot)(\/.*)?$/;
+  const regex = /^\/(biller|discuss-room|chat|login|signup|password\/forgot)(\/.*)?$/;
   return (
     <>
       <ThemeProvider theme={theme}>
@@ -237,7 +237,7 @@ function App() {
               element={<DiscussionList currentUser={user} />}
             />
             <Route
-              path="/discuss/:discussionId"
+              path="/discuss-room/:discussionId"
               element={<DiscussionRoom currentUser={user} />}
             />
 

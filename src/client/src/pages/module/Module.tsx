@@ -86,90 +86,86 @@ const Module: React.FC = (): React.ReactElement => {
   };
 
   return (
-    <>
-      <ModuleContainer>
-        <Header>
-          <TabButton
-            onClick={() => changeTab("MODULE")}
-            active={activeTab === "MODULE"}
-          >
-            <IconBookshelf />
-            Module
-          </TabButton>
-          <TabButton
-            onClick={() => changeTab("PLAYLIST")}
-            active={activeTab === "PLAYLIST"}
-          >
-            <IconBxsCommentDetail />
-            Playlist
-          </TabButton>
-        </Header>
+        <>
+    <ModuleContainer>
+      <Header>
+        <TabButton
+          onClick={() => changeTab("MODULE")}
+          active={activeTab === "MODULE"}
+        >
+          <IconBookshelf />
+          Module
+        </TabButton>
+        <TabButton
+          onClick={() => changeTab("PLAYLIST")}
+          active={activeTab === "PLAYLIST"}
+        >
+          <IconBxsCommentDetail />
+          Playlist
+        </TabButton>
+      </Header>
 
-        {activeTab === "MODULE" && moduleDetails && (
-          <ModuleDetails>
-            <Typography variant="h4">{moduleDetails?.title}</Typography>
-            <Typography variant="body1">
-              {moduleDetails?.description}
+      {activeTab === "MODULE" && moduleDetails && (
+        <ModuleDetails>
+          <Typography variant="h4">{moduleDetails?.title}</Typography>
+          <Typography variant="body1">{moduleDetails?.description}</Typography>
+          <img
+            loading="lazy"
+            src={moduleDetails?.avatar.secureUrl}
+            alt="Module Banner"
+          />
+        </ModuleDetails>
+      )}
+
+      {activeTab === "MODULE" && moduleLessons && (
+        <LessonsContainer>
+          <Box>
+            <Typography variant="h6">Module</Typography>
+            <Typography>
+              {moduleDetails?.lessonCount > 1
+                ? `${moduleDetails?.lessonCount} Lessons`
+                : `${moduleDetails?.lessonCount} Lesson`}
             </Typography>
-            <img
-              loading="lazy"
-              src={moduleDetails?.avatar.secureUrl}
-              alt="Module Banner"
+          </Box>
+          {moduleLessons.map((les, i) => (
+            <LessonCardItem
+              key={i}
+              lessonId={les._id}
+              moduleId={moduleDetails._id}
+              title={les?.lessonTitle}
+              duration={les?.duration}
+              isWatched={les?.isWatched}
+              progress={les?.progress}
+              lessonIndex={les?.lessonIndex}
+              handlePlayLesson={onPlay}
             />
-          </ModuleDetails>
-        )}
+          ))}
+          <Button
+            startIcon={<IconAddOutline />}
+            onClick={newLesson}
+            variant="contained"
+            color="primary"
+          >
+            Add Lesson
+          </Button>
+        </LessonsContainer>
+      )}
 
-        {activeTab === "MODULE" && moduleLessons && (
-          <LessonsContainer>
-            <Box>
-              <Typography variant="h6">Module</Typography>
-              <Typography>
-                {moduleDetails?.lessonCount > 1
-                  ? `${moduleDetails?.lessonCount} Lessons`
-                  : `${moduleDetails?.lessonCount} Lesson`}
-              </Typography>
-            </Box>
-            {moduleLessons.map((les, i) => (
-              <LessonCardItem
-                key={i}
-                lessonId={les._id}
-                moduleId={moduleDetails._id}
-                title={les?.lessonTitle}
-                duration={les?.duration}
-                isWatched={les?.isWatched}
-                progress={les?.progress}
-                lessonIndex={les?.lessonIndex}
-                handlePlayLesson={onPlay}
-              />
-            ))}
-            <Button
-              startIcon={<IconAddOutline />}
-              onClick={newLesson}
-              variant="contained"
-              color="primary"
-            >
-              Add Lesson
-            </Button>
-          </LessonsContainer>
-        )}
+      {activeTab === "PLAYLIST" && (
+        <PlaylistContainer>
+          <Button
+            startIcon={<IconChevronLeft />}
+            onClick={() => changeTab("MODULE")}
+          >
+            Back
+          </Button>
+          <Player lessonsMedia={moduleLessons} moduleTitle={moduleDetails?.title} />
+        </PlaylistContainer>
+      )}
+    </ModuleContainer>
 
-        {activeTab === "PLAYLIST" && (
-          <PlaylistContainer>
-            <Button
-              startIcon={<IconChevronLeft />}
-              onClick={() => changeTab("MODULE")}
-            >
-              Back
-            </Button>
-            <Player
-              lessonsMedia={moduleLessons}
-              moduleTitle={moduleDetails?.title}
-            />
-          </PlaylistContainer>
-        )}
-      </ModuleContainer>
 
-      <Footer />
+    <Footer/>
     </>
   );
 };
@@ -204,16 +200,13 @@ const LessonCardItem = ({
 
   return (
     <LessonCard>
-      <Box
-        onClick={handlePlayLesson}
-        sx={{ display: "flex", alignItems: "center" }}
-      >
+      <Box onClick={handlePlayLesson} sx={{ display: 'flex', alignItems: 'center' }}>
         <IconPlayCircle />
         <Typography variant="subtitle1">Lesson {lessonIndex}</Typography>
       </Box>
       <Box>
         <Typography>{title}</Typography>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           {isWatched ? (
             <CircularProgressbar value={progress} text={`${progress}%`} />
           ) : (
@@ -237,47 +230,49 @@ const LessonCardItem = ({
   );
 };
 
+
 const ModuleContainer = styled(Box)({
-  display: "flex",
-  flexDirection: "column",
-  padding: "16px",
+  display: 'flex',
+  flexDirection: 'column',
+  padding: '16px',
 });
 
 const Header = styled(Box)({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: "16px",
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '16px',
 });
 
 const TabButton = styled(Button)(({ active }: { active: boolean }) => ({
-  backgroundColor: active ? "#176984" : "#f0f0f0",
-  color: active ? "#fff" : "#000",
+  backgroundColor: active ? '#176984' : '#f0f0f0',
+  color: active ? '#fff' : '#000',
 }));
 
 const ModuleDetails = styled(Box)({
-  display: "flex",
-  flexDirection: "column",
-  marginBottom: "16px",
+  display: 'flex',
+  flexDirection: 'column',
+  marginBottom: '16px',
 });
 
 const LessonsContainer = styled(Box)({
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
 });
 
 const PlaylistContainer = styled(Box)({
-  display: "flex",
-  flexDirection: "column",
-  gap: "16px",
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
 });
 
 const LessonCard = styled(Box)({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  padding: "8px",
-  border: "1px solid #ddd",
-  borderRadius: "4px",
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: '8px',
+  border: '1px solid #ddd',
+  borderRadius: '4px',
 });
+

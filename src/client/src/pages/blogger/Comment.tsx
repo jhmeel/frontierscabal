@@ -56,8 +56,10 @@ const CommentHeader = styled(Box)(({ theme }) => ({
 
 const CommentList = styled(List)(({ theme }) => ({
   flexGrow: 1,
+  width:'100%',
   overflowY: 'auto',
   padding: theme.spacing(2),
+
 }));
 
 const CommentInputContainer = styled(Box)(({ theme }) => ({

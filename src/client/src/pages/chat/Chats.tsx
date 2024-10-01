@@ -228,9 +228,7 @@ const Chats = () => {
     setSearchTerm(event.target.value);
   };
 
-  const goBack = () => {
-    navigate(-1);
-  };
+
 
   const filteredChats = chats.filter((chat) => {
     const otherParticipantId = chat.participants.find(id => id !== user?._id) || '';

@@ -30,15 +30,16 @@ export interface Discussion {
 }
 
 export interface DiscussionMessage {
-  id: string;
+  id?: string;
   discussionId: string;
+  senderName: string;
   senderId: string;
   content: string;
   fileUrl?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt?: any;
+  updatedAt?: any;
   replyTo?: string;
-  reactions: { [key: string]: string[] };
+  reactions?: { [key: string]: string[] };
 }
 
 export type ARTICLE = {

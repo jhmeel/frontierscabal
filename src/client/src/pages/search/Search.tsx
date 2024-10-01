@@ -25,14 +25,16 @@ import UserItem from '../../components/userItem/UserItem';
 import HorizontalArticleItem from '../../components/horizontalArticleItem/HorizontalArticleItem';
 import StudyMaterialItem from '../../components/studyMaterialItem/StudyMaterialItem';
 import Footer from '../../components/footer/Footer';
+import { useParams } from 'react-router-dom';
 
 const SearchContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(8),
-  marginBottom: theme.spacing(8),
+  marginBottom: theme.spacing(2),
+  
 }));
 
 const SearchBar = styled(TextField)(({ theme }) => ({
-  marginBottom: theme.spacing(4),
+  marginBottom: theme.spacing(2),
   '& .MuiOutlinedInput-root': {
     borderRadius: '30px',
     '&.Mui-focused fieldset': {
@@ -44,16 +46,16 @@ const SearchBar = styled(TextField)(({ theme }) => ({
 
 const HistoryPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
-  marginTop: theme.spacing(4),
+
   borderRadius: '16px',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+  border:'1px solid #ededed'
 }));
 
 const TrendingPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
-  marginTop: theme.spacing(4),
+
   borderRadius: '16px',
-  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+  border:'1px solid #ededed',
   backgroundColor: theme.palette.primary.light,
 }));
 
@@ -78,10 +80,13 @@ const Search = () => {
   ]);
   const [loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<any>(null);
+  const { query } = useParams();
 
   useEffect(() => {
     const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
     setSearchHistory(history);
+
+    setSearchTerm(query)
   }, []);
 
   const handleSearch = async (event) => {
@@ -111,7 +116,7 @@ const Search = () => {
   return (
     <>
       <SearchContainer maxWidth="lg">
-        <Typography variant="h3" gutterBottom align="center" sx={{ fontWeight: 700, mb: 4 }}>
+        <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 700, mb: 4 }}>
           Explore Frontierscabal
         </Typography>
 
@@ -119,6 +124,7 @@ const Search = () => {
           <SearchBar
             fullWidth
             variant="outlined"
+            size='small'
             placeholder="What are you curious about today?"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

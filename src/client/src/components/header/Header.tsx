@@ -126,7 +126,7 @@ const Header: React.FC = () => {
           </IconButton>
         </div>
 
-        <Drawer  anchor="right" open={isDrawerOpen} onClose={toggleDrawer}>
+        <Drawer anchor="right" open={isDrawerOpen} onClose={toggleDrawer}>
           {!user?.username && (
             <AuthButtons>
               <Link to="/login">

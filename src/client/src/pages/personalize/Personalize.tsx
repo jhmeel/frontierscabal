@@ -45,7 +45,7 @@ const Personalize = () => {
      `FC:${user?.username}:INTERESTS`,
       JSON.stringify(categories)
     );
-    navigate("/");
+    navigate("/biller");
   };
 
   return (

@@ -62,7 +62,8 @@ const UserItem: React.FC<UserItemProps> = ({ username, bio, img }) => {
             <ViewButton
               variant="contained"
               size="small"
-              color="success"
+              style={{color:"#fff"}}
+              color="primary"
               onClick={() => navigate(`/profile/${username}`)}
             >
               View Profile

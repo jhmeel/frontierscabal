@@ -1,0 +1,265 @@
+import React, { useState, useEffect } from "react";
+import {
+  Button,
+  Typography,
+  Box,
+  Avatar,
+  CircularProgress,
+  Menu,
+  MenuItem,
+  Grid,
+  IconButton,
+} from "@mui/material";
+import { styled } from "@mui/system";
+import {
+  IconAddOutline,
+  IconBookshelf,
+  IconBxsCommentDetail,
+  IconChevronLeft,
+  IconPlayCircle,
+  IconDotsVertical,
+  IconLock,
+} from "../../assets/icons";
+import { useNavigate, useParams } from "react-router-dom";
+import { CircularProgressbar } from "react-circular-progressbar";
+import "react-circular-progressbar/dist/styles.css";
+import { enqueueSnackbar } from "notistack";
+import Player from "../../lib/player";
+import axiosInstance from "../../utils/axiosInstance";
+import getToken from "../../utils/getToken";
+import Footer from "../../components/footer/Footer";
+import { IModule } from "../../types";
+
+const Module: React.FC = (): React.ReactElement => {
+  const [activeTab, setActiveTab] = useState<string>("MODULE");
+  const [moduleDetails, setModuleDetails] = useState<IModule | null>(null);
+  const [moduleLessons, setModuleLesson] = useState<Array<any> | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const params = useParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const getModule = async () => {
+      setLoading(true);
+      const authToken = await getToken();
+      try {
+        const { data } = await axiosInstance(authToken).get(
+          `/api/v1/module/${params.moduleId}`
+        );
+        const lessonsWithDurations = await Promise.all(
+          data?.lessons.map(async (lesson: any) => {
+            const duration = await getVideoDuration(lesson.lessonUrl);
+            return {
+              ...lesson,
+              lessonId: lesson._id,
+              lessonUrl: lesson?.lessonMaterial.secureUrl,
+              duration,
+              isWatched: false,
+              progress: 0,
+            };
+          })
+        );
+        setModuleDetails(data?.module);
+        setModuleLesson(lessonsWithDurations);
+      } catch (err: any) {
+        enqueueSnackbar(err.message, { variant: "error" });
+      } finally {
+        setLoading(false);
+      }
+    };
+    getModule();
+  }, [params.moduleId]);
+
+  const changeTab = (tab: "MODULE" | "PLAYLIST") => setActiveTab(tab);
+
+  const newLesson = () => navigate(`/lesson/new/${params.moduleId}`);
+
+  return (
+    <>
+      <ModuleContainer>
+        <Header>
+          <TabButton onClick={() => changeTab("MODULE")} active={activeTab === "MODULE"}>
+            <IconBookshelf />
+            Module
+          </TabButton>
+          <TabButton onClick={() => changeTab("PLAYLIST")} active={activeTab === "PLAYLIST"}>
+            <IconBxsCommentDetail />
+            Playlist
+          </TabButton>
+        </Header>
+
+        {loading ? (
+          <CircularProgress sx={{ alignSelf: 'center' }} />
+        ) : (
+          <>
+            {activeTab === "MODULE" && moduleDetails && (
+              <ModuleDetails>
+                <Typography variant="h4">{moduleDetails.title}</Typography>
+                <Typography variant="body1" color="textSecondary">
+                  {moduleDetails.description}
+                </Typography>
+                <Avatar
+                  src={moduleDetails.avatar.secureUrl}
+                  alt="Module Banner"
+                  sx={{ width: 200, height: 200, margin: "16px 0" }}
+                />
+              </ModuleDetails>
+            )}
+
+            {activeTab === "MODULE" && moduleLessons && (
+              <LessonsContainer container spacing={2}>
+                <Grid item xs={12}>
+                  <Typography variant="h6">Lessons</Typography>
+                </Grid>
+                {moduleLessons.map((lesson, index) => (
+                  <Grid item xs={12} sm={6} md={4} key={lesson.lessonId}>
+                    <LessonCardItem
+                      lessonId={lesson.lessonId}
+                      moduleId={moduleDetails._id}
+                      title={lesson.lessonTitle}
+                      duration={lesson.duration}
+                      isWatched={lesson.isWatched}
+                      progress={lesson.progress}
+                      lessonIndex={index + 1}
+                      handlePlayLesson={() => setActiveTab("PLAYLIST")}
+                    />
+                  </Grid>
+                ))}
+                <Button
+                  startIcon={<IconAddOutline />}
+                  onClick={newLesson}
+                  variant="contained"
+                  color="primary"
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Add Lesson
+                </Button>
+              </LessonsContainer>
+            )}
+
+            {activeTab === "PLAYLIST" && (
+              <PlaylistContainer>
+                <Button startIcon={<IconChevronLeft />} onClick={() => changeTab("MODULE")}>
+                  Back
+                </Button>
+                <Player lessonsMedia={moduleLessons} moduleTitle={moduleDetails?.title} />
+              </PlaylistContainer>
+            )}
+          </>
+        )}
+      </ModuleContainer>
+      <Footer />
+    </>
+  );
+};
+
+const LessonCardItem = ({
+  lessonId,
+  moduleId,
+  title,
+  lessonIndex,
+  isWatched,
+  progress,
+  duration,
+  handlePlayLesson,
+}: {
+  moduleId: string;
+  lessonId: string;
+  title: string;
+  lessonIndex: number;
+  isWatched: boolean;
+  progress: number;
+  duration: number;
+  handlePlayLesson: () => void;
+}) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => setAnchorEl(null);
+
+  return (
+    <LessonCard onClick={handlePlayLesson}>
+      <Box sx={{ display: "flex", alignItems: "center" }}>
+        <IconPlayCircle />
+        <Typography variant="subtitle1">Lesson {lessonIndex}</Typography>
+      </Box>
+      <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+        <Typography variant="body1">{title}</Typography>
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          {isWatched ? (
+            <CircularProgressbar value={progress} text={`${progress}%`} />
+          ) : (
+            <IconLock />
+          )}
+          <Typography sx={{ marginLeft: 1 }}>{duration} mins</Typography>
+        </Box>
+      </Box>
+      <IconButton onClick={handleClick}>
+        <IconDotsVertical />
+      </IconButton>
+      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        <MenuItem onClick={handlePlayLesson}>View Lesson</MenuItem>
+        <MenuItem>Edit Lesson</MenuItem>
+        <MenuItem>Reset Progress</MenuItem>
+        <MenuItem>Download Material</MenuItem>
+        <MenuItem>Share Lesson</MenuItem>
+        <MenuItem>Delete Lesson</MenuItem>
+      </Menu>
+    </LessonCard>
+  );
+};
+
+// Styled Components
+const ModuleContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: theme.spacing(2),
+}));
+
+const Header = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: theme.spacing(2),
+}));
+
+const TabButton = styled(Button)(({ theme, active }: { active: boolean }) => ({
+  backgroundColor: active ? theme.palette.primary.main : theme.palette.grey[200],
+  color: active ? theme.palette.common.white : theme.palette.text.primary,
+  '&:hover': {
+    backgroundColor: active
+      ? theme.palette.primary.dark
+      : theme.palette.grey[300],
+  },
+}));
+
+const ModuleDetails = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  marginBottom: theme.spacing(2),
+}));
+
+const LessonsContainer = styled(Grid)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+}));
+
+const PlaylistContainer = styled(Box)(({ theme }) => ({
+  marginTop: theme.spacing(2),
+}));
+
+const LessonCard = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: theme.spacing(1),
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: theme.shape.borderRadius,
+  cursor: 'pointer',
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+  },
+}));

@@ -1,25 +1,23 @@
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import MetaData from "../../MetaData";
-import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { useDispatch, useSelector } from "react-redux";
-import getToken from "../../utils/getToken";
 import { updateProfile, clearErrors } from "../../actions/user";
+import getToken from "../../utils/getToken";
 import { isOnline } from "../../utils";
 import RDotLoader from "../../components/loaders/RDotLoader";
 import { UPDATE_PROFILE_RESET } from "../../constants/user";
-import styled from "styled-components";
 import { RootState } from "../../store";
+import { Button, TextField, Typography, Avatar, Box, Paper, Grid } from "@mui/material";
+import styled from "styled-components";
 
 const EditProfile = () => {
   const dispatch = useDispatch();
   const { enqueueSnackbar } = useSnackbar();
   const navigate = useNavigate();
-  const { user } = useSelector((state:RootState) => state.user);
-  const { error, isUpdated, loading } = useSelector(
-    (state:RootState) => state.profile
-  );
+  const { user } = useSelector((state: RootState) => state.user);
+  const { error, isUpdated, loading } = useSelector((state: RootState) => state.profile);
 
   const [updatedInfo, setUpdatedInfo] = useState({
     username: "",
@@ -31,42 +29,33 @@ const EditProfile = () => {
 
   useEffect(() => {
     if (user) {
-      setUpdatedInfo((prev) => ({
-        ...prev,
+      setUpdatedInfo({
         username: user.username,
         phonenumber: user.phonenumber,
         email: user.email,
         school: user.school,
         bio: user.bio,
-      }));
+      });
     }
-  }, []);
+  }, [user]);
 
-  const [avatarPreview, setAvatarPreview] = useState<string>('');
-
-  const { username, phonenumber, email, school, bio } = updatedInfo;
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [avatar, setAvatar] = useState("");
 
-  const handleUpdate = async (e:ChangeEvent<HTMLFormElement>) => {
+  const handleUpdate = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Validate email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (updatedInfo.bio.split(" ").length > 20) {
-      enqueueSnackbar("Your bio should not be more than 20 words", {
-        variant: "error",
-      });
+      enqueueSnackbar("Your bio should not be more than 20 words", { variant: "error" });
       return;
     } else if (!emailRegex.test(updatedInfo.email)) {
-      enqueueSnackbar("Invalid email address", {
-        variant: "error",
-      });
+      enqueueSnackbar("Invalid email address", { variant: "error" });
       return;
     }
 
-    const authToken: string | undefined = await getToken();
+    const authToken = await getToken();
     const formData = new FormData();
-
     formData.append("username", updatedInfo.username);
     formData.append("phonenumber", updatedInfo.phonenumber);
     formData.append("email", updatedInfo.email);
@@ -74,24 +63,24 @@ const EditProfile = () => {
     formData.append("school", updatedInfo.school);
     formData.append("avatar", avatar);
 
-    isOnline() && dispatch<any>(updateProfile(authToken, formData));
+    isOnline() && dispatch(updateProfile(authToken, formData));
   };
 
-  const handleDataChange = (e:ChangeEvent<HTMLInputElement|HTMLTextAreaElement>) => {
+  const handleDataChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (e.target.name === "avatar") {
       const reader = new FileReader();
 
       reader.onload = () => {
         if (reader.readyState === 2) {
-          setAvatarPreview(reader.result as string) ;
+          setAvatarPreview(reader.result as string);
           setAvatar(reader.result as string);
         }
       };
 
       e.target?.files && reader.readAsDataURL(e.target.files[0]);
+    } else {
+      setUpdatedInfo({ ...updatedInfo, [e.target.name]: e.target.value });
     }
-
-    setUpdatedInfo({ ...updatedInfo, [e.target.name]: e.target.value });
   };
 
   useEffect(() => {
@@ -100,247 +89,161 @@ const EditProfile = () => {
       dispatch<any>(clearErrors());
     }
     if (isUpdated) {
-      enqueueSnackbar("profile updated!!", { variant: "success" });
+      enqueueSnackbar("Profile updated!!", { variant: "success" });
       dispatch({ type: UPDATE_PROFILE_RESET });
       navigate(`/profile/${updatedInfo.username}`);
     }
-  }, [dispatch, error, isUpdated]);
+  }, [dispatch, error, isUpdated, enqueueSnackbar, navigate, updatedInfo.username]);
+
   return (
     <>
-      <MetaData title="Edit-Profile" />
-      <EditprofileRenderer>
-        <div className="ed-header">
-          <h2>Edit profile</h2>
-          {avatar && (
-            <img
-              alt=""
-              src={avatarPreview}
-              width={85}
-              height={85}
-              loading="lazy"
-              draggable={false}
-            />
-          )}
-        </div>
-        <form
-          className="ed-form"
-          onSubmit={handleUpdate}
-          encType="multipart/form-data"
-        >
-          <div className="ed-input-container">
-            <label htmlFor="Username">Username:</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={username}
-              onChange={handleDataChange}
-              disabled={loading}
-              autoFocus
-              required
-            />
-          </div>
+      <MetaData title="Edit Profile" />
+      <StyledEditProfile>
+        <Paper elevation={3} className="edit-profile-container">
+          <Typography variant="h5" fontWeight={600} gutterBottom>
+            Edit Profile
+          </Typography>
 
-          <div className="ed-input-container">
-            <label htmlFor="email">Email:</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              autoFocus
-              onChange={handleDataChange}
-              disabled={loading}
-              required
-            />
-          </div>
-          <div className="ed-input-row-grp">
-          <div className="ed-input-container">
-            <label htmlFor="phone">Phone:</label>
-            <input
-              type="number"
-              id="phonenumber"
-              name="phonenumber"
-              min={0}
-              value={phonenumber}
-              onChange={handleDataChange}
-              disabled={loading}
-              required
-            />
-          </div>
-          <div className="ed-input-container">
-            <label htmlFor="school">school:</label>
-            <input
-              type="text"
-              id="school"
-              name="school"
-              placeholder=""
-              value={school}
-              onChange={handleDataChange}
-              disabled={loading}
-              required
-            />
-          </div>
-          </div>
-
-          <div className="ed-input-container">
-            <label htmlFor="bio">Bio:</label>
-            <textarea
-              id="bio"
-              name="bio"
-              placeholder="Tell us about you, not more than 20 words"
-              value={bio}
-              onChange={handleDataChange}
-              disabled={loading}
-              required
-            />
-          </div>
-         
-          <div className="ed-input-container">
-            <label className="avatar" htmlFor="avatar">
-              Select profile picture
-            </label>
-            <input
-              type="file"
-              id="avatar"
-              name="avatar"
-              className="ed-avatar-inp"
-              accept="image/*"
-              onChange={handleDataChange}
-            />
-          </div>
-
-          <button type="submit" className="update-button" disabled={loading}>
-            {loading ? (
-              <>
-                <RDotLoader />
-                <span>Updating...</span>{" "}
-              </>
-            ) : (
-              "Update"
+          <Box display="flex" alignItems="center" flexDirection="column" className="profile-avatar">
+            {avatarPreview && (
+              <Avatar src={avatarPreview} alt="Avatar" sx={{ width: 85, height: 85 }} />
             )}
-          </button>
-        </form>
-      </EditprofileRenderer>
+          </Box>
+
+          <form onSubmit={handleUpdate} encType="multipart/form-data">
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  label="Username"
+                  name="username"
+                  value={updatedInfo.username}
+                  onChange={handleDataChange}
+                  fullWidth
+                  required
+                  disabled={loading}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Email"
+                  name="email"
+                  type="email"
+                  value={updatedInfo.email}
+                  onChange={handleDataChange}
+                  fullWidth
+                  required
+                  disabled={loading}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Phone Number"
+                  name="phonenumber"
+                  type="number"
+                  value={updatedInfo.phonenumber}
+                  onChange={handleDataChange}
+                  fullWidth
+                  required
+                  disabled={loading}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="School"
+                  name="school"
+                  value={updatedInfo.school}
+                  onChange={handleDataChange}
+                  fullWidth
+                  required
+                  disabled={loading}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Bio"
+                  name="bio"
+                  value={updatedInfo.bio}
+                  onChange={handleDataChange}
+                  fullWidth
+                  multiline
+                  required
+                  disabled={loading}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <label htmlFor="avatar">
+                  <input
+                    style={{ display: "none" }}
+                    id="avatar"
+                    name="avatar"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleDataChange}
+                  />
+                  <Button component="span" variant="outlined" color="primary">
+                    Upload Avatar
+                  </Button>
+                </label>
+              </Grid>
+              <Grid item xs={12}>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  color="primary"
+                  disabled={loading}
+                  className="update-button"
+                >
+                  {loading ? (
+                    <>
+                      <RDotLoader />
+                      Updating...
+                    </>
+                  ) : (
+                    "Update"
+                  )}
+                </Button>
+              </Grid>
+            </Grid>
+          </form>
+        </Paper>
+      </StyledEditProfile>
     </>
   );
 };
 
 export default EditProfile;
 
-const EditprofileRenderer = styled.div`
+const StyledEditProfile = styled.div`
   width: 100%;
   min-width: 400px;
   height: 100vh;
   display: flex;
   align-items: center;
-  flex-direction: column;
-  @media (max-width: 767px) {
-    &,
-    .ed-form,
-    .ed-header {
-      min-width: 100%;
-    }
-    h2 {
-      font-size: 16px;
-      padding: 10px;
-    }
-  }
-  .ed-header {
-    display: flex;
-    flex-direction: column;
+  justify-content: center;
+
+  .edit-profile-container {
     width: 60%;
-  }
-  img {
-    border: 4px solid #176984;
-    border-radius: 50%;
-    object-fit: cover;
-    cursor: pointer;
-    margin: 4px 8px;
-  }
-  .ed-form {
-    width: 60%;
-    padding: 10px;
-    height: fit-content;
+    padding: 20px;
     border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    background-color: #fff;
-    box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.12), 0px 2px 4px 0px rgba(0, 0, 0, 0.14);
-
   }
 
-  .ed-avatar-inp {
-    display: none;
-  }
-  .avatar {
-    padding: 4px 8px;
-    border-radius: 5px;
-    cursor: pointer;
-    color: rgb(13, 1, 1);
-    margin: 10px;
-    font-size: 12px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  .profile-avatar {
+    margin-bottom: 16px;
   }
 
-  .ed-input-row-grp{
-    width: 100%;
-    display: flex;
-    flex-direction:row;
-    gap:10px;
-  }
+  @media (max-width: 767px) {
+    .edit-profile-container {
+      width: 100%;
+      padding: 16px;
+    }
 
-  .ed-input-container {
-    width: 100%;
-    height: fit-content;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-
-  .ed-input-container label {
-    font-size: 0.75rem;
-    color: #8b8e98;
-    font-weight: 600;
-  }
-
-  .ed-input-container input,
-  textarea {
-    width: auto;
-    height: auto;
-    margin-bottom: 5px;
-    padding: 15px;
-    border-radius: 7px;
-    outline: none;
-    border: 1px solid #e5e5e5;
-    filter: drop-shadow(0px 1px 0px #efefef)
-      drop-shadow(0px 1px 0.5px rgba(239, 239, 239, 0.5));
-    transition: all 0.3s cubic-bezier(0.15, 0.83, 0.66, 1);
-  }
-  .ed-input-container input:focus,
-  textarea:focus{
-    outline:1px solid #176984;
+    h4 {
+      font-size: 16px;
+    }
   }
 
   .update-button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px 20px;
-    width: 100%;
-    border: none;
-    border-radius: 24px;
-    outline: none;
-    color: rgb(255, 255, 255);
-    background-color: #176984;
-    font-size: 14px;
-    cursor: pointer;
-  }
-  .update-button span {
-    color: #fff;
+    margin-top: 16px;
   }
 `;

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { ModuleItem } from "../../components/moduleItem/ModuleItem";
-import styled from "styled-components";
 import { useSnackbar } from "notistack";
 import axiosInstance from "../../utils/axiosInstance";
 import { IconVideoTwentyFour } from "../../assets/icons";
@@ -8,14 +7,23 @@ import Footer from "../../components/footer/Footer";
 import ModuleItemSkeletonLoader from "../../components/loaders/ModuleItemSkeletonLoader";
 import { isOnline } from "../../utils";
 import { IModule } from "../../types";
+import { styled } from "@mui/system";
+import { Box, Button, Grid, Typography } from "@mui/material";
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import { useNavigate } from "react-router-dom";
 
 const ModuleList: React.FC = (): React.ReactElement => {
   const { enqueueSnackbar } = useSnackbar();
-  const [modules, setModules] = useState<Array<IModule>|null>(null);
+  const [modules, setModules] = useState<Array<IModule> | null>(null);
   const [moduleErr, setModuleErr] = useState<any>(null);
+  const navigate = useNavigate();
+
+  const handleCreateModule = () => {
+    navigate('/module/create');  // Navigate to the module creation page
+  };
 
   useEffect(() => {
-    const getModule = async () => {
+    const getModules = async () => {
       try {
         const { data } = await axiosInstance().get(`/api/v1/modules`);
         setModules(data?.modules);
@@ -25,75 +33,63 @@ const ModuleList: React.FC = (): React.ReactElement => {
       }
     };
 
-    isOnline() && getModule();
+    isOnline() && getModules();
   }, [moduleErr]);
+
   return (
     <>
-      <ModuleHeader>
-        <IconVideoTwentyFour /> Modules
-      </ModuleHeader>
-      <ModuleRenderer>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, background: '#f7f7f7', boxShadow: 1 }}>
+        <Typography variant="h5" component="div" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <IconVideoTwentyFour /> Modules
+        </Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<AddCircleOutlineIcon />}
+          onClick={handleCreateModule}
+        >
+          Create Module
+        </Button>
+      </Box>
+
+      <ModuleRenderer container spacing={2}>
         {modules?.length
           ? modules.map((mod: any, i: number) => (
-              <ModuleItem
-                key={i}
-                _id={mod?._id}
-                title={mod?.title}
-                description={mod?.description}
-                banner={mod?.avatar?.secureUrl}
-              />
+              <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
+                <ModuleItem
+                  _id={mod?._id}
+                  title={mod?.title}
+                  description={mod?.description}
+                  banner={mod?.avatar?.secureUrl}
+                />
+              </Grid>
             ))
           : Array(10)
               .fill(null)
-              .map((mod: any, i: number) => (
-                <ModuleItemSkeletonLoader key={i} />
+              .map((_, i: number) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={i}>
+                  <ModuleItemSkeletonLoader />
+                </Grid>
               ))}
       </ModuleRenderer>
+
       <Footer />
     </>
   );
 };
 
 export default ModuleList;
-const ModuleHeader = styled.h2`
-  width: 100%;
-  margin: 0 auto;
-  padding: 5px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  position: fixed;
-  z-index: 9;
-  background: transparent;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  -moz-backdrop-filter: blur(10px);
-  -o-backdrop-filter: blur(10px);
-  box-shadow: 0 0px 3px rgba(0, 0, 0, 0.2);
-  transform: 0.5s;
 
-  @media (max-width: 767px) {
-    & {
-      font-size: 16px;
-    }
-  }
-`;
-const ModuleRenderer = styled.div`
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  position: relative;
-  top: 45px;
-  padding-bottom: 150px;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
 
-  @media (max-width: 767px) {
-    & {
-      padding-bottom: 100px;
-      flex-direction: column;
-    }
-  }
-`;
+const ModuleRenderer = styled(Grid)({
+  width: '100%',
+  marginTop: '16px',
+  paddingBottom: '150px',
+  display: 'flex',
+  justifyContent: 'center',
+  gap: '10px',
+  "@media (max-width: 767px)": {
+    flexDirection: 'column',
+    paddingBottom: '100px',
+  },
+});
