@@ -1,22 +1,20 @@
-import React from "react";
-import styled from "styled-components";
+import React from 'react';
+import { Box, Skeleton } from '@mui/material';
+import styled from 'styled-components';
 
-const VerticalArticleItemSkeletonLoader: React.FC = () => {
+
+const VerticalArticleItemSkeletonLoader = () => {
   return (
-    <>
-      <VerticalArticleItemSkeletonRenderer>
-          <div className="card_v_skeleton art-s-img"></div>
-          <div className="card_v_skeleton card_v_title"></div>
-          <div className="card_v_skeleton card_v_description"></div>
-           <div className="card_v_skeleton card_v_description"></div>
-        </VerticalArticleItemSkeletonRenderer>
-      </>
+    <StyledVerticalArticleItemSkeletonRenderer>
+      <Skeleton variant="rectangular" className="art-s-img" />
+      <Skeleton variant="text" className="card_v_title" />
+      <Skeleton variant="text" className="card_v_description" />
+      <Skeleton variant="text" className="card_v_description" />
+    </StyledVerticalArticleItemSkeletonRenderer>
   );
 };
 
-export default VerticalArticleItemSkeletonLoader;
-
-const VerticalArticleItemSkeletonRenderer = styled.div`
+const StyledVerticalArticleItemSkeletonRenderer = styled(Box)`
   height: 450px;
   min-width: 320px;
   max-width: 320px;
@@ -34,34 +32,21 @@ const VerticalArticleItemSkeletonRenderer = styled.div`
     height: 50%;
     width: 90%;
     margin-top: 10px;
-    border-radius: inherit;
-  }
-  .card_v_skeleton {
-    background-color: rgba(243, 243, 243, 1);
-    animation: pulse 1s infinite;
+    border-radius: 8px;
   }
 
   .card_v_title {
     height: 20px;
     width: 90%;
     margin-top: 12px;
-    margin-bottom:10px;
-    border-radius: 5px;
+    margin-bottom: 10px;
   }
 
   .card_v_description {
     height: 5%;
     width: 90%;
     margin-top: 10px;
-    border-radius: 5px;
-  }
-
-  @keyframes pulse {
-    50% {
-      opacity: 0.5;
-    }
-    100% {
-      opacity: 1;
-    }
   }
 `;
+
+export default  VerticalArticleItemSkeletonLoader;

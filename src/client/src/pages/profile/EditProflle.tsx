@@ -99,7 +99,7 @@ const EditProfile = () => {
     <>
       <MetaData title="Edit Profile" />
       <StyledEditProfile>
-        <Paper elevation={3} className="edit-profile-container">
+        <Paper elevation={1} className="edit-profile-container">
           <Typography variant="h5" fontWeight={600} gutterBottom>
             Edit Profile
           </Typography>
@@ -216,7 +216,7 @@ export default EditProfile;
 
 const StyledEditProfile = styled.div`
   width: 100%;
-  min-width: 400px;
+  max-width: 600px;
   height: 100vh;
   display: flex;
   align-items: center;

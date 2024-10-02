@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,7 @@ import {
   Paper,
   Chip,
   Tooltip,
+  Skeleton,
 } from "@mui/material";
 import {
   TrendingUp as TrendingUpIcon,
@@ -28,8 +29,6 @@ import {
   ChevronRight as ChevronRightIcon,
   Book as BookIcon,
   Close as CloseIcon,
-  PlayArrow as PlayArrowIcon,
-  Pause as PauseIcon,
   Search as SearchIcon,
   Code as CodeIcon,
   Science as ScienceIcon,
@@ -42,13 +41,9 @@ import {
   Museum as CultureIcon,
   Restaurant as FoodIcon,
   Star as StarIcon,
-  VolumeUp as VolumeUpIcon,
-  VolumeOff as VolumeOffIcon,
   Bookmark as BookmarkIcon,
   Share as ShareIcon,
   Download as DownloadIcon,
-  ZoomIn as ZoomInIcon,
-  ZoomOut as ZoomOutIcon,
 } from "@mui/icons-material";
 import Footer from "../../components/footer/Footer";
 import VerticalArticleItemSkeletonLoader from "../../components/loaders/VerticalArticleItemSkeletonLoader";
@@ -69,7 +64,6 @@ import { RootState } from "../../store";
 import LocalForageProvider from "../../utils/localforage";
 import HorizontalArticleItemSkeletonLoader from "../../components/loaders/HorizontalArticleItemSkeletonLoader";
 import HorizontalArticleItem from "../../components/horizontalArticleItem/HorizontalArticleItem";
-import toast from "react-hot-toast";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -88,7 +82,7 @@ const Home: React.FC = () => {
   const [popularBooks, setPopularBooks] = useState([]);
   const [booksLoading, setBooksLoading] = useState(false);
 
-  const [bookCategories, setBookCategories] = useState([
+  const [bookCategories] = useState([
     "Fiction",
     "Non-fiction",
     "Science",
@@ -99,18 +93,9 @@ const Home: React.FC = () => {
   const [categoryBooks, setCategoryBooks] = useState<any[]>([]);
   const [selectedBook, setSelectedBook] = useState<any>(null);
   const [isReading, setIsReading] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [libraryPickOfTheDay, setLibraryPickOfTheDay] = useState<any>(null);
-
-  const [bookContent, setBookContent] = useState<string>("");
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [fontSize, setFontSize] = useState(16);
-  const speechSynthesisRef = useRef<SpeechSynthesis | null>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [libraryPickLoading, setLibraryPickLoading] = useState(true);
 
   const { isAuthenticated, user } = useSelector((state: RootState) => state.user);
 
@@ -168,12 +153,15 @@ const Home: React.FC = () => {
   useEffect(() => {
     const fetchLibraryPickOfTheDay = async () => {
       try {
+        setLibraryPickLoading(true);
         const response = await axios.get(
           "https://www.googleapis.com/books/v1/volumes?q=subject:fiction&orderBy=newest&maxResults=1"
         );
         setLibraryPickOfTheDay(response.data.items[0]);
+        setLibraryPickLoading(false);
       } catch (error) {
         console.error("Error fetching library pick of the day:", error);
+        setLibraryPickLoading(false);
       }
     };
 
@@ -195,8 +183,6 @@ const Home: React.FC = () => {
     isOnline() && getTrendingArticles();
   }, [enqueueSnackbar]);
 
-
-
   const fetchRecentArticles = useCallback(() => {
     if (!userInterest || userInterest.length === 0) {
       setUserInterest(["Personal Dev", "Tech", "Science", "Culture"]);
@@ -213,6 +199,7 @@ const Home: React.FC = () => {
     }
     isOnline() && fetchRecentArticles();
   }, [dispatch, enqueueSnackbar, fetchRecentArticles]);
+
   useEffect(() => {
     const getRandomArticle = async () => {
       try {
@@ -259,71 +246,17 @@ const Home: React.FC = () => {
     isOnline() && getModules();
   }, [enqueueSnackbar]);
 
-  
-  useEffect(() => {
-    speechSynthesisRef.current = window.speechSynthesis;
-    utteranceRef.current = new SpeechSynthesisUtterance();
-  }, []);
-
   const handleCategoryChange = (event: React.SyntheticEvent, newValue: string) => {
     setSelectedCategory(newValue);
   };
 
-  const handleBookSelect = async (book: any) => {
+  const handleBookSelect = (book: any) => {
     setSelectedBook(book);
     setIsReading(true);
-    try {
-      const response = await axios.get(book.volumeInfo.previewLink);
-      setBookContent(response.data);
-    } catch (error) {
-      console.error("Error fetching book content:", error);
-      setBookContent("");
-    }
-    LocalForageProvider.getItem(`book-progress-${book.id}`, (err, val: any) => {
-      if (val) {
-        setCurrentTime(val.currentTime);
-      }
-    });
   };
 
   const handleCloseReading = () => {
     setIsReading(false);
-    stopSpeaking();
-    if (audio) {
-      LocalForageProvider.setItem(`book-progress-${selectedBook.id}`, {
-        currentTime: audio.currentTime,
-      });
-    }
-  };
-
-  const handlePlayPause = () => {
-    if (isSpeaking) {
-      stopSpeaking();
-    } else {
-      startSpeaking();
-    }
-  };
-
-  const startSpeaking = () => {
-    if (speechSynthesisRef.current && utteranceRef.current) {
-      utteranceRef.current.text = bookContent;
-      speechSynthesisRef.current.speak(utteranceRef.current);
-      setIsSpeaking(true);
-    }
-  };
-
-  const stopSpeaking = () => {
-    if (speechSynthesisRef.current) {
-      speechSynthesisRef.current.cancel();
-      setIsSpeaking(false);
-    }
-  };
-
-  const handleSeek = (event: Event, newValue: number | number[]) => {
-    if (audio && typeof newValue === 'number') {
-      audio.currentTime = newValue;
-      setCurrentTime(newValue);
-    }
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -345,26 +278,19 @@ const Home: React.FC = () => {
   };
 
   const handleBookmark = () => {
-    // Implement bookmarking functionality
     enqueueSnackbar("Book bookmarked successfully!", { variant: "success" });
   };
 
   const handleShare = () => {
-    // Implement sharing functionality
     enqueueSnackbar("Share link copied to clipboard!", { variant: "success" });
   };
 
   const handleDownload = () => {
-    // Implement download functionality
-    enqueueSnackbar("Book download started!", { variant: "success" });
-  };
-
-  const handleFontSizeIncrease = () => {
-    setFontSize(prevSize => Math.min(prevSize + 2, 24));
-  };
-
-  const handleFontSizeDecrease = () => {
-    setFontSize(prevSize => Math.max(prevSize - 2, 12));
+    if (selectedBook && selectedBook.volumeInfo.previewLink) {
+      window.open(selectedBook.volumeInfo.previewLink, '_blank');
+    } else {
+      enqueueSnackbar("Download link not available", { variant: "error" });
+    }
   };
 
   const getCategoryIcon = (category: string) => {
@@ -398,12 +324,6 @@ const Home: React.FC = () => {
     navigate(route);
   };
 
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
-
   return (
     <HomeWrapper>
       <Banner />
@@ -416,7 +336,21 @@ const Home: React.FC = () => {
             <Typography variant="h5" component="h2" ml={1}>Library Pick of the Day</Typography>
           </Box>
         </SectionTitle>
-        {libraryPickOfTheDay && (
+        {libraryPickLoading ? (
+          <LibraryPickCard>
+            <Grid container spacing={3}>
+              <Grid item xs={12} md={4}>
+                <Skeleton variant="rectangular" width={128} height={192} />
+              </Grid>
+              <Grid item xs={12} md={8}>
+                <Skeleton variant="text" width="80%" height={40} />
+                <Skeleton variant="text" width="60%" height={30} />
+                <Skeleton variant="text" width="100%" height={100} />
+                <Skeleton variant="rectangular" width={120} height={36} />
+              </Grid>
+            </Grid>
+          </LibraryPickCard>
+        ) : libraryPickOfTheDay && (
           <LibraryPickCard>
             <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
@@ -429,7 +363,7 @@ const Home: React.FC = () => {
                 <Typography variant="h4">{libraryPickOfTheDay.volumeInfo.title}</Typography>
                 <Typography variant="subtitle1">{libraryPickOfTheDay.volumeInfo.authors?.join(', ')}</Typography>
                 <Typography variant="body1" mt={2}>
-                  {libraryPickOfTheDay.volumeInfo.description}
+                  {libraryPickOfTheDay.volumeInfo.description?.split(' ').slice(0, 50).join(' ')}...
                 </Typography>
                 <Button
                   variant="contained"
@@ -437,7 +371,7 @@ const Home: React.FC = () => {
                   onClick={() => handleBookSelect(libraryPickOfTheDay)}
                   sx={{ mt: 2 }}
                 >
-                  Read Now
+                  Read More
                 </Button>
               </Grid>
             </Grid>
@@ -479,7 +413,7 @@ const Home: React.FC = () => {
           </ViewMoreButton>
         </SectionTitle>
         <TrendingArticlesWrapper>
-          {trendingLoading
+        {trendingLoading
             ? Array(10)
                 .fill(null)
                 .map((_, i) => <VerticalArticleItemSkeletonLoader key={i} />)
@@ -517,8 +451,8 @@ const Home: React.FC = () => {
               </ViewMoreButton>
             </SectionTitle>
             <ModuleListWrapper>
-              {moduleLoading
-                ? Array(10)
+              {!modules.lenght
+                ? Array(2)
                     .fill(null)
                     .map((_, i) => <ModuleItemSkeletonLoader key={i} />)
                 : modules.map((mod: any, i: number) => (
@@ -578,7 +512,11 @@ const Home: React.FC = () => {
         </Tabs>
         <Grid container spacing={2} mt={2}>
           {booksLoading ? (
-            <CircularProgress />
+            Array(8).fill(null).map((_, index) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+                <BookCardSkeleton />
+              </Grid>
+            ))
           ) : (
             categoryBooks?.map((book: any) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={book.id}>
@@ -674,38 +612,16 @@ const Home: React.FC = () => {
                     <ShareIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Download">
+                <Tooltip title="Go to Google Books">
                   <IconButton onClick={handleDownload}>
                     <DownloadIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Increase font size">
-                  <IconButton onClick={handleFontSizeIncrease}>
-                    <ZoomInIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Decrease font size">
-                  <IconButton onClick={handleFontSizeDecrease}>
-                    <ZoomOutIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={isSpeaking ? "Stop speaking" : "Start speaking"}>
-                  <IconButton onClick={handlePlayPause}>
-                    {isSpeaking ? <VolumeOffIcon /> : <VolumeUpIcon />}
-                  </IconButton>
-                </Tooltip>
               </ActionTray>
-              <BookContent style={{ fontSize: `${fontSize}px` }}>
-                {bookContent ? (
-                  <div dangerouslySetInnerHTML={{ __html: bookContent }} />
-                ) : (
-                  <iframe
-                    src={selectedBook.volumeInfo.previewLink}
-                    width="100%"
-                    height="600px"
-                    title={selectedBook.volumeInfo.title}
-                  />
-                )}
+              <BookContent>
+                <Typography variant="body1">
+                  {selectedBook.volumeInfo.description}
+                </Typography>
               </BookContent>
             </>
           )}
@@ -877,3 +793,16 @@ const ActionTray = styled(Box)`
   border-bottom: 1px solid #e0e0e0;
   margin-bottom: 16px;
 `;
+
+const BookCardSkeleton = () => (
+  <BookCard>
+    <Skeleton variant="rectangular" width={128} height={192} />
+    <Skeleton variant="text" width="80%" />
+    <Skeleton variant="text" width="60%" />
+    <Skeleton variant="text" width="40%" />
+    <RatingWrapper>
+      <Skeleton variant="circular" width={20} height={20} />
+      <Skeleton variant="text" width={30} />
+    </RatingWrapper>
+  </BookCard>
+);

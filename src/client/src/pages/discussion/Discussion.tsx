@@ -103,7 +103,7 @@ const UserInfo = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
   position: "relative",
   width: "fit-content",
   alignSelf: isCurrentUser ? "flex-end" : "flex-start",
-  marginBottom: "14px",
+  marginBottom: "5px",
   cursor: "pointer",
   transition: "all 0.3s ease",
   fontStyle: isDeleted ? "italic" : "normal",
@@ -153,13 +153,6 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedMessage, setSelectedMessage] =
     useState<DiscussionMessage | null>(null);
-
-  const formatTimestamp = (timestamp: Timestamp | null | undefined) => {
-    if (timestamp instanceof Timestamp) {
-      return new Date(timestamp.toMillis()).toLocaleString();
-    }
-    return "Unknown Date";
-  };
 
   const fetchDiscussion = useCallback(async () => {
     try {
@@ -400,11 +393,12 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
             style={{
               marginLeft: 16,
               overflow: "hidden",
+              color: "#fff",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}
           >
-            {discussion?.title || "Discussion"}
+            {discussion?.title || "Discuss"}
           </Typography>
         </TopBar>
         <MessageList>

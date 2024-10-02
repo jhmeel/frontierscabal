@@ -53,8 +53,7 @@ const StyledCard = styled(Card)`
   margin: 16px 0;
   background-color: #ffffff;
   border-radius: 8px;
-  border:1px solid #ededed;
-
+  border: 1px solid #ededed;
 `;
 
 const TagContainer = styled.div`
@@ -67,7 +66,6 @@ const TopBar = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -90,7 +88,7 @@ const MessageBubble = styled.div`
   background-color: #e3f2fd;
   border-radius: 20px;
   padding: 12px 18px;
-  margin: 10px 0;
+  margin: 5px 0;
   max-width: 90%;
   word-wrap: break-word;
   align-self: flex-start;
@@ -228,7 +226,7 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
   };
 
   const isValidDate = (date: string) => {
-    return  date?.toDate().toLocaleString()
+    return date?.toDate().toLocaleString();
   };
   return (
     <Container maxWidth="md">
@@ -303,22 +301,22 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
             />
 
             <CardContent>
-              <MessageBubble>
-                <Typography variant="body2" color="textPrimary">
-                  {discussion.description}
-                </Typography>
-              </MessageBubble>
               <TagContainer>
                 {discussion.tags.map((tag) => (
                   <Chip
                     key={tag}
-                    label={tag}
+                    label={`#${tag}`}
                     size="small"
                     color="primary"
                     variant="outlined"
                   />
                 ))}
               </TagContainer>
+              <MessageBubble>
+                <Typography variant="body2" color="textPrimary">
+                  {discussion.description}
+                </Typography>
+              </MessageBubble>
             </CardContent>
 
             <CardActions
@@ -339,7 +337,7 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
                     handleJoinDiscussion(discussion.id);
                   }
                 }}
-              >
+              > 
                 {discussion.participants.includes(currentUser?._id)
                   ? "View"
                   : "Join"}
@@ -352,6 +350,7 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
           anchorEl={menuAnchorEl}
           open={Boolean(menuAnchorEl)}
           onClose={handleMenuClose}
+          elevation={1}
         >
           <MenuItem onClick={handleDeleteDiscussion}>Delete</MenuItem>
           <MenuItem onClick={handleShareDiscussion}>Share</MenuItem>

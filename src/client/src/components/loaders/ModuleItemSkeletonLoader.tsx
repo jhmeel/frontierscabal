@@ -1,23 +1,22 @@
-import React from 'react'
-import styled from 'styled-components'
+import React from 'react';
+import { Box, Skeleton } from '@mui/material';
+import styled from 'styled-components';
 
-const ModuleItemSkeletonLoader:React.FC = () => {
+const ModuleItemSkeletonLoader = () => {
   return (
-    <>
-    <ModuleItemSkeletonRenderer>
-    <div className="card_v_skeleton art-s-img"></div>
-    <div className="card_v_skeleton card_v_title"></div>
-    <div className="card_v_skeleton card_v_description"></div>
-    <div className="card_v_skeleton card_v_description"></div>
-  </ModuleItemSkeletonRenderer>
-</>
-  )
-}
+    <StyledSkeletonWrapper>
+      <Skeleton variant="rectangular" className="art-s-img" />
+      <Skeleton variant="text" className="card_v_title" />
+      <Skeleton variant="text" className="card_v_description" />
+      <Skeleton variant="text" className="card_v_description" />
+    </StyledSkeletonWrapper>
+  );
+};
 
-export default ModuleItemSkeletonLoader
+export default ModuleItemSkeletonLoader;
 
-const ModuleItemSkeletonRenderer = styled.div`
-   height: 330px;
+const StyledSkeletonWrapper = styled(Box)`
+  height: 330px;
   min-width: 350px;
   max-width: 500px;
   display: flex;
@@ -29,23 +28,20 @@ const ModuleItemSkeletonRenderer = styled.div`
   border-radius: 8px;
   transition: 0.3s ease-out;
   cursor: progress;
+  padding: 10px;
 
   .art-s-img {
     height: 50%;
     width: 90%;
     margin-top: 10px;
-    border-radius: inherit;
-  }
-  .card_v_skeleton {
-    background-color: rgba(243, 243, 243, 1);
-    animation: pulse 1s infinite;
+    border-radius: 8px;
   }
 
   .card_v_title {
     height: 20px;
     width: 90%;
     margin-top: 12px;
-    margin-bottom:10px;
+    margin-bottom: 10px;
     border-radius: 5px;
   }
 
@@ -55,13 +51,4 @@ const ModuleItemSkeletonRenderer = styled.div`
     margin-top: 10px;
     border-radius: 5px;
   }
-
-  @keyframes pulse {
-    50% {
-      opacity: 0.5;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
-`
+`;

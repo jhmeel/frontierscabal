@@ -1,26 +1,20 @@
-import React from "react";
-import { useSelector } from "react-redux";
-import styled from "styled-components";
+import React from 'react';
+import { Box, Skeleton } from '@mui/material';
+import styled from 'styled-components';
 
-const HorizontalArticleItemSkeletonLoader: React.FC = () => {
+const HorizontalArticleItemSkeletonLoader = () => {
   return (
-    <>
-    
-        <HorizontalArticleItemSkeletonRenderer>
-          <div className="card_h_skeleton art-h-s-img"></div>
-          <div className="art-s-cont">
-            <div className="card_h_skeleton card_h_title"></div>
-            <div className="card_h_skeleton card_h_description"></div>
-          </div>
-        </HorizontalArticleItemSkeletonRenderer>
-
-    </>
-  );  
+    <StyledHorizontalArticleItemSkeletonRenderer>
+      <Skeleton variant="rectangular" className="art-h-s-img" />
+      <Box className="art-s-cont">
+        <Skeleton variant="text" className="card_h_title" />
+        <Skeleton variant="rectangular" className="card_h_description" />
+      </Box>
+    </StyledHorizontalArticleItemSkeletonRenderer>
+  );
 };
 
-export default HorizontalArticleItemSkeletonLoader;                     
-
-const HorizontalArticleItemSkeletonRenderer = styled.div`
+const StyledHorizontalArticleItemSkeletonRenderer = styled(Box)`
   height: 300px;
   max-width: 530px;
   width: 500px;
@@ -37,18 +31,17 @@ const HorizontalArticleItemSkeletonRenderer = styled.div`
   cursor: progress;
 
   @media (max-width: 767px) {
-    & {
-      height: 250px;
-      min-width: 340px;
-      max-width: 400px;
-    }
+    height: 250px;
+    min-width: 340px;
+    max-width: 400px;
   }
+
   .art-h-s-img {
     flex: 30%;
-    width: 100%;
     height: 90%;
-    padding: 20px 0px 20px 0px;
+    margin: 20px 0;
   }
+
   .art-s-cont {
     flex: 70%;
     padding: 8px 16px;
@@ -59,15 +52,10 @@ const HorizontalArticleItemSkeletonRenderer = styled.div`
     flex-direction: column;
     justify-content: center;
   }
-  .card_h_skeleton {
-    background-color: rgba(243, 243, 243, 1);
-    animation: pulse 1s infinite;
-  }
 
   .card_h_title {
     height: 20px;
     width: 90%;
-    border-radius: 0%;
     margin-top: 12px;
   }
 
@@ -76,13 +64,7 @@ const HorizontalArticleItemSkeletonRenderer = styled.div`
     width: 90%;
     margin-top: 12px;
   }
-
-  @keyframes pulse {
-    50% {
-      opacity: 0.5;
-    }
-    100% {
-      opacity: 1;
-    }
-  }
 `;
+
+export default HorizontalArticleItemSkeletonLoader;                     
+
