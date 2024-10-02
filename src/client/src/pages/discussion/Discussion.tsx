@@ -23,10 +23,11 @@ import {
   Typography,
   Avatar,
   CircularProgress,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import {
   Delete,
-  Reply,
   AttachFile,
   Send,
   FormatBold,
@@ -35,6 +36,7 @@ import {
   InsertLink,
   Code,
   ArrowBack,
+  RemoveCircle,
 } from "@mui/icons-material";
 import styled from "styled-components";
 import { motion } from "framer-motion";
@@ -72,29 +74,41 @@ const Toolbar = styled.div`
   margin-bottom: 8px;
 `;
 
-const MessageBubble = styled(motion.div)(({ isCurrentUser }) => ({
+const MessageBubble = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
   maxWidth: "60%",
+  position: "relative",
   width: "fit-content",
   padding: "10px",
   borderTopRightRadius: "20px",
   borderTopLeftRadius: "20px",
   borderBottomRightRadius: isCurrentUser ? "0" : "20px",
   borderBottomLeftRadius: isCurrentUser ? "20px" : "0",
-  backgroundColor: isCurrentUser ? "#3498db" : "#f0f0f0",
-  color: isCurrentUser ? "white" : "#333",
+  backgroundColor: isDeleted
+    ? "transparent"
+    : isCurrentUser
+    ? "#3498db"
+    : "#f0f0f0",
+  color: isDeleted ? "#888" : isCurrentUser ? "white" : "#333",
   alignSelf: isCurrentUser ? "flex-end" : "flex-start",
   marginBottom: "14px",
-  position: "relative",
   cursor: "pointer",
   transition: "all 0.3s ease",
-  border: "1px solid #ededed",
+  border: isDeleted ? "none" : "1px solid #ededed",
+  fontStyle: isDeleted ? "italic" : "normal",
+  marginLeft: isCurrentUser ? "auto" : "0",
 }));
 
-const UserInfo = styled.div`
-  display: flex;
-  align-items: center;
-  margin-bottom: 4px;
-`;
+const UserInfo = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
+  maxWidth: "60%",
+  position: "relative",
+  width: "fit-content",
+  alignSelf: isCurrentUser ? "flex-end" : "flex-start",
+  marginBottom: "14px",
+  cursor: "pointer",
+  transition: "all 0.3s ease",
+  fontStyle: isDeleted ? "italic" : "normal",
+  marginLeft: isCurrentUser ? "auto" : "0",
+}));
 
 const Username = styled(Typography)`
   font-size: 12px;
@@ -136,6 +150,9 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedMessage, setSelectedMessage] =
+    useState<DiscussionMessage | null>(null);
 
   const formatTimestamp = (timestamp: Timestamp | null | undefined) => {
     if (timestamp instanceof Timestamp) {
@@ -264,6 +281,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
       await updateDoc(doc(db, "messages", messageId), {
         content: "This message has been deleted",
         updatedAt: serverTimestamp(),
+        isDeleted: true,
       });
     } catch (error) {
       setError("Failed to delete message. Please try again.");
@@ -319,6 +337,35 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
     );
   };
 
+  const handleOpenMenu = (
+    event: React.MouseEvent<HTMLElement>,
+    message: DiscussionMessage
+  ) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedMessage(message);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+    setSelectedMessage(null);
+  };
+
+  const handleMenuAction = (action: string) => {
+    if (selectedMessage) {
+      switch (action) {
+        case "reply":
+          setReplyTo(selectedMessage);
+          break;
+        case "delete":
+          handleDeleteMessage(selectedMessage.id);
+          break;
+        default:
+          break;
+      }
+    }
+    handleCloseMenu();
+  };
+
   if (loading) {
     return <StyledLoader size={40} />;
   }
@@ -342,166 +389,173 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   }
 
   return (
-    <StyledDiscussionRoom>
-      <TopBar>
-        <IconButton onClick={() => navigate(-1)} color="inherit">
-          <ArrowBack />
-        </IconButton>
-        <Typography
-          variant="h6"
-          style={{
-            marginLeft: 16,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {discussion?.title || "Discussion"}
-        </Typography>
-      </TopBar>
-      <MessageList>
-        {messages.map((message) => (
-          <div>
-            <MessageBubble
-              key={message.id}
-              isCurrentUser={message.senderId === currentUser._id}
-            >
-              {message.replyTo && (
-                <Typography
-                  variant="caption"
-                  style={{ marginBottom: 4, display: "block", color: "#666" }}
-                >
-                  Replying to:{" "}
-                  {messages
-                    .find((m) => m.id === message.replyTo)
-                    ?.content.substring(0, 30)}
-                  ...
-                </Typography>
-              )}
-              <Typography variant="body2">
-                {" "}
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {message.content}
-                </ReactMarkdown>
-              </Typography>
-              {message.fileUrl && (
-                <Button
-                  href={message.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  size="small"
-                  style={{ marginTop: 4, padding: 0 }}
-                >
-                  View Attachment
-                </Button>
-              )}
-              <div style={{ marginTop: 4 }}>
-                <IconButton size="small" onClick={() => setReplyTo(message)}>
-                  <Reply fontSize="small" />
-                </IconButton>
-                {message.senderId === currentUser._id && (
-                  <IconButton
-                    size="small"
-                    onClick={() => handleDeleteMessage(message.id)}
-                  >
-                    <Delete fontSize="small" />
-                  </IconButton>
-                )}
-              </div>
-            </MessageBubble>
-            <UserInfo>
-              <Avatar
-                sx={{ width: 24, height: 24, fontSize: 12, marginRight: 1 }}
-              >
-                {message.senderName ? message.senderName[0].toUpperCase() : 'U'}
-              </Avatar>
-            
-              <Time variant="caption">
-                {new Date(message.createdAt).toLocaleTimeString()}
-              </Time>
-            </UserInfo>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </MessageList>
-      <MessageInput>
-        {replyTo && (
-          <div
+    <>
+      <StyledDiscussionRoom>
+        <TopBar>
+          <IconButton onClick={() => navigate(-1)} color="inherit">
+            <ArrowBack />
+          </IconButton>
+          <Typography
+            variant="h6"
             style={{
-              padding: 8,
-              marginBottom: 8,
-              backgroundColor: "#f0f4f8",
-              borderRadius: 4,
+              marginLeft: 16,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
             }}
           >
-            <Typography variant="caption">
-              Replying to:{" "}
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {replyTo.content.substring(0, 30)}
-              </ReactMarkdown>
-              ...
-            </Typography>
-            <IconButton size="small" onClick={() => setReplyTo(null)}>
-              <Delete fontSize="small" />
+            {discussion?.title || "Discussion"}
+          </Typography>
+        </TopBar>
+        <MessageList>
+          {messages.map((message) => (
+            <div key={message.id}>
+              <UserInfo
+                isCurrentUser={message.senderId === currentUser?._id}
+                isDeleted={message.isDeleted}
+              >
+                <Avatar
+                  sx={{ width: 24, height: 24, fontSize: 12, marginRight: 1 }}
+                >
+                  {message.senderName
+                    ? message.senderName[0].toUpperCase()
+                    : "U"}
+                </Avatar>
+                <Username variant="caption">{message.senderName}</Username>
+                <Time variant="caption">
+                  {new Date(message.createdAt).toLocaleString()}
+                </Time>
+              </UserInfo>
+              <MessageBubble
+                isCurrentUser={message.senderId === currentUser?._id}
+                isDeleted={message.isDeleted}
+                onDoubleClick={(event) => handleOpenMenu(event, message)}
+              >
+                {message.replyTo && (
+                  <Typography
+                    variant="caption"
+                    style={{ marginBottom: 4, display: "block", color: "#666" }}
+                  >
+                    Replying to:{" "}
+                    {messages
+                      .find((m) => m.id === message.replyTo)
+                      ?.content.substring(0, 30)}
+                  </Typography>
+                )}
+                <Typography variant="body2">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {message.content}
+                  </ReactMarkdown>
+                </Typography>
+                {message.fileUrl && (
+                  <Button
+                    href={message.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    size="small"
+                    style={{ marginTop: 4, padding: 0 }}
+                  >
+                    View Attachment
+                  </Button>
+                )}
+              </MessageBubble>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
+        </MessageList>
+        <MessageInput>
+          {replyTo && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: 8,
+                marginBottom: 8,
+                backgroundColor: "#f0f4f8",
+                borderRadius: 4,
+              }}
+            >
+              <Typography variant="caption">
+                Replying to:{" "}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {replyTo.content.substring(0, 30)}
+                </ReactMarkdown>
+          
+              </Typography>
+              <IconButton size="small" onClick={() => setReplyTo(null)}>
+                <RemoveCircle fontSize="small" />
+              </IconButton>
+            </div>
+          )}
+          <Toolbar>
+            <IconButton size="small" onClick={() => handleFormatText("bold")}>
+              <FormatBold fontSize="small" />
             </IconButton>
+            <IconButton size="small" onClick={() => handleFormatText("italic")}>
+              <FormatItalic fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() => handleFormatText("underline")}
+            >
+              <FormatUnderlined fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={() => handleFormatText("link")}>
+              <InsertLink fontSize="small" />
+            </IconButton>
+            <IconButton size="small" onClick={() => handleFormatText("code")}>
+              <Code fontSize="small" />
+            </IconButton>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+              ref={fileInputRef}
+            />
+            <IconButton
+              size="small"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <AttachFile fontSize="small" />
+            </IconButton>
+          </Toolbar>
+          <div style={{ display: "flex" }}>
+            <TextField
+              id="message-input"
+              fullWidth
+              variant="outlined"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              multiline
+              rows={2}
+              size="small"
+            />
+            <Button
+              variant="contained"
+              color="primary"
+              endIcon={<Send />}
+              onClick={handleSendMessage}
+              style={{ marginLeft: 8, alignSelf: "flex-end" }}
+            >
+              Send
+            </Button>
           </div>
-        )}
-        <Toolbar>
-          <IconButton size="small" onClick={() => handleFormatText("bold")}>
-            <FormatBold fontSize="small" />
-          </IconButton>
-          <IconButton size="small" onClick={() => handleFormatText("italic")}>
-            <FormatItalic fontSize="small" />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => handleFormatText("underline")}
-          >
-            <FormatUnderlined fontSize="small" />
-          </IconButton>
-          <IconButton size="small" onClick={() => handleFormatText("link")}>
-            <InsertLink fontSize="small" />
-          </IconButton>
-          <IconButton size="small" onClick={() => handleFormatText("code")}>
-            <Code fontSize="small" />
-          </IconButton>
-          <input
-            type="file"
-            onChange={handleFileChange}
-            style={{ display: "none" }}
-            ref={fileInputRef}
-          />
-          <IconButton
-            size="small"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <AttachFile fontSize="small" />
-          </IconButton>
-        </Toolbar>
-        <div style={{ display: "flex" }}>
-          <TextField
-            id="message-input"
-            fullWidth
-            variant="outlined"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            multiline
-            rows={2}
-            size="small"
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            endIcon={<Send />}
-            onClick={handleSendMessage}
-            style={{ marginLeft: 8, alignSelf: "flex-end" }}
-          >
-            Send
-          </Button>
-        </div>
-      </MessageInput>
-    </StyledDiscussionRoom>
+        </MessageInput>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleCloseMenu}
+        >
+          <MenuItem onClick={() => handleMenuAction("reply")}>Reply</MenuItem>
+          {selectedMessage?.senderId === currentUser._id && (
+            <MenuItem onClick={() => handleMenuAction("delete")}>
+              Delete
+            </MenuItem>
+          )}
+        </Menu>
+      </StyledDiscussionRoom>
+    </>
   );
 };
 

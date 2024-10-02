@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import styled, { ThemeProvider } from "styled-components";
+import styled from "styled-components";
 import { motion } from "framer-motion";
-import { FaBookmark } from "react-icons/fa";
+import { FaBookmark, FaUnlink } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { enqueueSnackbar, closeSnackbar } from "notistack";
 import { FiBookmark } from "react-icons/fi";
@@ -12,7 +12,6 @@ import getToken from "../../utils/getToken";
 import { errorParser, removeHtmlAndHashTags } from "../../utils/formatter";
 import RDotLoader from "../loaders/RDotLoader";
 import { RootState } from "../../store";
-
 import defaultImage from "../../assets/images/my_answer.svg";
 import emptyAvatar from "../../assets/images/empty_avatar.png";
 

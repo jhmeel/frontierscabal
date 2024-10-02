@@ -50,15 +50,15 @@ const CreateModule = () => {
   const handleSubmit = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formInfo = { ...formData, avatar: avatar.file };
-    // Submit form logic here
+   
   };
 
   return (
     <>
       <StyledBox>
-        <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
-          Create Module
-        </Typography>
+      <Typography variant="h5" fontWeight={600}>
+      Create Module
+      </Typography>
         <ModuleForm onSubmit={handleSubmit}>
           {avatar?.file && (
             <Avatar
@@ -101,7 +101,7 @@ const CreateModule = () => {
           />
 
           <label htmlFor="Module-avatar" className="select-avatar">
-            <Button variant="outlined" component="label">
+            <Button variant="outlined" component="label" size="small">
               {(avatar.name && (
                 <>
                   <IconImageEditOutline className="icon" />
@@ -124,8 +124,9 @@ const CreateModule = () => {
             type="submit"
             variant="contained"
             color="primary"
+            size="small"
             className="submit-btn"
-            sx={{ mt: 3 }}
+          
           >
             Submit
           </Button>
@@ -144,7 +145,7 @@ const StyledBox = styled(Box)`
   padding: 20px;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  
 `;
 
 const ModuleForm = styled.form`
@@ -158,7 +159,6 @@ const ModuleForm = styled.form`
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 10px;
   }
 
   .icon {

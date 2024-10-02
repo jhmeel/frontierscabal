@@ -13,8 +13,8 @@ export const newPastQuestion = catchAsync(async (req, res, next) => {
     level,
     courseCode,
     school,
-    session,
-    pqImg,
+    session, 
+    pqImg, 
     answer,
     reference,
     logo,
@@ -22,7 +22,7 @@ export const newPastQuestion = catchAsync(async (req, res, next) => {
   } = req.body;
   const pqImages = [];
 
-  for (let i = 0; i < pqImgTotal; i++) {
+  for (let i = 0; i < pqImgTotal; i++) { 
     pqImages.push(req.body[`pqImg${i}`]);
   }
   const result = await pdfGen(
@@ -258,3 +258,4 @@ export const getMostRecents = catchAsync(async (req, res, next) => {
     totalPages: totalPages,
   });
 });
+ 

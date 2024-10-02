@@ -19,14 +19,12 @@ import {
   Popover,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
   CircularProgress,
 } from "@mui/material";
 import {
   Send as SendIcon,
   AttachFile as AttachFileIcon,
-  DeleteOutline as DeleteIcon,
   Edit as EditIcon,
   Share as ShareIcon,
   Call as CallIcon,
@@ -45,6 +43,7 @@ import {
   onSnapshot,
   serverTimestamp,
   where,
+  getDocs,
 } from "firebase/firestore";
 import {
   getStorage,
@@ -168,24 +167,6 @@ const StyledMenuItemText = styled(ListItemText)(({ theme }) => ({
   },
 }));
 
-const RecentChatsContainer = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(2),
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: theme.shape.borderRadius,
-  boxShadow: theme.shadows[1],
-  marginBottom: theme.spacing(2),
-}));
-
-const ChatPreview = styled(Box)(({ theme }) => ({
-  display: "flex",
-  alignItems: "center",
-  padding: theme.spacing(1),
-  cursor: "pointer",
-  "&:hover": {
-    backgroundColor: theme.palette.action.hover,
-  },
-}));
-
 const MAX_FILE_COUNT = 3;
 const MAX_FILE_SIZE_MB = 5;
 const ACCEPTED_FILE_TYPES = [
@@ -225,6 +206,7 @@ const ChatRoom: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [chatroomId, setChatroomId] = useState<string | null>(null);
 
   const { user } = useSelector((state: RootState) => state.user);
   const {
@@ -255,8 +237,33 @@ const ChatRoom: React.FC = () => {
   }, [dispatch, fetchUser, selectedUserError]);
 
   useEffect(() => {
-    if (selectedUser && user) {
-      const chatroomId = [user._id, selectedUser._id].sort().join("|");
+    const getChatroomId = async () => {
+      if (user && selectedUser) {
+        const db = getFirestore(firebaseApp);
+        const chatRoomsRef = collection(db, "chatrooms");
+        const q = query(
+          chatRoomsRef,
+          where("participants", "array-contains", user._id)
+        );
+        const querySnapshot = await getDocs(q);
+        let foundChatroomId = null;
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.participants.includes(selectedUser._id)) {
+            foundChatroomId = doc.id;
+          }
+        });
+        if (!foundChatroomId) {
+          foundChatroomId = [user._id, selectedUser._id].sort().join("|");
+        }
+        setChatroomId(foundChatroomId);
+      }
+    };
+    getChatroomId();
+  }, [user, selectedUser]);
+
+  useEffect(() => {
+    if (chatroomId) {
       const messagesRef = collection(
         getFirestore(firebaseApp),
         "chatrooms",
@@ -277,7 +284,7 @@ const ChatRoom: React.FC = () => {
       });
       return unsubscribe;
     }
-  }, [selectedUser, user]);
+  }, [chatroomId]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -287,7 +294,7 @@ const ChatRoom: React.FC = () => {
 
   const handleSendMessage = async () => {
     try {
-      if (newMessage.trim() || attachedFiles.length > 0) {
+      if ((newMessage.trim() || attachedFiles.length > 0) && chatroomId) {
         setIsLoading(true);
         const messageData: Partial<Message> = {
           text: newMessage.trim(),
@@ -300,7 +307,6 @@ const ChatRoom: React.FC = () => {
           updatedAt: serverTimestamp(),
         };
 
-        const chatroomId = [user?._id, selectedUser?._id].sort().join("|");
         const chatroomRef = doc(
           getFirestore(firebaseApp),
           "chatrooms",
@@ -328,7 +334,6 @@ const ChatRoom: React.FC = () => {
           });
         }
 
-        // Update the chatroom document
         await updateDoc(chatroomRef, {
           lastMessage: newMessage.trim(),
           lastMessageTimestamp: serverTimestamp(),
@@ -340,7 +345,6 @@ const ChatRoom: React.FC = () => {
         setReferencedMessage(null);
         setIsLoading(false);
 
-        // Add notification for the recipient
         await addDoc(collection(getFirestore(firebaseApp), "notifications"), {
           recipientId: selectedUser?._id,
           senderId: user?._id,
@@ -359,8 +363,7 @@ const ChatRoom: React.FC = () => {
   };
 
   const handleEditMessage = async (messageId: string, newText: string) => {
-    if (user && selectedUser) {
-      const chatroomId = [user._id, selectedUser._id].sort().join("|");
+    if (chatroomId) {
       await updateDoc(
         doc(
           getFirestore(firebaseApp),
@@ -379,8 +382,7 @@ const ChatRoom: React.FC = () => {
   };
 
   const handleDeleteMessage = async (messageId: string) => {
-    if (user && selectedUser) {
-      const chatroomId = [user._id, selectedUser._id].sort().join("|");
+    if (chatroomId) {
       await deleteDoc(
         doc(
           getFirestore(firebaseApp),
@@ -489,7 +491,6 @@ const ChatRoom: React.FC = () => {
             <StyledMessageBubble
               key={message.id}
               isCurrentUser={message.sender._id === user?._id}
-              isReferenced={referencedMessage?.id === message.id}
               onContextMenu={(e) => handleMessageLongPress(e, message)}
               whileTap={{ scale: 0.98 }}
               initial={{ opacity: 0, y: 20 }}

@@ -22,9 +22,38 @@ import {
   IconSchool,
   IconBxsPin,
   IconMinutemailer,
-  IconBookshelf,
   IconPlayCircle,
 } from "../../assets/icons";
+
+import {
+  TrendingUp as TrendingUpIcon,
+  Article as ArticleIcon,
+  VideoLibrary as VideoLibraryIcon,
+  ChevronRight as ChevronRightIcon,
+  Book as BookIcon,
+  Close as CloseIcon,
+  PlayArrow as PlayArrowIcon,
+  Pause as PauseIcon,
+  Search as SearchIcon,
+  Code as CodeIcon,
+  Science as ScienceIcon,
+  Newspaper as NewspaperIcon,
+  School as SchoolIcon,
+  EmojiObjects as PersonalDevIcon,
+  AutoStories as FictionIcon,
+  AttachMoney as FinanceIcon,
+  Checkroom as FashionIcon,
+  Museum as CultureIcon,
+  Restaurant as FoodIcon,
+  Star as StarIcon,
+  VolumeUp as VolumeUpIcon,
+  VolumeOff as VolumeOffIcon,
+  Bookmark as BookmarkIcon,
+  Share as ShareIcon,
+  Download as DownloadIcon,
+  ZoomIn as ZoomInIcon,
+  ZoomOut as ZoomOutIcon,
+} from "@mui/icons-material";
 import {
   getBookmarkedArticle,
   getUserArticles,
@@ -41,6 +70,7 @@ import LocalForageProvider from "../../utils/localforage";
 import { RootState } from "../../store";
 import { getUserDetails } from "../../actions/user.js";
 import { Message } from "@mui/icons-material";
+import { Chip } from "@mui/material";
 
 type ActiveList = "MY_ARTICLES" | "READING_LIST";
 
@@ -194,7 +224,32 @@ const Profile: React.FC = () => {
     window.open(mail, "_blank");
   };
   const isCurrentUser = currentUser?.username === user?.username;
-
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case "Tech":
+        return <CodeIcon />;
+      case "Science":
+        return <ScienceIcon />;
+      case "News":
+        return <NewspaperIcon />;
+      case "Education":
+        return <SchoolIcon />;
+      case "Personal_dev":
+        return <PersonalDevIcon />;
+      case "Fiction":
+        return <FictionIcon />;
+      case "Finance":
+        return <FinanceIcon />;
+      case "Fashion":
+        return <FashionIcon />;
+      case "Culture":
+        return <CultureIcon />;
+      case "Food":
+        return <FoodIcon />;
+      default:
+        return <ArticleIcon />;
+    }
+  };
   return (
     <>
       <MetaData title="Profile" />
@@ -353,7 +408,7 @@ const Profile: React.FC = () => {
                             (currentUser?.username && navigate("/bookmarks"));
                         }}
                       >
-                        {int}
+                     <CategoryChip key={int} icon={getCategoryIcon(int)} label={int.replace('_', ' ')} />
                       </div>
                     ))}
                   </div>
@@ -907,3 +962,10 @@ const ProfileRenderer = styled.div`
     }
   }
 `;
+
+const CategoryChip = styled(Chip)`
+
+&:hover {
+  background-color: #176984;
+  color: #ffffff;
+}`

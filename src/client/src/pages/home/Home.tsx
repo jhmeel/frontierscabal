@@ -15,7 +15,6 @@ import {
   Tab,
   Drawer,
   IconButton,
-  Slider,
   TextField,
   InputAdornment,
   Paper,

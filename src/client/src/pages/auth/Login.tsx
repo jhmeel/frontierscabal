@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { clearErrors, loginUser } from "../../actions/user";
-import { Google as GoogleIcon, Visibility, VisibilityOff } from '@mui/icons-material';
+import {Visibility, VisibilityOff } from '@mui/icons-material';
 import {
   IconButton,
   InputAdornment,
@@ -17,7 +17,6 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { RootState } from "../../store";
-import { useGoogleLogin } from '@react-oauth/google';
 import { MailIcon } from "../../assets/icons";
 import fcabal from "../../assets/logos/fcabal.png";
 import { useFormik } from "formik";
@@ -55,9 +54,6 @@ const Login = () => {
     },
   });
 
-  const loginWithGoogle = ()=>{
-
-  }
 
   useEffect(() => {
     if (error) {
@@ -131,16 +127,7 @@ const Login = () => {
         >
           {loading ? "Logging in..." : "Login"}
         </Button>
-        <StyledDivider>OR</StyledDivider>
-        <Button
-          fullWidth
-          variant="outlined"
-          startIcon={<GoogleIcon />}
-          onClick={() => loginWithGoogle()}
-          sx={{ marginBottom: '1rem' }}
-        >
-          Log in with Google
-        </Button>
+       
         <Typography variant="body2" align="center">
           Don't have an account?{" "}
           <Link to="/signup">

@@ -19,7 +19,7 @@ const ModuleList: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
 
   const handleCreateModule = () => {
-    navigate('/module/create');  // Navigate to the module creation page
+    navigate('/module/new');  
   };
 
   useEffect(() => {

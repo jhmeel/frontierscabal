@@ -37,6 +37,7 @@ export interface DiscussionMessage {
   content: string;
   fileUrl?: string;
   createdAt?: any;
+  isDeleted?:boolean;
   updatedAt?: any;
   replyTo?: string;
   reactions?: { [key: string]: string[] };

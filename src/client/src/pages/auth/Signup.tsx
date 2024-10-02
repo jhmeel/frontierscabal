@@ -19,7 +19,6 @@ import {
 import {
   Visibility,
   VisibilityOff,
-  Google as GoogleIcon,
 } from "@mui/icons-material";
 
 import { clearErrors, registerUser } from "../../actions/user";
@@ -81,7 +80,7 @@ const Signup: React.FC = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const { loading, isAuthenticated, error } = useSelector(
+  const { loading, isAuthenticated, user:currentUser, error } = useSelector(
     (state: RootState) => state.user
   );
 
@@ -113,9 +112,6 @@ const Signup: React.FC = () => {
     },
   });
 
-  const handleGoogleSignup = () => {
-    console.log("Sign up with Google");
-  };
 
   useEffect(() => {
     if (error) {
@@ -225,15 +221,7 @@ const Signup: React.FC = () => {
               </a>
             </Typography>
           </Box>
-          <StyledDivider>OR</StyledDivider>
-          <StyledButton
-            fullWidth
-            variant="outlined"
-            startIcon={<GoogleIcon />}
-            onClick={handleGoogleSignup}
-          >
-            Sign up with Google
-          </StyledButton>
+        
           <Box mt={2}>
             <Typography variant="body2" align="center">
               By clicking sign up, you agree to our{" "}

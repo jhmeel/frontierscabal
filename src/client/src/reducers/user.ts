@@ -39,11 +39,11 @@ import { USER } from "../types";
 import LocalForageProvider from "../utils/localforage";
 import { USER_ROOT_STATE } from "../types";
 
-const initialState: USER = {
+const initialState: Partial<USER> = {
   username: undefined,
   shortname: undefined,
   email: undefined,
-  phone: undefined,
+  phonenumber: undefined,
   connections: [],
   bio: undefined,
   referralCode: undefined,

@@ -31,9 +31,6 @@ import {
   FormControl,
   Box,
   Container,
-  AppBar,
-  Toolbar,
-  Icon,
 } from "@mui/material";
 import { db } from "../../firebase";
 import { Discussion, USER } from "../../types";
@@ -44,6 +41,7 @@ import {
   Search as SearchIcon,
   Add as AddIcon,
   Close as CloseIcon,
+  AccessTime as ActivityIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -63,7 +61,6 @@ const TagContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
 `;
 
 const TopBar = styled.div`
@@ -97,7 +94,6 @@ const MessageBubble = styled.div`
   max-width: 90%;
   word-wrap: break-word;
   align-self: flex-start;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
 const DrawerContainer = styled(Box)`
@@ -232,13 +228,11 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
   };
 
   const isValidDate = (date: string) => {
-    const d = new Date(date).getTime();
-    return !isNaN(d) ? new Date(date).toLocaleDateString() : "";
+    return  date?.toDate().toLocaleString()
   };
-
   return (
     <Container maxWidth="md">
-      <Typography variant="h5" fontWeight={600} marginBottom={2}>
+      <Typography variant="h5" fontWeight={600}>
         Discuss
       </Typography>
       <DiscussionListWrapper>
@@ -298,7 +292,12 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
                 <Typography variant="subtitle2" color="textSecondary">
                   {`${discussion.participants.length} participant${
                     discussion.participants.length > 1 ? "s" : ""
-                  } • ${isValidDate(discussion.lastActivityAt)}`}
+                  }`}
+                  {" • "}
+                  <ActivityIcon
+                    sx={{ fontSize: "1rem", verticalAlign: "middle" }}
+                  />
+                  {` ${isValidDate(discussion.lastActivityAt)}`}
                 </Typography>
               }
             />
@@ -326,7 +325,7 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
               style={{
                 display: "flex",
                 justifyContent: "center",
-                padding: "16px",
+                padding: "8px",
               }}
             >
               <Button

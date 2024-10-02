@@ -2,7 +2,6 @@ import React, { useState, ChangeEvent, useEffect } from "react";
 import styled from "styled-components";
 import axiosInstance from "../../utils/axiosInstance";
 import { IconPaste, SuccessIcon } from "../../assets/icons";
-import RDotLoader from "../../components/loaders/RDotLoader";
 import { isYouTubeVideoActive } from "../../utils";
 import { useParams } from "react-router-dom";
 import getToken from "../../utils/getToken";
@@ -176,90 +175,90 @@ const UploadLesson = ({
           "Invalid lesson URL. The URL may be broken; please recopy and paste it."
         );
       }
-    } catch (error) {
+    } catch (error:any) {
       toast.error(error.message);
     }
   };
 
   return (
     <>
-    
-    <CreateLessonWrapper>
-    <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
-    {action === "UPDATE" ? `Update Lesson` : `Create Lesson`}
+      <CreateLessonWrapper>
+        <Typography variant="h5" fontWeight={600}>
+          {action === "UPDATE" ? `Update Lesson` : `Create Lesson`}
         </Typography>
-      <LessonForm onSubmit={handleUpload}>
-        <TextField
-          label="Title"
-          variant="outlined"
-          value={title}
-          fullWidth
-          required
-          placeholder="L1: Introduction to web3.0"
-          onChange={handleTitleChange}
-          margin="normal"
-        />
-        <TextField
-          label="Aim"
-          variant="outlined"
-          value={aim}
-          fullWidth
-          required
-          multiline
-          rows={4}
-          onChange={handleAimChange}
-          margin="normal"
-        />
-        <Box display="flex" alignItems="center" position="relative">
+        <LessonForm onSubmit={handleUpload}>
           <TextField
-            label="Lesson URL (YouTube)"
+            label="Title"
             variant="outlined"
-            value={lessonUrl}
+            value={title}
             fullWidth
             required
-            disabled={lessonUrlActive}
-            onChange={handleLessonUrlChange}
+            placeholder="L1: Introduction to web3.0"
+            onChange={handleTitleChange}
             margin="normal"
           />
-          <IconButton onClick={handlePaste} disabled={lessonUrlActive}>
-            {lessonUrlValidationLoading ? (
-              <CircularProgress size={24} />
-            ) : lessonUrlActive ? (
-              <SuccessIcon />
-            ) : (
-              <IconPaste />
-            )}
-          </IconButton>
-        </Box>
-        <Box>
-          <label htmlFor="material">
-            <Typography variant="body2">
-              {material.name ? `✔ ${material.name}` : "Select Lesson Material"}
-            </Typography>
-          </label>
-          <input
-            type="file"
-            id="material"
-            accept=".pdf"
-            onChange={handleMaterialChange}
-            style={{ display: "none" }}
+          <TextField
+            label="Aim"
+            variant="outlined"
+            value={aim}
+            fullWidth
+            required
+            multiline
+            rows={4}
+            onChange={handleAimChange}
+            margin="normal"
           />
-        </Box>
-        <Button
-          variant="contained"
-          color="primary"
-          type="submit"
-          fullWidth
-          disabled={uploadProgress > 0}
-          sx={{ mt: 2 }}
-        >
-          {action === "UPDATE" ? `Update` : `Create`}
-        </Button>
-      </LessonForm>
-      
-    </CreateLessonWrapper>
-   
-    <Footer/></>
+          <Box display="flex" alignItems="center" position="relative">
+            <TextField
+              label="Lesson URL (YouTube)"
+              variant="outlined"
+              value={lessonUrl}
+              fullWidth
+              required
+              disabled={lessonUrlActive}
+              onChange={handleLessonUrlChange}
+              margin="normal"
+            />
+            <IconButton onClick={handlePaste} disabled={lessonUrlActive}>
+              {lessonUrlValidationLoading ? (
+                <CircularProgress size={24} />
+              ) : lessonUrlActive ? (
+                <SuccessIcon />
+              ) : (
+                <IconPaste />
+              )}
+            </IconButton>
+          </Box>
+          <Box>
+            <label htmlFor="material">
+              <Typography variant="body2">
+                {material.name
+                  ? `✔ ${material.name}`
+                  : "Select Lesson Material"}
+              </Typography>
+            </label>
+            <input
+              type="file"
+              id="material"
+              accept=".pdf"
+              onChange={handleMaterialChange}
+              style={{ display: "none" }}
+            />
+          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            fullWidth
+            disabled={uploadProgress > 0}
+            sx={{ mt: 2 }}
+          >
+            {action === "UPDATE" ? `Update` : `Create`}
+          </Button>
+        </LessonForm>
+      </CreateLessonWrapper>
+      <Footer />
+    </>
   );
 };
 
