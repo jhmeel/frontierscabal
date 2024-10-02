@@ -61,7 +61,7 @@ const Login = () => {
       dispatch<any>(clearErrors());
     } else if (isAuthenticated) {
       enqueueSnackbar(`Logged in successfully!`, { variant: "success" });
-      navigate(`/profile/${user?.username}`);
+      navigate(`/biller`);
     }
   }, [dispatch, error, isAuthenticated, navigate]);
 

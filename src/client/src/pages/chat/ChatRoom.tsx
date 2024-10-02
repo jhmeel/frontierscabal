@@ -94,6 +94,7 @@ const StyledMessageBubble = styled(motion.div)(({ theme, isCurrentUser }) => ({
   cursor: "pointer",
   transition: "all 0.3s ease",
   border: "1px solid #ededed",
+  fontSize: "16px",
   "&:hover": {
     boxShadow: theme.shadows[3],
   },
@@ -316,6 +317,8 @@ const ChatRoom: React.FC = () => {
 
         const newMessageRef = await addDoc(messagesRef, messageData);
 
+        setNewMessage("");
+
         if (attachedFiles.length) {
           for (const file of attachedFiles) {
             const fileRef = ref(
@@ -340,7 +343,7 @@ const ChatRoom: React.FC = () => {
           participants: [user?._id, selectedUser?._id],
         });
 
-        setNewMessage("");
+      
         setAttachedFiles([]);
         setReferencedMessage(null);
         setIsLoading(false);
@@ -357,7 +360,6 @@ const ChatRoom: React.FC = () => {
       }
     } catch (err: any) {
       console.error(err);
-      setErrorMessage(err.message);
       setIsLoading(false);
     }
   };
@@ -462,7 +464,7 @@ const ChatRoom: React.FC = () => {
       <StyledAppBar position="static">
         <StyledToolbar>
           <IconButton edge="start" color="inherit" onClick={() => navigate(-1)}>
-            <ArrowBack />
+            <ArrowBack color="#fff"/>
           </IconButton>
           <Box
             display="flex"

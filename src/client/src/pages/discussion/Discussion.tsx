@@ -95,6 +95,7 @@ const MessageBubble = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
   transition: "all 0.3s ease",
   border: isDeleted ? "none" : "1px solid #ededed",
   fontStyle: isDeleted ? "italic" : "normal",
+  fontSize: "16px",
   marginLeft: isCurrentUser ? "auto" : "0",
 }));
 
@@ -105,6 +106,7 @@ const UserInfo = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
   alignSelf: isCurrentUser ? "flex-end" : "flex-start",
   marginBottom: "5px",
   cursor: "pointer",
+  display: isDeleted ? "none" : "block",
   transition: "all 0.3s ease",
   fontStyle: isDeleted ? "italic" : "normal",
   marginLeft: isCurrentUser ? "auto" : "0",
@@ -385,7 +387,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
     <>
       <StyledDiscussionRoom>
         <TopBar>
-          <IconButton onClick={() => navigate(-1)} color="inherit">
+          <IconButton color="#fff" onClick={() => navigate(-1)} color="inherit">
             <ArrowBack />
           </IconButton>
           <Typography
@@ -474,7 +476,6 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {replyTo.content.substring(0, 30)}
                 </ReactMarkdown>
-          
               </Typography>
               <IconButton size="small" onClick={() => setReplyTo(null)}>
                 <RemoveCircle fontSize="small" />

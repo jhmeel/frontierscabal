@@ -217,7 +217,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
           </MenuItem>
         </Menu>
 
-        {commenterName === ownersName && (
+        {commenterName === ownersName && user?.username !== commenterName && (
           <Typography variant="caption" className="comment-owner-tag">
             Author
           </Typography>

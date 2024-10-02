@@ -391,7 +391,7 @@ const StudyMaterialItemRenderer = styled.div`
   
    @media (max-width: 767px) {
     &{
-      max-width: 380px;
+      max-width: 330px;
       margin:0 auto;
     }
   

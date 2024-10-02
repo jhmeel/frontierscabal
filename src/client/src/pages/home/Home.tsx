@@ -451,7 +451,7 @@ const Home: React.FC = () => {
               </ViewMoreButton>
             </SectionTitle>
             <ModuleListWrapper>
-              {!modules.lenght
+              {!modules.length
                 ? Array(2)
                     .fill(null)
                     .map((_, i) => <ModuleItemSkeletonLoader key={i} />)
@@ -525,10 +525,6 @@ const Home: React.FC = () => {
                   <Typography variant="subtitle1">{book.volumeInfo.title}</Typography>
                   <Typography variant="body2">{book.volumeInfo.authors?.join(', ')}</Typography>
                   <Typography variant="caption">{book.volumeInfo.publishedDate}</Typography>
-                  <RatingWrapper>
-                    <StarIcon />
-                    <Typography variant="body2">{book.volumeInfo.averageRating || 'N/A'}</Typography>
-                  </RatingWrapper>
                 </BookCard>
               </Grid>
             ))
