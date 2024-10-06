@@ -33,7 +33,7 @@ const ref_signup = catchAsync(async (req, res, next) => {
   referrer.tokenBalance += 3;
   await referrer.save();
 
-  createSession(user, 200, res, next);
+  return createSession(user, 200, res, next);
   //notify newuser for successful signup!
   
 

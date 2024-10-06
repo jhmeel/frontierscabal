@@ -45,6 +45,7 @@ import {
   Share as ShareIcon,
   Download as DownloadIcon,
 } from "@mui/icons-material";
+import AcUnitIcon from '@mui/icons-material/AcUnit';
 import Footer from "../../components/footer/Footer";
 import VerticalArticleItemSkeletonLoader from "../../components/loaders/VerticalArticleItemSkeletonLoader";
 import VerticalArticleItem from "../../components/verticalArticleItem/VerticalArticleItem";
@@ -64,6 +65,7 @@ import { RootState } from "../../store";
 import LocalForageProvider from "../../utils/localforage";
 import HorizontalArticleItemSkeletonLoader from "../../components/loaders/HorizontalArticleItemSkeletonLoader";
 import HorizontalArticleItem from "../../components/horizontalArticleItem/HorizontalArticleItem";
+import NASA from "../../components/nasa/Nasa";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -380,13 +382,15 @@ const Home: React.FC = () => {
       </Section>
       <MsgItemWrapper>
         <MsgItem />
+   
       </MsgItemWrapper>
+
       {isAuthenticated && (
         <Section>
           <SectionTitle>
             <Box display="flex" alignItems="center">
               <ArticleIcon />
-              <Typography variant="h5" component="h2" ml={1}>Following</Typography>
+              <Typography variant="h5" component="h2" ml={1}>Your Interest</Typography>
             </Box>
           </SectionTitle>
           <CategoriesScrollContainer>
@@ -398,7 +402,12 @@ const Home: React.FC = () => {
           </CategoriesScrollContainer>
         </Section>
       )}
-
+ 
+      <Section>
+        <AcUnitIcon/>
+      <Typography variant="h5" component="h2" ml={1}>Uncover Earth's Secrets from Space</Typography>
+     <NASA/>
+     </Section>
       <Section>
         <SectionTitle>
           <Box display="flex" alignItems="center">

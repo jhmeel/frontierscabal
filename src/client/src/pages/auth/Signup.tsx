@@ -118,11 +118,11 @@ const Signup: React.FC = () => {
       enqueueSnackbar(error, { variant: "error" });
       dispatch<any>(clearErrors());
     }
-    if (isAuthenticated && authToken) {
+    if (isAuthenticated) {
       enqueueSnackbar("Signed up successfully!", { variant: "success" });
       navigate("/personalize");
     }
-  }, [dispatch, error, isAuthenticated, authToken, navigate, enqueueSnackbar]);
+  },[dispatch, error, isAuthenticated, navigate]);
 
   return (
     <>

@@ -292,7 +292,7 @@ const Bot = () => {
         {
           type: "bot",
           content:
-            "Hi! I'm here to assist you in providing answers to past questions, generating quizzes from questions, and answering your academic questions.",
+            "Hi! I'm here to assist you in providing answers to past questions, generating quizzes from questions, and answering your climatic and academic  questions.",
         },
       ]);
      

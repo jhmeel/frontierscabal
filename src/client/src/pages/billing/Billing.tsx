@@ -209,7 +209,7 @@ const Pricing: React.FC = () => {
 
   const componentProps = (plan: Plan) => {
     return {
-      email:user.email,
+      email:user?.email,
       amount: parseInt(plan.price.replace('₦', '').replace(',', '')) * 100,
       publicKey,
       text: 'Subscribe Now',

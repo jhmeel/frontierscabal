@@ -8,9 +8,11 @@ const MultiTextLoader = () => {
       <div className="loader">
         <p>Loading</p>
         <div className="words">
+        <span className="word">Climate Data</span>
           <span className="word">Study Materials</span>
           <span className="word">Blog Posts</span>
           <span className="word">Events</span>
+          <span className="word">Books</span>
           <span className="word">Modules</span>
           <span className="word">Lessons</span>
         </div>
