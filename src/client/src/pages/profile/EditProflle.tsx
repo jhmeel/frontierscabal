@@ -3,7 +3,7 @@ import MetaData from "../../MetaData";
 import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "notistack";
 import { useDispatch, useSelector } from "react-redux";
-import { updateProfile, clearErrors } from "../../actions/user";
+import { updateProfile, clearErrors, getUserDetails } from "../../actions/user";
 import getToken from "../../utils/getToken";
 import { isOnline } from "../../utils";
 import RDotLoader from "../../components/loaders/RDotLoader";
@@ -18,7 +18,8 @@ const EditProfile = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state: RootState) => state.user);
   const { error, isUpdated, loading } = useSelector((state: RootState) => state.profile);
-
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [avatar, setAvatar] = useState("");
   const [updatedInfo, setUpdatedInfo] = useState({
     username: "",
     phonenumber: "",
@@ -36,11 +37,12 @@ const EditProfile = () => {
         school: user.school,
         bio: user.bio,
       });
+
+      setAvatarPreview(user?.avatar?.url)
     }
   }, [user]);
 
-  const [avatarPreview, setAvatarPreview] = useState<string>("");
-  const [avatar, setAvatar] = useState("");
+
 
   const handleUpdate = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -63,7 +65,7 @@ const EditProfile = () => {
     formData.append("school", updatedInfo.school);
     formData.append("avatar", avatar);
 
-    isOnline() && dispatch(updateProfile(authToken, formData));
+    isOnline() && dispatch<any>(updateProfile(authToken, formData));
   };
 
   const handleDataChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -218,13 +220,14 @@ const StyledEditProfile = styled.div`
   width: 100%;
   max-width: 600px;
   height: 100vh;
+  margin:0 auto;
   display: flex;
   justify-content: center;
 
   .edit-profile-container {
-    width: 60%;
+
     padding: 20px;
-    border-radius: 12px;
+  
   }
 
   .profile-avatar {

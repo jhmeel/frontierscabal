@@ -120,7 +120,7 @@ const Profile: React.FC = () => {
   const fetchUser = useCallback(async () => {
     const authToken = await getToken();
     let username: string =
-      params?.username || (await LocalForageProvider.getItem("FC:USERNAME"));
+      params?.username || (await LocalForageProvider.getItem("FC:USERNAME"))
     username && dispatch<any>(await getUserDetails(username, authToken));
   }, []);
   useEffect(() => {

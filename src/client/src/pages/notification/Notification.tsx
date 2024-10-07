@@ -3,7 +3,7 @@ import NotificationItem from "../../components/notificationItem/NotificationItem
 import MetaData from "../../MetaData";
 import Footer from "../../components/footer/Footer";
 import { NotificationManager } from "../../lib/notificationManager/NotificationManager";
-import { Box, Typography, Card, CardContent, Grid } from "@mui/material";
+import { Box, Typography, Card, CardContent } from "@mui/material";
 import { styled } from "@mui/system";
 
 const NotificationPage: React.FC = (): React.ReactElement => {
@@ -53,7 +53,10 @@ const NotificationPage: React.FC = (): React.ReactElement => {
             notifications
               .sort((a, b) => b?.date - a?.date)
               .map((not: any, i: number) => (
-                <Card sx={{ margin: 2, width: "100%", maxWidth: "600px" }} key={i}>
+                <Card
+                  sx={{ margin: 2, width: "100%", maxWidth: "600px" }}
+                  key={i}
+                >
                   <CardContent>
                     <NotificationItem
                       id={not?._id}

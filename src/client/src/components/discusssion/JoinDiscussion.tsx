@@ -4,6 +4,7 @@ import { db } from '../../firebase';
 import { USER, JoinRequest as JoinRequestType }from '../../types';
 import { Button, List, ListItem, ListItemText, ListItemSecondaryAction, Typography, Paper } from '@mui/material';
 import styled from 'styled-components';
+import { arrayUnion } from 'firebase/firestore';
 
 const StyledPaper = styled(Paper)`
   padding: 16px;
@@ -50,7 +51,7 @@ const JoinRequest: React.FC<JoinRequestProps> = ({ discussionId, currentUser, is
   const handleApproveRequest = async (requestId: string, userId: string) => {
     await updateDoc(doc(db, 'joinRequests', requestId), { status: 'approved' });
     await updateDoc(doc(db, 'discussions', discussionId), {
-      participants: firebase.firestore.FieldValue.arrayUnion(userId)
+      participants: arrayUnion(userId)
     });
   };
 

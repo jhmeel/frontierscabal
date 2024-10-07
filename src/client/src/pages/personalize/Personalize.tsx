@@ -57,7 +57,7 @@ const Personalize = () => {
             Select your interests!
           </Typography>
           <Typography variant="subtitle1" align="center">
-            This will help us customize your blog feed.
+            This will help us customize what you see.
           </Typography>
         </Box>
 

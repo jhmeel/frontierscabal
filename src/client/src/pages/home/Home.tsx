@@ -45,7 +45,7 @@ import {
   Share as ShareIcon,
   Download as DownloadIcon,
 } from "@mui/icons-material";
-import AcUnitIcon from '@mui/icons-material/AcUnit';
+import AcUnitIcon from "@mui/icons-material/AcUnit";
 import Footer from "../../components/footer/Footer";
 import VerticalArticleItemSkeletonLoader from "../../components/loaders/VerticalArticleItemSkeletonLoader";
 import VerticalArticleItem from "../../components/verticalArticleItem/VerticalArticleItem";
@@ -99,7 +99,9 @@ const Home: React.FC = () => {
   const [libraryPickOfTheDay, setLibraryPickOfTheDay] = useState<any>(null);
   const [libraryPickLoading, setLibraryPickLoading] = useState(true);
 
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.user);
+  const { isAuthenticated, user } = useSelector(
+    (state: RootState) => state.user
+  );
 
   const [categories, setCategories] = useState({
     Tech: false,
@@ -122,15 +124,18 @@ const Home: React.FC = () => {
 
   useEffect(() => {
     if (isAuthenticated && user?.username) {
-      LocalForageProvider.getItem(`FC:${user.username}:INTERESTS`, (err, val: any) => {
-        if (val) {
-          const parsedVal = JSON.parse(val);
-          setCategories(prevCategories => ({
-            ...prevCategories,
-            ...parsedVal,
-          }));
+      LocalForageProvider.getItem(
+        `FC:${user.username}:INTERESTS`,
+        (err, val: any) => {
+          if (val) {
+            const parsedVal = JSON.parse(val);
+            setCategories((prevCategories) => ({
+              ...prevCategories,
+              ...parsedVal,
+            }));
+          }
         }
-      });
+      );
     }
   }, [isAuthenticated, user]);
 
@@ -248,7 +253,10 @@ const Home: React.FC = () => {
     isOnline() && getModules();
   }, [enqueueSnackbar]);
 
-  const handleCategoryChange = (event: React.SyntheticEvent, newValue: string) => {
+  const handleCategoryChange = (
+    event: React.SyntheticEvent,
+    newValue: string
+  ) => {
     setSelectedCategory(newValue);
   };
 
@@ -289,7 +297,7 @@ const Home: React.FC = () => {
 
   const handleDownload = () => {
     if (selectedBook && selectedBook.volumeInfo.previewLink) {
-      window.open(selectedBook.volumeInfo.previewLink, '_blank');
+      window.open(selectedBook.volumeInfo.previewLink, "_blank");
     } else {
       enqueueSnackbar("Download link not available", { variant: "error" });
     }
@@ -330,12 +338,14 @@ const Home: React.FC = () => {
     <HomeWrapper>
       <Banner />
       <Descriptor />
-      
+
       <Section>
         <SectionTitle>
           <Box display="flex" alignItems="center">
             <BookIcon />
-            <Typography variant="h5" component="h2" ml={1}>Library Pick of the Day</Typography>
+            <Typography variant="h5" component="h2" ml={1}>
+              Library Pick of the Day
+            </Typography>
           </Box>
         </SectionTitle>
         {libraryPickLoading ? (
@@ -352,37 +362,49 @@ const Home: React.FC = () => {
               </Grid>
             </Grid>
           </LibraryPickCard>
-        ) : libraryPickOfTheDay && (
-          <LibraryPickCard>
-            <Grid container spacing={3}>
-              <Grid item xs={12} md={4}>
-                <BookCover
-                  src={libraryPickOfTheDay.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/128x192'}
-                  alt={libraryPickOfTheDay.volumeInfo.title}
-                />
+        ) : (
+          libraryPickOfTheDay && (
+            <LibraryPickCard>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={4}>
+                  <BookCover
+                    src={
+                      libraryPickOfTheDay.volumeInfo.imageLinks?.thumbnail ||
+                      "https://via.placeholder.com/128x192"
+                    }
+                    alt={libraryPickOfTheDay.volumeInfo.title}
+                  />
+                </Grid>
+                <Grid item xs={12} md={8}>
+                  <Typography variant="h4">
+                    {libraryPickOfTheDay.volumeInfo.title}
+                  </Typography>
+                  <Typography variant="subtitle1">
+                    {libraryPickOfTheDay.volumeInfo.authors?.join(", ")}
+                  </Typography>
+                  <Typography variant="body1" mt={2}>
+                    {libraryPickOfTheDay.volumeInfo.description
+                      ?.split(" ")
+                      .slice(0, 50)
+                      .join(" ")}
+                    ...
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleBookSelect(libraryPickOfTheDay)}
+                    sx={{ mt: 2 }}
+                  >
+                    Read More
+                  </Button>
+                </Grid>
               </Grid>
-              <Grid item xs={12} md={8}>
-                <Typography variant="h4">{libraryPickOfTheDay.volumeInfo.title}</Typography>
-                <Typography variant="subtitle1">{libraryPickOfTheDay.volumeInfo.authors?.join(', ')}</Typography>
-                <Typography variant="body1" mt={2}>
-                  {libraryPickOfTheDay.volumeInfo.description?.split(' ').slice(0, 50).join(' ')}...
-                </Typography>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleBookSelect(libraryPickOfTheDay)}
-                  sx={{ mt: 2 }}
-                >
-                  Read More
-                </Button>
-              </Grid>
-            </Grid>
-          </LibraryPickCard>
+            </LibraryPickCard>
+          )
         )}
       </Section>
       <MsgItemWrapper>
         <MsgItem />
-   
       </MsgItemWrapper>
 
       {isAuthenticated && (
@@ -390,29 +412,44 @@ const Home: React.FC = () => {
           <SectionTitle>
             <Box display="flex" alignItems="center">
               <ArticleIcon />
-              <Typography variant="h5" component="h2" ml={1}>Your Interest</Typography>
+              <Typography variant="h5" component="h2" ml={1}>
+                Your Interest
+              </Typography>
             </Box>
           </SectionTitle>
           <CategoriesScrollContainer>
-            {Object.entries(categories).map(([category, isSelected]) => (
-              isSelected && (
-                <CategoryChip key={category} icon={getCategoryIcon(category)} label={category.replace('_', ' ')} />
-              )
-            ))}
+            {Object.entries(categories).map(
+              ([category, isSelected]) =>
+                isSelected && (
+                  <CategoryChip
+                    key={category}
+                    icon={getCategoryIcon(category)}
+                    label={category.replace("_", " ")}
+                  />
+                )
+            )}
           </CategoriesScrollContainer>
         </Section>
       )}
- 
+
       <Section>
-        <AcUnitIcon/>
-      <Typography variant="h5" component="h2" ml={1}>Uncover Earth's Secrets from Space</Typography>
-     <NASA/>
-     </Section>
+        <SectionTitle>
+          <Box display="flex" alignItems="center">
+            <AcUnitIcon />
+            <Typography variant="h5" component="h2" ml={1}>
+              Uncover Earth's Secrets from Space
+            </Typography>
+          </Box>
+        </SectionTitle>
+        <NASA />
+      </Section>
       <Section>
         <SectionTitle>
           <Box display="flex" alignItems="center">
             <TrendingUpIcon />
-            <Typography variant="h5" component="h2" ml={1}>Top Stories</Typography>
+            <Typography variant="h5" component="h2" ml={1}>
+              Top Stories
+            </Typography>
           </Box>
           <ViewMoreButton
             endIcon={<ChevronRightIcon />}
@@ -422,7 +459,7 @@ const Home: React.FC = () => {
           </ViewMoreButton>
         </SectionTitle>
         <TrendingArticlesWrapper>
-        {trendingLoading
+          {trendingLoading
             ? Array(10)
                 .fill(null)
                 .map((_, i) => <VerticalArticleItemSkeletonLoader key={i} />)
@@ -450,7 +487,9 @@ const Home: React.FC = () => {
             <SectionTitle>
               <Box display="flex" alignItems="center">
                 <VideoLibraryIcon />
-                <Typography variant="h5" component="h2" ml={1}>Modules</Typography>
+                <Typography variant="h5" component="h2" ml={1}>
+                  Modules
+                </Typography>
               </Box>
               <ViewMoreButton
                 endIcon={<ChevronRightIcon />}
@@ -485,7 +524,9 @@ const Home: React.FC = () => {
         <SectionTitle>
           <Box display="flex" alignItems="center">
             <BookIcon />
-            <Typography variant="h5" component="h2" ml={1}>Books by Category</Typography>
+            <Typography variant="h5" component="h2" ml={1}>
+              Books by Category
+            </Typography>
           </Box>
         </SectionTitle>
         <SearchBarWrapper>
@@ -520,24 +561,36 @@ const Home: React.FC = () => {
           ))}
         </Tabs>
         <Grid container spacing={2} mt={2}>
-          {booksLoading ? (
-            Array(8).fill(null).map((_, index) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
-                <BookCardSkeleton />
-              </Grid>
-            ))
-          ) : (
-            categoryBooks?.map((book: any) => (
-              <Grid item xs={12} sm={6} md={4} lg={3} key={book.id}>
-                <BookCard onClick={() => handleBookSelect(book)}>
-                  <BookCover src={book.volumeInfo.imageLinks?.thumbnail || 'https://via.placeholder.com/128x192'} alt={book.volumeInfo.title} />
-                  <Typography variant="subtitle1">{book.volumeInfo.title}</Typography>
-                  <Typography variant="body2">{book.volumeInfo.authors?.join(', ')}</Typography>
-                  <Typography variant="caption">{book.volumeInfo.publishedDate}</Typography>
-                </BookCard>
-              </Grid>
-            ))
-          )}
+          {booksLoading
+            ? Array(8)
+                .fill(null)
+                .map((_, index) => (
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+                    <BookCardSkeleton />
+                  </Grid>
+                ))
+            : categoryBooks?.map((book: any) => (
+                <Grid item xs={12} sm={6} md={4} lg={3} key={book.id}>
+                  <BookCard onClick={() => handleBookSelect(book)}>
+                    <BookCover
+                      src={
+                        book.volumeInfo.imageLinks?.thumbnail ||
+                        "https://via.placeholder.com/128x192"
+                      }
+                      alt={book.volumeInfo.title}
+                    />
+                    <Typography variant="subtitle1">
+                      {book.volumeInfo.title}
+                    </Typography>
+                    <Typography variant="body2">
+                      {book.volumeInfo.authors?.join(", ")}
+                    </Typography>
+                    <Typography variant="caption">
+                      {book.volumeInfo.publishedDate}
+                    </Typography>
+                  </BookCard>
+                </Grid>
+              ))}
         </Grid>
       </Section>
 
@@ -545,7 +598,9 @@ const Home: React.FC = () => {
         <SectionTitle>
           <Box display="flex" alignItems="center">
             <ArticleIcon />
-            <Typography variant="h5" component="h2" ml={1}>Recent Stories</Typography>
+            <Typography variant="h5" component="h2" ml={1}>
+              Recent Stories
+            </Typography>
           </Box>
           <ViewMoreButton
             endIcon={<ChevronRightIcon />}
@@ -587,14 +642,14 @@ const Home: React.FC = () => {
         open={isReading}
         onClose={handleCloseReading}
         PaperProps={{
-          style: { width: '80%', maxWidth: '1000px' },
+          style: { width: "80%", maxWidth: "1000px" },
         }}
       >
         <ReadingDrawerContent>
           <IconButton
             aria-label="close"
             onClick={handleCloseReading}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
+            sx={{ position: "absolute", right: 8, top: 8 }}
           >
             <CloseIcon />
           </IconButton>
@@ -604,7 +659,7 @@ const Home: React.FC = () => {
                 {selectedBook.volumeInfo.title}
               </Typography>
               <Typography variant="subtitle1" gutterBottom>
-                By {selectedBook.volumeInfo.authors?.join(', ')}
+                By {selectedBook.volumeInfo.authors?.join(", ")}
               </Typography>
               <ActionTray>
                 <Tooltip title="Bookmark">

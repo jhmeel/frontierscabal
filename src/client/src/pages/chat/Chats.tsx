@@ -29,6 +29,7 @@ import {
 } from "firebase/firestore";
 import { app as firebaseApp } from "../../firebase";
 import { RootState } from "../../store";
+import toast from "react-hot-toast";
 
 const ChatsPageContainer = styled(Box)(({ theme }) => ({
   display: "flex",
@@ -63,7 +64,7 @@ const NoChatsPlaceholder = styled(Box)(({ theme }) => ({
 const StyledListItem = styled(ListItem)(({ theme }) => ({
   borderRadius: theme.shape.borderRadius,
   marginBottom: theme.spacing(1.5),
-  '&:hover': {
+  "&:hover": {
     backgroundColor: theme.palette.action.hover,
   },
 }));
@@ -96,12 +97,12 @@ const Chats: React.FC = () => {
 
   useEffect(() => {
     if (!user?._id) {
-      console.log("No user ID found. Skipping chat fetch.");
+      toast.error("No user ID found. Skipping chat fetch.");
       setLoading(false);
       return;
     }
 
-    console.log("Fetching chats for user:", user._id);
+    toast.error("Fetching chats for user");
 
     const db = getFirestore(firebaseApp);
     const chatroomsRef = collection(db, "chatrooms");
@@ -112,15 +113,20 @@ const Chats: React.FC = () => {
       limit(20)
     );
 
-    const unsubscribe = onSnapshot(q, 
+    const unsubscribe = onSnapshot(
+      q,
       (snapshot) => {
-        console.log("Received snapshot with", snapshot.docs.length, "documents");
+        console.log(
+          "Received snapshot with",
+          snapshot.docs.length,
+          "documents"
+        );
         const newChats: ChatData[] = [];
         const newUsers: { [key: string]: string } = {};
 
         snapshot.forEach((doc) => {
           const data = doc.data() as ChatData;
-          console.log("Processing chat:", doc.id, data);
+        
           if (data.lastMessageTime) {
             newChats.push({
               id: doc.id,
@@ -139,7 +145,6 @@ const Chats: React.FC = () => {
         });
 
         setChats(newChats);
-        console.log("Updated chats:", newChats);
 
         const usersRef = collection(db, "users");
         const userIds = Object.keys(newUsers);
@@ -161,7 +166,7 @@ const Chats: React.FC = () => {
         setLoading(false);
       },
       (err) => {
-        console.error("Error fetching chats:", err);
+     
         setError("Failed to load chats. Please try again later.");
         setLoading(false);
       }
@@ -169,7 +174,6 @@ const Chats: React.FC = () => {
 
     return () => unsubscribe();
   }, [user?._id]);
-
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -184,13 +188,14 @@ const Chats: React.FC = () => {
   };
 
   const filteredChats = chats.filter((chat) => {
-    const otherParticipantId = chat.participants.find(id => id !== user?._id) || '';
+    const otherParticipantId =
+      chat.participants.find((id) => id !== user?._id) || "";
     const otherUser = users[otherParticipantId];
     return otherUser?.username.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const getOtherParticipant = (participants: string[]) => {
-    return participants.find(id => id !== user?._id) || '';
+    return participants.find((id) => id !== user?._id) || "";
   };
 
   return (
@@ -210,19 +215,28 @@ const Chats: React.FC = () => {
       </SearchContainer>
 
       <RecentChatsContainer>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+        >
           <Typography variant="h6">Recent Chats</Typography>
           <Button
             variant="contained"
             color="primary"
             startIcon={<AddIcon />}
             onClick={handleFindSomeoneClick}
-          >
-          </Button>
+          ></Button>
         </Box>
 
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            flex={1}
+          >
             <CircularProgress />
           </Box>
         ) : filteredChats.length === 0 ? (
@@ -240,18 +254,36 @@ const Chats: React.FC = () => {
               const otherParticipantId = getOtherParticipant(chat.participants);
               const otherUser = users[otherParticipantId];
               return (
-                <StyledListItem key={chat.id} button onClick={() => handleChatClick(chat.id)}>
+                <StyledListItem
+                  key={chat.id}
+                  button
+                  onClick={() => handleChatClick(chat.id)}
+                >
                   <ListItemAvatar>
                     <Avatar src={otherUser?.avatar?.url}>
                       {otherUser?.username.charAt(0)}
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
-                    primary={<Typography variant="subtitle1">{otherUser?.username}</Typography>}
+                    primary={
+                      <Typography variant="subtitle1">
+                        {otherUser?.username}
+                      </Typography>
+                    }
                     secondary={
-                      <Box display="flex" justifyContent="space-between" alignItems="center">
-                        <Typography variant="body2" color="textSecondary" noWrap sx={{ maxWidth: '70%' }}>
-                          {chat.lastMessageSender === user?._id ? 'You: ' : ''}{chat.lastMessage}
+                      <Box
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="center"
+                      >
+                        <Typography
+                          variant="body2"
+                          color="textSecondary"
+                          noWrap
+                          sx={{ maxWidth: "70%" }}
+                        >
+                          {chat.lastMessageSender === user?._id ? "You: " : ""}
+                          {chat.lastMessage}
                         </Typography>
                         <Typography variant="caption" color="textSecondary">
                           {formatDistanceToNow(chat.lastMessageTime)} ago

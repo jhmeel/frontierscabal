@@ -320,7 +320,7 @@ export type USER = {
     instagram?: string;
     tiktok?: string;
   };
-  createdAt: string;
+  createdAt?: string;
 };
 
 export type COURSE = {

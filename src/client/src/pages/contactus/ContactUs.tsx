@@ -88,10 +88,9 @@ export default ContactUs;
 const StyledContactUs = styled(Box)`
   width: 100%;
   height: 100vh;
-  padding: 20px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
   font-family: "Roboto", sans-serif;
 

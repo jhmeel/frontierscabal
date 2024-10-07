@@ -38,8 +38,10 @@ import {
 import { USER } from "../types";
 import LocalForageProvider from "../utils/localforage";
 import { USER_ROOT_STATE } from "../types";
+import { string } from "yup";
 
-const initialState: Partial<USER> = {
+const initialState: USER = {
+  _id: undefined,
   username: undefined,
   shortname: undefined,
   email: undefined,
@@ -53,6 +55,7 @@ const initialState: Partial<USER> = {
   savedArticles: [],
   tokenBalance: 0,
   social_handles: undefined,
+  createdAt: undefined
 };
 
 export const userReducer = (
