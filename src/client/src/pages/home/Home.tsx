@@ -348,7 +348,7 @@ const Home: React.FC = () => {
             </Typography>
           </Box>
         </SectionTitle>
-        {libraryPickLoading ? (
+        {libraryPickLoading|| !libraryPickOfTheDay ? (
           <LibraryPickCard>
             <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
@@ -459,7 +459,7 @@ const Home: React.FC = () => {
           </ViewMoreButton>
         </SectionTitle>
         <TrendingArticlesWrapper>
-          {trendingLoading
+          {trendingLoading|| !trendingArticles.length
             ? Array(10)
                 .fill(null)
                 .map((_, i) => <VerticalArticleItemSkeletonLoader key={i} />)
@@ -561,7 +561,7 @@ const Home: React.FC = () => {
           ))}
         </Tabs>
         <Grid container spacing={2} mt={2}>
-          {booksLoading
+          {booksLoading || !categoryBooks.length
             ? Array(8)
                 .fill(null)
                 .map((_, index) => (
@@ -610,7 +610,7 @@ const Home: React.FC = () => {
           </ViewMoreButton>
         </SectionTitle>
         <Grid container spacing={2}>
-          {recentArticleLoading
+          {recentArticleLoading|| !recentArticles.length
             ? Array(12)
                 .fill(null)
                 .map((_, i) => (

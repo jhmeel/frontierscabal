@@ -3,7 +3,7 @@ import NotificationItem from "../../components/notificationItem/NotificationItem
 import MetaData from "../../MetaData";
 import Footer from "../../components/footer/Footer";
 import { NotificationManager } from "../../lib/notificationManager/NotificationManager";
-import { Box, Typography, Card, CardContent } from "@mui/material";
+import { Box, Typography, Card, CardContent, Container} from "@mui/material";
 import { styled } from "@mui/system";
 
 const NotificationPage: React.FC = (): React.ReactElement => {
@@ -95,13 +95,10 @@ const NotificationPage: React.FC = (): React.ReactElement => {
 
 export default NotificationPage;
 
-const NotificationRenderer = styled(Box)`
-  max-width: 1000px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  margin: 0 auto;
-  padding: 16px;
+const NotificationRenderer =  styled(Container)`
+  margin-top: 20px;
+  margin-bottom: 40px;
+  min-height:100vh;
 
   .notification-header {
     margin-top: 5px;

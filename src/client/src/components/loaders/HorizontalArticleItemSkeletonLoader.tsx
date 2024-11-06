@@ -15,9 +15,9 @@ const HorizontalArticleItemSkeletonLoader = () => {
 };
 
 const StyledHorizontalArticleItemSkeletonRenderer = styled(Box)`
-  height: 300px;
+  height: 200px;
   max-width: 530px;
-  width: 500px;
+  width: 100%;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -28,6 +28,7 @@ const StyledHorizontalArticleItemSkeletonRenderer = styled(Box)`
   border-radius: 8px;
   transition: 0.3s ease-out;
   overflow: hidden;
+  background:#fff;
   cursor: progress;
 
   @media (max-width: 767px) {

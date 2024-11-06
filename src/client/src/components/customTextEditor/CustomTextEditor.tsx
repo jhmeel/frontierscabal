@@ -26,6 +26,7 @@ import IRCache from "../../utils/cache";
 import styled from "styled-components";
 import RDotLoader from "../loaders/RDotLoader";
 import { RootState } from "../../store";
+import { Button } from "@mui/material";
 
 interface CustomEditorProps {
   artId?: string;
@@ -309,14 +310,14 @@ const CustomEditor: React.FC<CustomEditorProps> = ({
           }}
           ref={editorEl}
         />
-        <button
+        <Button
           type="submit"
           onClick={handleSubmit}
           disabled={!content}
           className={content ? "custom-editor-btn" : "dis-btn"}
         >
           {action === "New" ? "Publish" : "Republish"}
-        </button>
+        </Button>
       </CustomEditorForm>
       {metaVisible && (
         <CustomEditorFormMetaData>
@@ -411,7 +412,7 @@ const CustomEditor: React.FC<CustomEditorProps> = ({
                 </div>
               )}
             </div>
-            <button
+            <Button
               type="submit"
               className="submit-art-meta"
               disabled={loading || updateLoading}
@@ -423,7 +424,7 @@ const CustomEditor: React.FC<CustomEditorProps> = ({
               ) : (
                 "Update"
               )}
-            </button>
+            </Button>
           </form>
         </CustomEditorFormMetaData>
       )}
@@ -540,7 +541,7 @@ const CustomEditorForm = styled.form`
     margin-top: 1.9rem;
     border: none;
     border-radius: 6px;
-    font-size: 1.1rem;
+    font-size: 13px;
     opacity: 0.4;
     cursor: pointer;
     position: absolute;

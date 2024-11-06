@@ -19,6 +19,9 @@ import { errorParser } from "../../utils/formatter";
 import toast from "react-hot-toast";
 import styled from "styled-components";
 import { RootState } from "../../store";
+import { CloudUpload as CloudUploadIcon } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@mui/material";
 
 const StudyMaterial = () => {
   const dispatch = useDispatch();
@@ -40,6 +43,8 @@ const StudyMaterial = () => {
     pastQuestion,
     loading,
   } = useSelector((state: RootState) => state.pastQuestionSearch);
+
+  const navigate = useNavigate()
 
   const toggleOptionVisible = () => {
     setIsOptionVisible(!optionVisible);
@@ -171,6 +176,10 @@ const StudyMaterial = () => {
       document.removeEventListener("click", handleCourseClickOutside);
     };
   }, []);
+
+  const handleUpload = () => {
+    navigate("/study-material/new");
+  };
   return (
     <>
       <MetaData title="Study Materials" />
@@ -178,6 +187,9 @@ const StudyMaterial = () => {
         {loading && <SpinLoader />}
         <StudyMaterialRenderer>
           <div className="demarcator">
+           
+            <div style={{display:'flex', position:'relative'}}>
+
             <div className="options-bar" ref={optionRef}>
               <span className="selectedOption" onClick={toggleOptionVisible}>
                 {selectedCourse.code}-{selectedSession}-{selectedLevel}
@@ -245,6 +257,18 @@ const StudyMaterial = () => {
                 </div>
               )}
             </div>
+
+            </div>
+
+            <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                startIcon={<CloudUploadIcon />}
+                onClick={handleUpload}
+              >
+                Upload
+              </Button>
           </div>
           <div className="pq-list">
             {loading
@@ -323,7 +347,7 @@ const StudyMaterialRenderer = styled.div`
     position: fixed;
     justify-content: space-between;
     align-items: center;
-    padding: 5px 10px;
+    padding: 10px 20px;
     width: 100%;
     height: fit-content;
     z-index: 99;
@@ -414,9 +438,6 @@ const StudyMaterialRenderer = styled.div`
       margin: 0;
       padding: 0;
     }
-    .course-list {
-      left: 50%;
-    }
   }
 
   .course-list {
@@ -425,7 +446,6 @@ const StudyMaterialRenderer = styled.div`
     border-radius: 5px;
     background-color: #fff;
     z-index: 999;
-    left: 75%;
     height: 300px;
     overflow-y: scroll;
   }

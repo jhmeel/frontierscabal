@@ -5,7 +5,16 @@ import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
 import { enqueueSnackbar, closeSnackbar } from "notistack";
-import { FaBookmark, FaRegBookmark, FaEllipsisH, FaEdit, FaPen, FaUnlink, FaShareAlt, FaTrash } from "react-icons/fa";
+import {
+  FaBookmark,
+  FaRegBookmark,
+  FaEllipsisH,
+  FaEdit,
+  FaPen,
+  FaUnlink,
+  FaShareAlt,
+  FaTrash,
+} from "react-icons/fa";
 
 import axiosInstance from "../../utils/axiosInstance";
 import getToken from "../../utils/getToken";
@@ -44,7 +53,6 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
   pinnedBy,
   onProfile = false,
 }) => {
-  
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [isSaved, setIsSaved] = useState(false);
@@ -80,7 +88,9 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
         return;
       }
       setBookmarkLoading(true);
-      const { data } = await axiosInstance(authToken).get(`/api/v1/article/bookmark/${id}`);
+      const { data } = await axiosInstance(authToken).get(
+        `/api/v1/article/bookmark/${id}`
+      );
 
       if (data.success) {
         setIsSaved(!isSaved);
@@ -110,12 +120,15 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
       persist: true,
       action: (key) => (
         <>
-          <Button onClick={() => { closeSnackbar(); navigate("/signup"); }}>
+          <Button
+            onClick={() => {
+              closeSnackbar();
+              navigate("/signup");
+            }}
+          >
             Signup
           </Button>
-          <Button onClick={() => closeSnackbar()}>
-            Cancel
-          </Button>
+          <Button onClick={() => closeSnackbar()}>Cancel</Button>
         </>
       ),
     });
@@ -142,7 +155,9 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
     try {
       const authToken = await getToken();
       setDeleteLoading(true);
-      const { data } = await axiosInstance(authToken).delete(`/api/v1/article/${id}`);
+      const { data } = await axiosInstance(authToken).delete(
+        `/api/v1/article/${id}`
+      );
       if (data?.success) {
         toast.success("Article deleted successfully!");
       }
@@ -172,7 +187,9 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
       whileHover={{ scale: 1.02 }}
       transition={{ type: "spring", stiffness: 300 }}
     >
-      <CategoryBadge onClick={() => navigate(`/blog/search?category=${category}`)}>
+      <CategoryBadge
+        onClick={() => navigate(`/blog/search?category=${category}`)}
+      >
         {category}
       </CategoryBadge>
       <ImageContainer>
@@ -184,7 +201,7 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
         {onProfile ? (
           <MenuContainer ref={menuRef}>
             <MenuIcon onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            <MoreVert  />
+              <MoreVert />
             </MenuIcon>
             <AnimatePresence>
               {isMenuOpen && (
@@ -201,13 +218,15 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
                   )}
                   {user?.username === postedBy?.username && (
                     <MenuItem onClick={handlePinAndUnpin}>
-                      {isPinned ? <FaUnlink /> : <FaPen />} {isPinned ? "Unpin" : "Pin"}
+                      {isPinned ? <FaUnlink /> : <FaPen />}{" "}
+                      {isPinned ? "Unpin" : "Pin"}
                     </MenuItem>
                   )}
                   <MenuItem onClick={handleShare}>
                     <FaShareAlt /> Share
                   </MenuItem>
-                  {(user?.username === postedBy?.username || user?.role === "FC:SUPER:ADMIN") && (
+                  {(user?.username === postedBy?.username ||
+                    user?.role === "FC:SUPER:ADMIN") && (
                     <MenuItem onClick={showConfirmation}>
                       {deleteLoading ? <RDotLoader /> : <FaTrash />} Delete
                     </MenuItem>
@@ -221,25 +240,36 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
             {bookmarkLoading ? (
               <RDotLoader />
             ) : isSaved ? (
-              <FaBookmark size={20}/>
+              <FaBookmark size={20} />
             ) : (
-              <FaRegBookmark size={20}/>
+              <FaRegBookmark size={20} />
             )}
           </BookmarkIcon>
         )}
         <Link to={`/blog/article/${slug}`}>
-          <Title>{title?.length > 60 ? `${title.slice(0, 60)}...` : title}</Title>
+          <Title>
+            {title?.length > 60 ? `${title.slice(0, 60)}...` : title}
+          </Title>
         </Link>
-        <Caption dangerouslySetInnerHTML={{ __html: removeHtmlAndHashTags(`${caption?.slice(0, 120)}...`) }} />
+        <Caption
+          dangerouslySetInnerHTML={{
+            __html: removeHtmlAndHashTags(`${caption?.slice(0, 120)}...`),
+          }}
+        />
         <MetaContainer>
           <AuthorInfo>
-            <AuthorAvatar src={postedBy?.avatar?.url || emptyAvatar} alt={postedBy?.username} />
+            <AuthorAvatar
+              src={postedBy?.avatar?.url || emptyAvatar}
+              alt={postedBy?.username}
+            />
             <AuthorName to={`/profile/${postedBy?.username}`}>
               {postedBy?.username}
             </AuthorName>
           </AuthorInfo>
           <ReadDuration>
-            {readDuration === "less than a minute read" ? "1 min read" : readDuration}
+            {readDuration === "less than a minute read"
+              ? "1 min read"
+              : readDuration}
           </ReadDuration>
         </MetaContainer>
       </ContentContainer>
@@ -254,11 +284,11 @@ const ArticleCard = styled.div`
   background-color: #ffffff;
   border-radius: 12px;
   overflow: hidden;
-border:1px solid #ededed;
+  border: 1px solid #ededed;
   max-width: 600px;
-  width:100%;
+  width: 100%;
   height: 220px;
-  margin-top:5px;
+  margin-top: 5px;
   position: relative;
 `;
 
@@ -309,7 +339,7 @@ const Title = styled.h2`
 const Caption = styled.p`
   font-size: clamp(0.75rem, 1.5vw, 0.9rem);
   color: #666;
-  font-weight:500;
+  font-weight: 500;
   margin-bottom: 16px;
   overflow: hidden;
   display: -webkit-box;
@@ -387,7 +417,7 @@ const MenuItem = styled.div`
   color: #333;
   cursor: pointer;
   display: flex;
-  font-weight:500;
+  font-weight: 500;
   align-items: center;
 
   &:hover {

@@ -26,6 +26,9 @@ import toast from "react-hot-toast";
 import styled, { ThemeProvider } from "styled-components";
 import { closeSnackbar, enqueueSnackbar } from "notistack";
 import { RootState } from "../../store";
+import { Document, Page } from "react-pdf";
+import { pdfjs } from "react-pdf";
+import { Box, Button, Drawer, Typography } from "@mui/material";
 const StudyMaterialItem = ({
   _id,
   tag,
@@ -45,6 +48,8 @@ const StudyMaterialItem = ({
   type?: string;
   sch?: string;
 }) => {
+  pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+
   const [filename, setFilename] = useState("");
   const [href, setHref] = useState("");
   const [downloadLoading, setDownloadLoading] = useState(false);
@@ -54,23 +59,27 @@ const StudyMaterialItem = ({
   const [downloadPointerVisible, setIsDownloadPointerVisible] = useState(false);
   const [courseMaterialDeleteLoading, setCourseMaterialDeleteLoading] =
     useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [numPages, setNumPages] = useState(null);
+  const [pageNumber, setPageNumber] = useState(1);
+
   let {
     loading: detailsLoading,
     user,
     error: detailsError,
-  } = useSelector((state:RootState) => state.userDetails);
+  } = useSelector((state: RootState) => state.userDetails);
 
   const {
     loading: PastquestionDeleteLoading,
     success,
     error,
-  } = useSelector((state:RootState) => state.deletePastQuestion);
+  } = useSelector((state: RootState) => state.deletePastQuestion);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (error) {
-      enqueueSnackbar(error,{variant:'error'});
+      enqueueSnackbar(error, { variant: "error" });
       dispatch<any>(clearErrors());
     } else if (success) {
       toast.success("Deleted successfully!");
@@ -121,7 +130,6 @@ const StudyMaterialItem = ({
     }
   };
 
-  
   const showConfirmation = async () => {
     try {
       await fetchUser();
@@ -134,26 +142,37 @@ const StudyMaterialItem = ({
           persist: true,
           action: (key) => (
             <>
-              <button className="snackbar-btn"  onClick={() => {
-                        if (type === "PQ") {
-                          toast.dismiss("confirmation-toast");
-                          DeletePq();
-                        } else {
-                          toast.dismiss("confirmation-toast");
-                          deleteCourseMaterial();
-                        }
-                      }}>
+              <button
+                className="snackbar-btn"
+                onClick={() => {
+                  if (type === "PQ") {
+                    toast.dismiss("confirmation-toast");
+                    DeletePq();
+                  } else {
+                    toast.dismiss("confirmation-toast");
+                    deleteCourseMaterial();
+                  }
+                }}
+              >
                 Proceed
               </button>
-              <button className="snackbar-btn" onClick={() => closeSnackbar()}>
+              <button
+                className="snackbar-btn"
+                onClick={() => {
+                  closeSnackbar();
+                  handleViewDocument();
+                }}
+              >
                 No
               </button>
             </>
           ),
         });
+      } else {
+        handleViewDocument();
       }
     } catch (err) {
-      enqueueSnackbar(errorParser(err),{variant:'error'});
+      enqueueSnackbar(errorParser(err), { variant: "error" });
     }
   };
 
@@ -191,7 +210,7 @@ const StudyMaterialItem = ({
         </>
       ),
     });
-  }
+  };
 
   useEffect(() => {
     const source = axios.CancelToken.source();
@@ -212,84 +231,59 @@ const StudyMaterialItem = ({
   };
   const handleDownload = async () => {
     try {
-      if (isOnline() == false) {
-        toast.error("Check your internet connection and try again!!");
+      if (!isOnline()) {
+        enqueueSnackbar("Check your internet connection and try again!!", {
+          variant: "error",
+        });
         return;
       }
       setDownloadLoading(true);
       setDownloadStatus("Downloading");
-      // const authToken = await GetToken();
 
-      // await fetchUser();
-
-      // if (
-      //   (user?.tokenBalance && Number(user?.tokenBalance) >= 1) ||
-      //   ["FC:SUPER:ADMIN", "FC:ADMIN"].includes(user?.role)
-      // ) {
-      // if (!authToken) {
-      //   showAuthDialogue();
-      //   return;
-      // }
       const cancelTokenSource = axios.CancelToken.source();
 
-      if (type === "PQ") {
-        const response = await axiosInstance().get(
-          `/api/v1/past-question/download/${_id}`,
-          {
-            responseType: "blob",
-            onDownloadProgress: (progressEvent) => {
-              const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
-              setDownloadProgress(percentCompleted);
-            },
-            cancelToken: cancelTokenSource.token,
-          }
-        );
-        const filename = `FC:${courseTitle}:${session}.pdf`;
+      const endpoint =
+        type === "PQ"
+          ? `/api/v1/past-question/download/${_id}`
+          : `/api/v1/course-material/download/${_id}`;
 
-        const blob = new Blob([response.data], { type: "application/pdf" });
+      const response = await axiosInstance().get(endpoint, {
+        responseType: "blob",
+        onDownloadProgress: (progressEvent) => {
+          const percentCompleted = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setDownloadProgress(percentCompleted);
+        },
+        cancelToken: cancelTokenSource.token,
+      });
 
-        const href = URL.createObjectURL(blob);
-        setHref(href);
-        setFilename(filename);
-        setDownloadLoading(false);
-      } else {
-        const response = await axiosInstance().get(
-          `/api/v1/course-material/download/${_id}`,
-          {
-            responseType: "blob",
-            onDownloadProgress: (progressEvent) => {
-              const percentCompleted = Math.round(
-                (progressEvent.loaded * 100) / progressEvent.total
-              );
-              setDownloadProgress(percentCompleted);
-            },
-            cancelToken: cancelTokenSource.token,
-          }
-        );
-        const filename = `FC:${courseTitle}:${session}.pdf`;
-
-        const blob = new Blob([response.data], { type: "application/pdf" });
-
-        const href = URL.createObjectURL(blob);
-        setHref(href);
-        setFilename(filename);
-        setDownloadLoading(false);
-      }
-      // } else {
-      //   setDownloadLoading(false);
-      //   navigate("/new-subscription");
-      //   return;
-      // }
+      const filename = `FC:${courseTitle}:${session}.pdf`;
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const href = URL.createObjectURL(blob);
+      setHref(href);
+      setFilename(filename);
+      setDownloadLoading(false);
     } catch (err) {
       if (!axios.isCancel(err)) {
-        toast.error(errorParser(err));
+        enqueueSnackbar(errorParser(err), { variant: "error" });
         setDownloadStatus("Failed");
       }
       setDownloadLoading(false);
     }
   };
+
+  const handleViewDocument = async () => {
+    if (!href) {
+      await handleDownload();
+    }
+    setDrawerOpen(true);
+  };
+
+  const onDocumentLoadSuccess = ({ numPages }) => {
+    setNumPages(numPages);
+  };
+
   return (
     <>
       {(courseMaterialDeleteLoading || PastquestionDeleteLoading) && (
@@ -362,6 +356,37 @@ const StudyMaterialItem = ({
             <span>{FormattedCount(downloads)}</span>
           </div>
         </div>
+
+        <Drawer
+          anchor="bottom"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+        >
+          <Box sx={{ p: 2, height: "80vh", overflow: "auto" }}>
+            <Document file={href} onLoadSuccess={onDocumentLoadSuccess}>
+              <Page pageNumber={pageNumber} />
+            </Document>
+            <Box
+              sx={{ mt: 2, display: "flex", justifyContent: "space-between" }}
+            >
+              <Button
+                disabled={pageNumber <= 1}
+                onClick={() => setPageNumber(pageNumber - 1)}
+              >
+                Previous
+              </Button>
+              <Typography>
+                Page {pageNumber} of {numPages}
+              </Typography>
+              <Button
+                disabled={pageNumber >= numPages}
+                onClick={() => setPageNumber(pageNumber + 1)}
+              >
+                Next
+              </Button>
+            </Box>
+          </Box>
+        </Drawer>
       </StudyMaterialItemRenderer>
     </>
   );
@@ -370,41 +395,41 @@ const StudyMaterialItem = ({
 export default StudyMaterialItem;
 
 const StudyMaterialItemRenderer = styled.div`
-    position: relative;
-    color: #2e2e2f;
-    background-color: #fff;
-    padding: 1rem;
-    border-radius: 8px;
-    border:1px solid #ededed;
-    margin-bottom: 1rem;
-    max-width: 600px; 
-    width: 500px;
-    max-height: 220px;
-    overflow: hidden;
-    cursor: pointer;
+  position: relative;
+  color: #2e2e2f;
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ededed;
+  margin-bottom: 1rem;
+  max-width: 600px;
+  width: 96%;
+  max-height: 220px;
+  overflow: hidden;
+  cursor: pointer;
 
-   .circular-progress{
-      height: 45px;
-      width: 45px;
-      cursor: pointer;
-   }
-  
-   @media (max-width: 767px) {
-    &{
-      max-width: 330px;
-      margin:0 auto;
+  .circular-progress {
+    height: 45px;
+    width: 45px;
+    cursor: pointer;
+  }
+
+  @media (max-width: 768px) {
+    & {
+      min-width: 96%;
+      margin: 0 auto;
     }
-  
-    .circular-progress{
+
+    .circular-progress {
       height: 30px;
       width: 30px;
     }
   }
-  
+
   .pq-dowload-icon {
     cursor: pointer;
   }
-  
+
   .pq-details {
     display: flex;
     width: 100%;
@@ -420,7 +445,8 @@ const StudyMaterialItemRenderer = styled.div`
     padding: 3px 6px;
     font-size: 14px;
     font-weight: 500;
-    font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS", sans-serif;
+    font-family: "Gill Sans", "Gill Sans MT", Calibri, "Trebuchet MS",
+      sans-serif;
     text-transform: capitalize;
     text-align: center;
   }
@@ -434,7 +460,7 @@ const StudyMaterialItemRenderer = styled.div`
     font-weight: 600;
     color: #fff;
   }
-  
+
   .task:hover {
     box-shadow: rgba(99, 99, 99, 0.3) 0px 2px 8px 0px;
     border-color: rgba(162, 179, 207, 0.2) !important;
@@ -460,12 +486,12 @@ const StudyMaterialItemRenderer = styled.div`
     width: 2rem;
     height: 2rem;
   }
-  
+
   .task p {
     font-size: 15px;
     margin: 1.2rem 0;
   }
-  
+
   .pq-tag {
     border-radius: 100px;
     padding: 4px 13px;
@@ -473,14 +499,14 @@ const StudyMaterialItemRenderer = styled.div`
     color: #ffffff;
     background-color: #176984;
   }
-  
+
   .pq-tags {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  
+
   .stats {
     width: 100%;
     color: #9fa4aa;
@@ -490,7 +516,7 @@ const StudyMaterialItemRenderer = styled.div`
     justify-content: space-between;
     margin-top: 15px;
   }
-  
+
   .pq-download-count {
     height: 20px;
     display: flex;
@@ -509,12 +535,12 @@ const StudyMaterialItemRenderer = styled.div`
     from {
       transform: scale(1);
     }
-  
+
     to {
       transform: scale(1.09);
     }
   }
-  
+
   .snackbar-btn {
     padding: 6px 12px;
     color: #000;
@@ -522,10 +548,11 @@ const StudyMaterialItemRenderer = styled.div`
     border-radius: 5px;
     margin-right: 5px;
     cursor: pointer;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+      sans-serif;
   }
-  
+
   .download-pointer {
     color: #fff;
     background-color: #000;
@@ -541,10 +568,11 @@ const StudyMaterialItemRenderer = styled.div`
     top: 50px;
     right: 10px;
     font-size: 12px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-      Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+      sans-serif;
   }
-  
+
   .download-pointer::after {
     content: "";
     position: absolute;
@@ -553,6 +581,4 @@ const StudyMaterialItemRenderer = styled.div`
     border: 8px solid transparent;
     border-bottom-color: rgb(0, 0, 0);
   }
-  
-
 `;

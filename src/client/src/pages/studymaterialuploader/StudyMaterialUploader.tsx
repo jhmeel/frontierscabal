@@ -1,20 +1,34 @@
-import React, { useState, useEffect, useRef } from "react";
-import { createWorker } from "tesseract.js";
-import { useSelector, useDispatch } from "react-redux";
-import RDotLoader from "../../components/loaders/RDotLoader";
-import { addNewPastQuestion, clearErrors } from "../../actions/pastquestion";
-import ImageEditor from "../../components/imageEditor/ImageEditor";
-import { IconCaretDown, IconContentCopy } from "../../assets/icons";
-import getToken from "../../utils/getToken";
-import { isOnline } from "../../utils";
-import { NEW_PAST_QUESTION_RESET } from "../../constants/pastQuestion";
-import fcabalLogo from "../../assets/logos/fcabal.png";
-import { errorParser } from "../../utils";
-import axiosInstance from "../../utils/axiosInstance";
-import toast from "react-hot-toast";
-import styled from "styled-components";
-import { useSnackbar } from "notistack";
-import { RootState } from "../../store";
+import React, { useState, useEffect, useRef } from 'react';
+import { createWorker } from 'tesseract.js';
+import { useSelector, useDispatch } from 'react-redux';
+import { addNewPastQuestion, clearErrors } from '../../actions/pastquestion';
+import ImageEditor from '../../components/imageEditor/ImageEditor';
+import getToken from '../../utils/getToken';
+import { isOnline } from '../../utils';
+import { NEW_PAST_QUESTION_RESET } from '../../constants/pastQuestion';
+import fcabalLogo from '../../assets/logos/fcabal.png';
+import { errorParser } from '../../utils';
+import axiosInstance from '../../utils/axiosInstance';
+import styled from 'styled-components';
+import { RootState } from '../../store';
+import {
+  TextField,
+  Button,
+  Typography,
+  Box,
+  CircularProgress,
+  Snackbar,
+  IconButton,
+  Menu,
+  MenuItem,
+  Paper,
+} from '@mui/material';
+import {
+  ExpandMore as ExpandMoreIcon,
+  ContentCopy as ContentCopyIcon,
+} from '@mui/icons-material';
+import Footer from '../../components/footer/Footer';
+
 interface PastQuestionDetails {
   courseTitle: string;
   courseCode: string;
@@ -40,66 +54,79 @@ const OCREngine: React.FC = () => {
     error: pastquestionError,
   } = useSelector((state: RootState) => state.newPastQuestion);
   const dispatch = useDispatch();
-  const [processedImage, setProcessedImage] = useState<string>("");
-  const [isProceessing, setIsProcessing] = useState<boolean>(false);
-  const [status, setStatus] = useState<string>("");
+  const [processedImage, setProcessedImage] = useState<string>('');
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [status, setStatus] = useState<string>('');
   const [pqImages, setPqImages] = useState<
     Array<{ dataUrl: string; file: File }>
   >([]);
   const [editImage, setEditImage] = useState<boolean>(false);
-  const [croppedImage, setCroppedImage] = useState<string>("");
+  const [croppedImage, setCroppedImage] = useState<string>('');
   const [pastquestionDetails, setPastquestionDetails] =
     useState<PastQuestionDetails>({
-      courseTitle: "",
-      courseCode: "",
-      school: "",
-      level: "",
-      session: "",
-      answer: "",
-      reference: "",
-      pqImg: "",
+      courseTitle: '',
+      courseCode: '',
+      school: '',
+      level: '',
+      session: '',
+      answer: '',
+      reference: '',
+      pqImg: '',
     });
   const [isMultiple, setIsMultiple] = useState<boolean>(false);
-  const [logo, setLogo] = useState<string>("");
+  const [logo, setLogo] = useState<string>('');
   const [selectedDoc, setSelectedDoc] = useState<{ name: string }>({
-    name: "",
+    name: '',
   });
-  const [isTabOpen, setIsTabOpened] = useState<boolean>(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [activeOption, setActiveOption] = useState<string>('Pastquestion');
+  const [courseDoc, setCourseDoc] = useState<string>('');
+  const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
+  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
   const [courseMaterialLoading, setCourseMaterialLoading] =
     useState<boolean>(false);
-  const [activeOption, setActiveOption] = useState<string>("Pastquestion");
-  const [courseDoc, setCourseDoc] = useState<string>("");
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [courseMaterialDetails, setCourseMaterialDetails] =
     useState<CourseMaterialDetails>({
-      courseTitle: "",
-      courseCode: "",
-      level: "",
-      session: "",
+      courseTitle: '',
+      courseCode: '',
+      level: '',
+      session: '',
     });
 
-  const toggleTab = () => {
-    setIsTabOpened(!isTabOpen);
+  const [selectedFile, setSelectedFile] = useState<{
+    file: string;
+    name: string;
+  }>({
+    file: '',
+    name: '',
+  });
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  const handleSelection = (it: string) => {
-    setActiveOption(it);
-    toggleTab();
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSelection = (option: string) => {
+    setActiveOption(option);
+    handleClose();
   };
 
   const handleDocChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelectedDoc({
-      name: e.target.files![0].name,
-    });
+    if (e.target.files && e.target.files[0]) {
+      setSelectedDoc({
+        name: e.target.files[0].name,
+      });
 
-    if (e.target.files![0]) {
       const reader = new FileReader();
       reader.onload = () => {
         if (reader.readyState === 2) {
           setCourseDoc(reader.result as string);
         }
       };
-      reader.readAsDataURL(e.target.files![0]);
+      reader.readAsDataURL(e.target.files[0]);
     }
   };
 
@@ -107,46 +134,25 @@ const OCREngine: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
     const { name, value } = e.target;
-
     setCourseMaterialDetails((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const tabRef = useRef<HTMLSpanElement>(null);
-  const handleClickOutside = (e: MouseEvent) => {
-    if (tabRef.current && !tabRef.current.contains(e.target as Node)) {
-      setIsTabOpened(false);
-    }
-  };
-
-  useEffect(() => {
-    document.addEventListener("click", handleClickOutside);
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, []);
-
-  const [selectedFile, setSelectedFile] = useState<{
-    file: string;
-    name: string;
-  }>({
-    file: "",
-    name: "",
-  });
-
   // Base64 converter
   const convertLogoToBase64 = async (path: string) => {
-    fetch(path)
-      .then((res) => res.blob())
-      .then((blob) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-          setLogo(reader.result as string);
-        };
-        reader.readAsDataURL(blob);
-      });
+    try {
+      const response = await fetch(path);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      reader.onload = () => {
+        setLogo(reader.result as string);
+      };
+      reader.readAsDataURL(blob);
+    } catch (error) {
+      console.error('Error converting logo to base64:', error);
+    }
   };
 
   // OCR generator
@@ -161,8 +167,8 @@ const OCREngine: React.FC = () => {
         },
       });
 
-      await worker.loadLanguage("eng");
-      await worker.initialize("eng");
+      await worker.loadLanguage('eng');
+      await worker.initialize('eng');
 
       const {
         data: { text },
@@ -171,10 +177,12 @@ const OCREngine: React.FC = () => {
 
       await worker.terminate();
       setIsProcessing(false);
-      toast.success("OCR captured successfully!");
+      setSnackbarMessage('OCR captured successfully!');
+      setSnackbarOpen(true);
     } catch (err) {
       setIsProcessing(false);
-      toast.error(err);
+      setSnackbarMessage('Error processing image');
+      setSnackbarOpen(true);
     }
   };
 
@@ -182,38 +190,36 @@ const OCREngine: React.FC = () => {
   const handleChange = async (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const imagePromises: Promise<{ dataUrl: string; file: File }>[] = [];
-    if (isMultiple === true && e.target?.files) {
-      const files = e.target.files;
-      for (const file of files) {
-        const promise = new Promise<{ dataUrl: string; file: File }>(
-          (resolve) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-              resolve({ dataUrl: e.target.result as string, file });
-            };
-            reader.readAsDataURL(file);
-          }
-        );
-        imagePromises.push(promise);
-      }
-      const imagesData = await Promise.all(imagePromises);
-      imagesData && setPqImages(imagesData);
-      return;
-    } else {
-      const { name, value } = e.target;
-      if (name === "pqImg") {
-        const reader = new FileReader();
+    const { name, value } = e.target;
 
+    if (name === 'pqImg' && e.target instanceof HTMLInputElement && e.target.files) {
+      if (isMultiple) {
+        const files = e.target.files;
+        const imagePromises = Array.from(files).map(
+          (file) =>
+            new Promise<{ dataUrl: string; file: File }>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = (e) => {
+                resolve({ dataUrl: e.target!.result as string, file });
+              };
+              reader.readAsDataURL(file);
+            })
+        );
+
+        const imagesData = await Promise.all(imagePromises);
+        setPqImages(imagesData);
+      } else {
+        const file = e.target.files[0];
+        const reader = new FileReader();
         reader.onload = () => {
           setSelectedFile({
             file: reader.result as string,
-            name: e.target?.files![0].name,
+            name: file.name,
           });
         };
-        reader.readAsDataURL(e.target?.files![0]);
+        reader.readAsDataURL(file);
       }
-
+    } else {
       setPastquestionDetails((prev) => ({
         ...prev,
         [name]: value,
@@ -224,47 +230,50 @@ const OCREngine: React.FC = () => {
   // Submit handler
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // To upload course material
     const authToken = await getToken();
-    if (activeOption === "Course Material" && courseDoc) {
-      if (!courseMaterialDetails.session.includes("/")) {
-        toast.error(
-          "Invalid session. Session must be in this format -> 2020/2021"
+
+    if (activeOption === 'Course Material' && courseDoc) {
+      if (!courseMaterialDetails.session.includes('/')) {
+        setSnackbarMessage(
+          'Invalid session. Session must be in this format -> 2020/2021'
         );
+        setSnackbarOpen(true);
         return;
       }
       setCourseMaterialLoading(true);
       const formData = new FormData();
       formData.append(
-        "courseTitle",
+        'courseTitle',
         courseMaterialDetails.courseTitle.toUpperCase()
       );
       formData.append(
-        "courseCode",
+        'courseCode',
         courseMaterialDetails.courseCode.toUpperCase()
       );
-      formData.append("level", courseMaterialDetails.level);
-      formData.append("session", courseMaterialDetails.session);
-      formData.append("file", courseDoc);
+      formData.append('level', courseMaterialDetails.level);
+      formData.append('session', courseMaterialDetails.session);
+      formData.append('file', courseDoc);
 
       try {
         const { data } = await axiosInstance(authToken).post(
-          "/api/v1/course-material/new",
+          '/api/v1/course-material/new',
           formData
         );
         setCourseMaterialLoading(false);
-        toast.success(data?.message);
+        setSnackbarMessage(data?.message);
+        setSnackbarOpen(true);
         setCourseMaterialDetails({
-          courseTitle: "",
-          courseCode: "",
-          level: "",
-          session: "",
+          courseTitle: '',
+          courseCode: '',
+          level: '',
+          session: '',
         });
-        setSelectedDoc({ name: "" });
-        setCourseDoc("");
+        setSelectedDoc({ name: '' });
+        setCourseDoc('');
       } catch (err) {
         setCourseMaterialLoading(false);
-        toast.error(errorParser(err));
+        setSnackbarMessage(errorParser(err));
+        setSnackbarOpen(true);
       }
       return;
     }
@@ -273,36 +282,38 @@ const OCREngine: React.FC = () => {
     await convertLogoToBase64(fcabalLogo);
 
     if (pqImages.length < 1 && !selectedFile.file) {
-      toast.error("Pastquestion image is required");
+      setSnackbarMessage('Pastquestion image is required');
+      setSnackbarOpen(true);
       return;
-    } else if (!pastquestionDetails.session.includes("/")) {
-      toast.error(
-        "Invalid session. Session must be in this format -> 2020/2021"
+    } else if (!pastquestionDetails.session.includes('/')) {
+      setSnackbarMessage(
+        'Invalid session. Session must be in this format -> 2020/2021'
       );
+      setSnackbarOpen(true);
       return;
     }
 
     const formData = new FormData();
 
     formData.append(
-      "courseTitle",
+      'courseTitle',
       pastquestionDetails.courseTitle.toUpperCase()
     );
-    formData.append("courseCode", pastquestionDetails.courseCode.toUpperCase());
-    formData.append("level", pastquestionDetails.level);
-    formData.append("session", pastquestionDetails.session);
-    formData.append("answer", pastquestionDetails.answer);
-    formData.append("school", pastquestionDetails.school.toUpperCase());
-    formData.append("reference", pastquestionDetails.reference);
-    formData.append("logo", logo);
+    formData.append('courseCode', pastquestionDetails.courseCode.toUpperCase());
+    formData.append('level', pastquestionDetails.level);
+    formData.append('session', pastquestionDetails.session);
+    formData.append('answer', pastquestionDetails.answer);
+    formData.append('school', pastquestionDetails.school.toUpperCase());
+    formData.append('reference', pastquestionDetails.reference);
+    formData.append('logo', logo);
 
     if (isMultiple && pqImages.length > 1) {
-      for (let i = 0; i < pqImages.length; i++) {
-        formData.append(`pqImg${i}`, pqImages[i].dataUrl);
-      }
-      formData.append("pqImgTotal", pqImages.length.toString());
+      pqImages.forEach((image, index) => {
+        formData.append(`pqImg${index}`, image.dataUrl);
+      });
+      formData.append('pqImgTotal', pqImages.length.toString());
     } else {
-      formData.append("pqImg", croppedImage || selectedFile.file);
+      formData.append('pqImg', croppedImage || selectedFile.file);
     }
 
     isOnline() &&
@@ -312,68 +323,31 @@ const OCREngine: React.FC = () => {
 
   useEffect(() => {
     if (pastquestionError) {
-      toast.error(pastquestionError);
+      setSnackbarMessage(pastquestionError);
+      setSnackbarOpen(true);
       dispatch<any>(clearErrors());
     }
     if (pastquestionSuccess) {
-      toast.success("Uploaded successfully!");
+      setSnackbarMessage('Uploaded successfully!');
+      setSnackbarOpen(true);
 
       setPastquestionDetails({
-        courseTitle: "",
-        courseCode: "",
-        school: "",
-        level: "",
-        session: "",
-        answer: "",
-        reference: "",
-        pqImg: "",
+        courseTitle: '',
+        courseCode: '',
+        school: '',
+        level: '',
+        session: '',
+        answer: '',
+        reference: '',
+        pqImg: '',
       });
       setSelectedFile({
-        file: "",
-        name: "",
+        file: '',
+        name: '',
       });
       dispatch({ type: NEW_PAST_QUESTION_RESET });
     }
   }, [dispatch, pastquestionError, pastquestionSuccess]);
-
-  const showPrompt = () => {
-    enqueueSnackbar("Are you selecting multiple image files?", {
-      variant: "info",
-      persist: true,
-      action: (key) => (
-        <>
-          <button
-            className="snackbar-btn"
-            onClick={() => {
-              closeSnackbar();
-              setIsMultiple(true);
-              document.querySelector("#pq-img")?.click();
-            }}
-          >
-            Yes
-          </button>
-          <button
-            className="snackbar-btn"
-            onClick={() => {
-              closeSnackbar();
-              setIsMultiple(false);
-              document.querySelector("#pq-img")?.click();
-            }}
-          >
-            No
-          </button>
-          <button
-            className="snackbar-cancel-btn"
-            onClick={() => {
-              closeSnackbar();
-            }}
-          >
-            cancel
-          </button>
-        </>
-      ),
-    });
-  };
 
   const handleImageEdit = () => {
     setEditImage(true);
@@ -382,412 +356,295 @@ const OCREngine: React.FC = () => {
   const copyOutput = () => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(processedImage);
-      toast.success("copied to clipboard!");
-      return;
+      setSnackbarMessage('Copied to clipboard!');
+      setSnackbarOpen(true);
+    } else {
+      setSnackbarMessage('Failed to copy to clipboard');
+      setSnackbarOpen(true);
     }
-    toast.error("failed while copying to clipboard!");
   };
 
   return (
-    <>
-      <main>
-        <StudyMaterialUploadRenderer
-          id="new-pq-form"
-          encType="multipart/form-data"
-          onSubmit={handleSubmit}
-        >
-          <div className="new-pq-form-hd">
-            <span
-              ref={tabRef}
-              className="active-hd-opt"
-              title="Study Material Options"
-              onClick={toggleTab}
-            >
-              {activeOption}
-              <IconCaretDown className="pq-hd-toggle-icon" />
-            </span>
-            {isTabOpen && (
-              <div className="pq-hd-option">
-                <ul>
-                  {["Pastquestion", "Course Material"].map((it, i) => (
-                    <li key={i} onClick={() => handleSelection(it)}>
-                      {it}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-          {editImage && (
-            <ImageEditor
-              Image={selectedFile.file}
-              onCropImage={setCroppedImage}
-              onFinishEdit={() => setEditImage(false)}
-              onCancelEdit={() => {
-                setCroppedImage("");
-                setEditImage(false);
-              }}
+    <StyledPaper elevation={1}>
+      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }} display={`flex`} flexDirection={`column`} alignItems={`center`} justifyContent={`center`}>
+        <Box sx={{ display: 'flex',justifyContent: 'space-between', mb: 2 }}  width={`100%`}>
+          <Typography variant="h1">{activeOption}</Typography>
+          <Button
+          size='small'
+            aria-controls="simple-menu"
+            aria-haspopup="true"
+            onClick={handleClick}
+            endIcon={<ExpandMoreIcon />}
+          >
+            Options
+          </Button>
+          <Menu
+            id="simple-menu"
+            anchorEl={anchorEl}
+            keepMounted
+            open={Boolean(anchorEl)}
+            onClose={handleClose}
+          >
+            <MenuItem onClick={() => handleSelection('Pastquestion')}>
+              Pastquestion
+            </MenuItem>
+            <MenuItem onClick={() => handleSelection('Course Material')}>
+              Course Material
+            </MenuItem>
+          </Menu>
+        </Box>
+
+        {editImage && (
+          <ImageEditor
+            Image={selectedFile.file}
+            onCropImage={setCroppedImage}
+            onFinishEdit={() => setEditImage(false)}
+            onCancelEdit={() => {
+              setCroppedImage('');
+              setEditImage(false);
+            }}
+          />
+        )}
+
+        {activeOption === 'Pastquestion' ? (
+          <>
+            <TextField
+             size='small'
+              fullWidth
+              label="Course Title"
+              name="courseTitle"
+              value={pastquestionDetails.courseTitle}
+              onChange={handleChange}
+              required
+              margin="normal"
+              disabled={pastquestionLoading}
             />
-          )}
-          {activeOption === "Pastquestion" ? (
-            <>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+               size='small'
+                fullWidth
+                label="Course Code"
+                name="courseCode"
+                value={pastquestionDetails.courseCode}
+                onChange={handleChange}
+                required
+                margin="normal"
+                disabled={pastquestionLoading}
+              />
+              <TextField
+               size='small'
+                fullWidth
+                label="Level"
+                name="level"
+                value={pastquestionDetails.level}
+                onChange={handleChange}
+                required
+                margin="normal"
+                disabled={pastquestionLoading}
+              />
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+               size='small'
+                fullWidth
+                label="Session"
+                name="session"
+                value={pastquestionDetails.session}
+                onChange={handleChange}
+                required
+                margin="normal"
+                disabled={pastquestionLoading}
+              />
+              <TextField
+               size='small'
+                fullWidth
+                label="School"
+                name="school"
+                value={pastquestionDetails.school}
+                onChange={handleChange}
+                required
+                margin="normal"
+                disabled={pastquestionLoading}
+              />
+            </Box>
+            <TextField
+             size='small'
+              fullWidth
+              label="Answer"
+              name="answer"
+              value={pastquestionDetails.answer}
+              onChange={handleChange}
+              multiline
+              rows={4}
+              margin="normal"
+              disabled={pastquestionLoading}
+            />
+            <TextField
+             size='small'
+              fullWidth
+              label="Reference"
+              name="reference"
+              value={pastquestionDetails.reference}
+              onChange={handleChange}
+              required={Boolean(pastquestionDetails.answer)}
+              margin="normal"
+              disabled={pastquestionLoading}
+              />
               <input
-                type="text"
-                title="Course title"
-                name="courseTitle"
-                value={pastquestionDetails.courseTitle}
-                onChange={handleChange}
-                placeholder="Course title"
-                required={true}
-                autoFocus
-                disabled={pastquestionLoading}
-              />
-
-              <div className="course-code-level-cont">
-                <input
-                  type="text"
-                  title="Course code"
-                  name="courseCode"
-                  value={pastquestionDetails.courseCode}
-                  onChange={handleChange}
-                  placeholder="Course code"
-                  required={true}
-                  disabled={pastquestionLoading}
-                />
-                <input
-                  type="text"
-                  name="level"
-                  value={pastquestionDetails.level}
-                  title="Level"
-                  onChange={handleChange}
-                  placeholder="Level"
-                  required={true}
-                  disabled={pastquestionLoading}
-                />
-              </div>
-              <div className="sesion-school-cont">
-                <input
-                  type="text"
-                  name="session"
-                  value={pastquestionDetails.session}
-                  title="Session"
-                  onChange={handleChange}
-                  placeholder="Session"
-                  required={true}
-                  disabled={pastquestionLoading}
-                />
-                <input
-                  type="text"
-                  name="school"
-                  value={pastquestionDetails.school}
-                  title="School"
-                  onChange={handleChange}
-                  placeholder="School"
-                  required={true}
-                  disabled={pastquestionLoading}
-                />
-              </div>
-
-              <textarea
-                name="answer"
-                value={pastquestionDetails.answer}
-                title="Answer"
-                onChange={handleChange}
-                placeholder="Answer"
-                disabled={pastquestionLoading}
-              />
-              <textarea
-                name="reference"
-                value={pastquestionDetails.reference}
-                title="Reference"
-                onChange={handleChange}
-                placeholder="Reference"
-                required={pastquestionDetails.answer ? true : false}
-                disabled={pastquestionLoading}
-              />
-              <label className="pq-img" onClick={showPrompt}>
-                {selectedFile.name
-                  ? `✔${selectedFile.name}`
-                  : pqImages.length > 1
-                  ? `✔${pqImages.length} image files selected`
-                  : "Select pastquestion"}
-              </label>
-              <input
-                id="pq-img"
-                name="pqImg"
-                type="file"
-                accept="image/jpeg, image/png, image/gif"
-                onChange={handleChange}
+                accept="image/*"
+                style={{ display: 'none' }}
+                id="raised-button-file"
                 multiple={isMultiple}
+                type="file"
+                onChange={handleChange}
+                name="pqImg"
               />
+              <label htmlFor="raised-button-file">
+                <Button variant="outlined" component="span" fullWidth sx={{ mt: 2, mb: 2 }}>
+                  {selectedFile.name
+                    ? `✔${selectedFile.name}`
+                    : pqImages.length > 1
+                    ? `✔${pqImages.length} image files selected`
+                    : "Select pastquestion"}
+                </Button>
+              </label>
+              <div>
               {selectedFile.file && (
-                <span className="image-edit-text" onClick={handleImageEdit}>
-                  Edit
-                </span>
+                <Button size='small' onClick={handleImageEdit}>
+                  Edit Image
+                </Button>
               )}
               {croppedImage && (
-                <button
-                  className="process-btn"
+                <Button
+                 size='small'
                   onClick={processImage}
-                  disabled={isProceessing}
+                  disabled={isProcessing}
+                  variant="contained"
+                  sx={{ mt: 2, mb: 2 }}
                 >
-                  {isProceessing ? "Processing..." : "Process"}
-                  <p>{isProceessing && status}</p>
-                </button>
+                  {isProcessing ? 'Processing...' : 'Process'}
+                </Button>
               )}
-              <button className="pq-submit-btn" type="submit">
-                {pastquestionLoading ? <RDotLoader /> : "Submit"}
-              </button>
+              </div>
+             
+              {isProcessing && (
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  Status: {status}
+                </Typography>
+              )}
+              <Button
+               size='small'
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+                disabled={pastquestionLoading}
+              >
+                {pastquestionLoading ? <CircularProgress size={24} /> : 'Submit'}
+              </Button>
               {processedImage && (
-                <p className="process-output">
-                  {`${processedImage.substring(0, 20)}...`}{" "}
-                  <span title="Copy" onClick={copyOutput}>
-                    <IconContentCopy />
-                  </span>
-                </p>
+                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center' }}>
+                  <Typography variant="body1" sx={{ mr: 1 }}>
+                    {`${processedImage.substring(0, 20)}...`}
+                  </Typography>
+                  <IconButton onClick={copyOutput} size="small">
+                    <ContentCopyIcon />
+                  </IconButton>
+                </Box>
               )}
             </>
           ) : (
             <>
-              <input
-                type="text"
-                title="Course title"
+              <TextField
+               size='small'
+                fullWidth
+                label="Course Title"
                 name="courseTitle"
                 value={courseMaterialDetails.courseTitle}
                 onChange={handleCourseMaterialChange}
-                placeholder="Course title"
-                required={true}
-                autoFocus
+                required
+                margin="normal"
                 disabled={courseMaterialLoading}
               />
-              <div className="course-code-level-cont">
-                <input
-                  type="text"
-                  title="Course code"
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <TextField
+                 size='small'
+                  fullWidth
+                  label="Course Code"
                   name="courseCode"
                   value={courseMaterialDetails.courseCode}
                   onChange={handleCourseMaterialChange}
-                  placeholder="Course code"
-                  required={true}
+                  required
+                  margin="normal"
                   disabled={courseMaterialLoading}
                 />
-                <input
-                  type="text"
+                <TextField
+                 size='small'
+                  fullWidth
+                  label="Level"
                   name="level"
                   value={courseMaterialDetails.level}
-                  title="Level"
                   onChange={handleCourseMaterialChange}
-                  placeholder="Level"
-                  required={true}
+                  required
+                  margin="normal"
                   disabled={courseMaterialLoading}
                 />
-              </div>
-              <input
-                type="text"
+              </Box>
+              <TextField
+               size='small'
+                fullWidth
+                label="Session"
                 name="session"
                 value={courseMaterialDetails.session}
-                title="Session"
                 onChange={handleCourseMaterialChange}
-                placeholder="Session"
-                required={true}
+                required
+                margin="normal"
                 disabled={courseMaterialLoading}
               />
-              <label className="course-doc-label" htmlFor="course-doc">
-                {selectedDoc.name
-                  ? `✔${selectedDoc.name}`
-                  : "Select a PDF Document"}
-              </label>
               <input
-                id="course-doc"
-                name="course-doc"
+                accept="application/pdf"
+                style={{ display: 'none' }}
+                id="raised-button-file"
                 type="file"
-                accept=".pdf"
                 onChange={handleDocChange}
               />
-              <button className="pq-submit-btn" type="submit">
-                {courseMaterialLoading ? <RDotLoader /> : "Submit"}
-              </button>
+              <label htmlFor="raised-button-file">
+                <Button  size='small' variant="outlined" component="span" fullWidth sx={{ mt: 2, }}>
+                  {selectedDoc.name
+                    ? `✔${selectedDoc.name}`
+                    : "Select a PDF Document"}
+                </Button>
+              </label>
+              <Button
+               size='small'
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+                disabled={courseMaterialLoading}
+              >
+                {courseMaterialLoading ? <CircularProgress size={24} /> : 'Submit'}
+              </Button>
             </>
           )}
-        </StudyMaterialUploadRenderer>
-      </main>
-    </>
-  );
-};
+        </Box>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={() => setSnackbarOpen(false)}
+          message={snackbarMessage}
+        />
 
-export default OCREngine;
-
-const StudyMaterialUploadRenderer = styled.form`
-  max-width: 600px;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: #fff;
-  position: relative;
-  overflow: hidden;
-  margin: 0 auto;
-  .course-code-level-cont,
-  .sesion-school-cont {
-    width: 90%;
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-  }
-  input {
-    width: 95%;
-    height: auto;
-    font-size: 14px;
-    padding: 10px;
-    border-radius: 7px;
-    outline: none;
-    font-weight: 500;
-    border: 1px solid #e5e5e5;
-    filter: drop-shadow(0px 1px 0px #efefef)
-      drop-shadow(0px 1px 0.5px rgba(239, 239, 239, 0.5));
-    transition: all 0.3s cubic-bezier(0.15, 0.83, 0.66, 1);
-    margin-top: 10px;
-    background-color: #fff;
-  }
-
-  input:focus,
-  textarea:focus {
-    border: 2px solid #176984;
-  }
-  textarea {
-    height: 80px;
-    width: 90%;
-    font-size: 14px;
-    padding: 15px;
-    border-radius: 7px;
-    outline: none;
-    font-weight: 500;
-    border: 1px solid #e5e5e5;
-    filter: drop-shadow(0px 1px 0px #efefef)
-      drop-shadow(0px 1px 0.5px rgba(239, 239, 239, 0.5));
-    transition: all 0.3s cubic-bezier(0.15, 0.83, 0.66, 1);
-    margin-top: 10px;
-    background-color: #fff;
-  }
-  input[type="file"] {
-    display: none;
-  }
-
-  .pq-submit-btn {
-    padding: 10px 20px;
-    background-color: #176984;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
-    outline: none;
-  }
-
-  .process-btn {
-    background-color: transparent;
-    border: 1px solid #ededed;
-    padding: 10px 20px;
-    color: #176984;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-
-  .pq-img,
-  .course-doc-label {
-    font-size: 12px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-      sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-    width: 80%;
-    padding: 5px;
-  }
-  .process-output {
-    width: fit-content;
-    height: fit-content;
-    padding: 5px 10px;
-    font-size: 14px;
-    text-align: center;
-    text-rendering: optimizeLegibility;
-    background-color: #e5e5e5;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-
-  .image-edit-text {
-    cursor: pointer;
-    color: #176984;
-  }
-
-  .new-pq-form-hd {
-    border-bottom: 1px solid #dedede;
-    display: flex;
-    position: relative;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 10px;
-    width: 100%;
-    height: fit-content;
-    z-index: 99;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    -moz-backdrop-filter: blur(10px);
-    -o-backdrop-filter: blur(10px);
-    transform: 0.5s;
-  }
-  .pq-hd-option {
-    position: absolute;
-    z-index: 999;
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
-    border-radius: 5px;
-    background-color: #fff;
-    left: 10px;
-    top: 20px;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  .pq-hd-option ul {
-    width: 100%;
-    font-size: 14px;
-    list-style: none;
-  }
-
-  .pq-hd-option ul li {
-    width: 100%;
-    cursor: pointer;
-    color: rgb(0, 0, 0);
-    border-bottom: 1px solid #ededed;
-    padding: 5px 10px;
-    font-size: 13px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-  }
-  .pq-hd-option ul li:hover {
-    background-color: #176984;
-    color: #fff;
-    transition: all 0.3s ease-out;
-  }
-  .pq-hd-option ul li :last-child {
-    border-bottom: none;
-  }
-  .pq-hd-option ul li :first-child:hover {
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-  }
-  .pq-hd-option ul li :last-child:hover {
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
-  }
-
-  .pq-hd-toggle-icon,
-  .active-hd-opt {
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-  }
-`;
+  
+      </StyledPaper>
+      
+    );
+  };
+  
+  export default OCREngine;
+  
+  const StyledPaper = styled(Paper)`
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+  `;

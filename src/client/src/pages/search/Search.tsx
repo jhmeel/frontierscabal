@@ -46,14 +46,12 @@ const SearchBar = styled(TextField)(({ theme }) => ({
 
 const HistoryPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
-
   borderRadius: '16px',
   border:'1px solid #ededed'
 }));
 
 const TrendingPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
-
   borderRadius: '16px',
   border:'1px solid #ededed',
   backgroundColor: theme.palette.primary.light,

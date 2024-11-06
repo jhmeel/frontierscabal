@@ -92,6 +92,7 @@ const StyledContactUs = styled(Box)`
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items:center;
   font-family: "Roboto", sans-serif;
 
   .contact-holder {

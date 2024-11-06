@@ -22,6 +22,7 @@ import LocalForageProvider from "../../utils/localforage";
 import IRCache from "../../utils/cache";
 import styled from "styled-components";
 import { RootState } from "../../store";
+import { Button } from "@mui/material";
 
 const MarkdownEditor: React.FC<{
   artId: string;
@@ -313,13 +314,13 @@ const MarkdownEditor: React.FC<{
             </span>
           )}
           {markdownText && (
-            <button
+            <Button
               className="pre-btn"
               onClick={handlePreview}
               title="Preview"
             >
               Preview
-            </button>
+            </Button>
           )}
           {headerImage ? (
             <img
@@ -353,14 +354,14 @@ const MarkdownEditor: React.FC<{
             autoFocus
           />
           {markdownText ? (
-            <button
+            <Button
               type="submit"
               className="pub-btn"
               title="Publish"
               onClick={handlePublish}
             >
               {action === "New" ? "Publish" : "Republish"}
-            </button>
+            </Button>
           ) : (
             <>
               <label
@@ -371,8 +372,8 @@ const MarkdownEditor: React.FC<{
                   file.name
                 ) : (
                   <>
-                    <IconArticleFill className="e-upload-md-icon" />
-                    &nbsp; Or Upload A Markdown
+              
+               Upload Markdown
                   </>
                 )}{" "}
               </label>
@@ -489,7 +490,7 @@ const MarkdownEditor: React.FC<{
               </div>
             )}
           </div>
-          <button
+          <Button
             type="submit"
             className="submit-art-meta"
             disabled={loading || updateLoading}
@@ -501,7 +502,7 @@ const MarkdownEditor: React.FC<{
             ) : (
               "Update"
             )}
-          </button>
+          </Button>
         </form>
       </MarkdownEditorFormMetaData>
     )}

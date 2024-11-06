@@ -13,6 +13,7 @@ import {
   Button,
   CircularProgress,
   Paper,
+  InputAdornment,
 } from "@mui/material";
 import { Search as SearchIcon, Add as AddIcon } from "@mui/icons-material";
 import { useSelector } from "react-redux";
@@ -44,6 +45,7 @@ const SearchContainer = styled(Paper)(({ theme }) => ({
   alignItems: "center",
   padding: theme.spacing(1),
   marginBottom: theme.spacing(2),
+  background:`transparent`
 }));
 
 const RecentChatsContainer = styled(Box)(({ theme }) => ({
@@ -51,6 +53,10 @@ const RecentChatsContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
 }));
+const SearchBar = styled(TextField)`
+  flex-grow: 1;
+  margin-right: 16px;
+`;
 
 const NoChatsPlaceholder = styled(Box)(({ theme }) => ({
   flex: 1,
@@ -126,7 +132,7 @@ const Chats: React.FC = () => {
 
         snapshot.forEach((doc) => {
           const data = doc.data() as ChatData;
-        
+
           if (data.lastMessageTime) {
             newChats.push({
               id: doc.id,
@@ -166,7 +172,6 @@ const Chats: React.FC = () => {
         setLoading(false);
       },
       (err) => {
-     
         setError("Failed to load chats. Please try again later.");
         setLoading(false);
       }
@@ -200,18 +205,21 @@ const Chats: React.FC = () => {
 
   return (
     <ChatsPageContainer>
-      <SearchContainer>
-        <TextField
-          fullWidth
-          variant="standard"
-          placeholder="Search chats..."
-          value={searchTerm}
+      <SearchContainer elevation={0}>
+      <SearchBar
+            label="Search chats..."
+            variant="outlined"
+            size="small"
+            value={searchTerm}
           onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
-            disableUnderline: true,
-          }}
-        />
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
       </SearchContainer>
 
       <RecentChatsContainer>
@@ -224,13 +232,15 @@ const Chats: React.FC = () => {
           <Typography variant="h6">Recent Chats</Typography>
           <Button
             variant="contained"
+            size="small"
             color="primary"
-            startIcon={<AddIcon />}
             onClick={handleFindSomeoneClick}
-          ></Button>
+          >
+            <AddIcon color="action" />
+          </Button>
         </Box>
 
-        {loading ? (
+        {!loading ? (
           <Box
             display="flex"
             justifyContent="center"

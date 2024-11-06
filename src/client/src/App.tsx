@@ -14,10 +14,6 @@ import ScrollReveal from "scrollreveal";
 import { IconCloudOffline16 } from "./assets/icons";
 import MultiTextLoader from "./components/loaders/multiTextLoader";
 import MainLoader from "./components/loaders/MainLoader";
-import DiscussionList from "./components/discusssion/DiscussionList";
-import DiscussionRoom from "./pages/discussion/Discussion";
-import CreateDiscussion from "./components/discusssion/CreateDiscussion";
-import Pricing from "./pages/billing/Billing";
 
 const CreateModulePage = lazy(() => import("./pages/module/CreateModule"));
 const HomePage = lazy(() => import("./pages/home/Home"));
@@ -68,6 +64,15 @@ const UpdatePasswordPage = lazy(() => import("./pages/auth/UpdatePassword"));
 
 const ChatRoomPage = lazy(() => import("./pages/chat/ChatRoom"));
 const ChatPage = lazy(() => import("./pages/chat/Chats"));
+
+const DiscussionList = lazy(
+  () => import("./components/discusssion/DiscussionList")
+);
+const DiscussionRoom = lazy(() => import("./pages/discussion/Discussion"));
+const CreateDiscussion = lazy(
+  () => import("./components/discusssion/CreateDiscussion")
+);
+const Pricing = lazy(() => import("./pages/billing/Billing"));
 
 function App() {
   const { pathname } = useLocation();
@@ -149,7 +154,8 @@ function App() {
     });
   }, [pathname]);
 
-  const regex = /^\/(biller|discuss-room|chat|login|signup|password\/forgot)(\/.*)?$/;
+  const regex =
+    /^\/(biller|discuss-room|chat|login|signup|password\/forgot)(\/.*)?$/;
   return (
     <>
       <ThemeProvider theme={theme}>
@@ -229,21 +235,40 @@ function App() {
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/blog/search" element={<BlogPage />} />
             <Route path="/blog/article/:slug" element={<ArticleViewPage />} />
-            <Route path="/blog/article/new" element={<EditorPage />} />
+            <Route
+              path="/blog/article/new"
+              element={
+                <PrivateRoute>
+                  <EditorPage />
+                </PrivateRoute>
+              }
+            />
             <Route path="/search" element={<SearchPage />} />
 
             <Route
               path="/discuss"
-              element={<DiscussionList currentUser={user} />}
+              element={
+                <PrivateRoute>
+                  <DiscussionList currentUser={user} />
+                </PrivateRoute>
+              }
             />
             <Route
               path="/discuss-room/:discussionId"
-              element={<DiscussionRoom currentUser={user} />}
+              element={
+                <PrivateRoute>
+                  <DiscussionRoom currentUser={user} />
+                </PrivateRoute>
+              }
             />
 
             <Route
               path="/discuss/create"
-              element={<CreateDiscussion currentUser={user} />}
+              element={
+                <PrivateRoute>
+                  <CreateDiscussion currentUser={user} />
+                </PrivateRoute>
+              }
             />
 
             <Route path="/biller" element={<Pricing />} />
@@ -256,7 +281,14 @@ function App() {
               // <Route path="/event/update/:slug" element={<UpdateEventPage />} />
             }
 
-            <Route path="/study-materials" element={<StudyMaterialPage />} />
+            <Route
+              path="/study-materials"
+              element={
+                <PrivateRoute>
+                  <StudyMaterialPage />
+                </PrivateRoute>
+              }
+            />
             <Route
               path="/study-material/new"
               element={
@@ -283,7 +315,14 @@ function App() {
                 </PrivateRoute>
               }
             />
-            <Route path="/profile/edit" element={<EditProfilePage />} />
+            <Route
+              path="/profile/edit"
+              element={
+                <PrivateRoute>
+                  <EditProfilePage />
+                </PrivateRoute>
+              }
+            />
             <Route
               path="/bookmarks"
               element={
@@ -324,8 +363,22 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
             <Route path="/contact-us" element={<ContactUsPage />} />
 
-            <Route path="/chat/:username" element={<ChatRoomPage />} />
-            <Route path="/chats" element={<ChatPage />} />
+            <Route
+              path="/chat/:username"
+              element={
+                <PrivateRoute>
+                  <ChatRoomPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/chats"
+              element={
+                <PrivateRoute>
+                  <ChatPage />
+                </PrivateRoute>
+              }
+            />
 
             {
               //<Route path="/misc" element={<Misc />} />

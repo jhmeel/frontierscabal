@@ -21,6 +21,7 @@ const StyledVerticalArticleItemSkeletonRenderer = styled(Box)`
   display: flex;
   flex-direction: column;
   align-items: center;
+  background:#fff;
   border: 1px solid #ededed;
   margin: 10px;
   position: relative;
