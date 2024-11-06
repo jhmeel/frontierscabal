@@ -108,7 +108,6 @@ const Chats: React.FC = () => {
       return;
     }
 
-    toast.error("Fetching chats for user");
 
     const db = getFirestore(firebaseApp);
     const chatroomsRef = collection(db, "chatrooms");

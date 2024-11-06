@@ -419,7 +419,8 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                 </Avatar>
                 <Username variant="caption">{message.senderName}</Username>
                 <Time variant="caption">
-                  {new Date(message.createdAt).toLocaleString()}
+                {new Date(message.createdAt).toUTCString().slice(3).replace(`GMT`, ``).slice(0, -4)}
+
                 </Time>
               </UserInfo>
               <MessageBubble
@@ -427,7 +428,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                 isDeleted={message.isDeleted}
                 onDoubleClick={(event) => handleOpenMenu(event, message)}
               >
-                {message.replyTo && (
+                {message.replyTo && !message.isDeleted && (
                   <Typography
                     variant="caption"
                     style={{ marginBottom: 4, display: "block", color: "#666" }}
@@ -438,7 +439,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                       ?.content.substring(0, 30)}
                   </Typography>
                 )}
-                <Typography variant="body2">
+                <Typography variant="body1" fontSize={!message.isDeleted?16:10}>
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {message.content}
                   </ReactMarkdown>

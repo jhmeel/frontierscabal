@@ -343,7 +343,6 @@ const ChatRoom: React.FC = () => {
           participants: [user?._id, selectedUser?._id],
         });
 
-      
         setAttachedFiles([]);
         setReferencedMessage(null);
         setIsLoading(false);
@@ -464,7 +463,7 @@ const ChatRoom: React.FC = () => {
       <StyledAppBar position="static">
         <StyledToolbar>
           <IconButton edge="start" color="inherit" onClick={() => navigate(-1)}>
-            <ArrowBack color="#fff"/>
+            <ArrowBack color="#fff" />
           </IconButton>
           <Box
             display="flex"
@@ -506,7 +505,7 @@ const ChatRoom: React.FC = () => {
                 }
               }}
             >
-              <Typography variant="body2">{message.text}</Typography>
+              <Typography variant="body1" fontSize={16}>{message.text}</Typography>
               {message.attachments &&
                 message.attachments.map((attachment, index) => (
                   <Box key={index} mt={1}>
@@ -538,7 +537,11 @@ const ChatRoom: React.FC = () => {
                 sx={{ mt: 1, display: "block", fontSize: "0.7rem" }}
               >
                 {message.createdAt &&
-                  new Date(message.createdAt.toDate()).toLocaleString()}
+                  new Date(message.createdAt)
+                    .toUTCString()
+                    .slice(3)
+                    .replace(`GMT`, ``)
+                    .slice(0, -3)}
               </Typography>
             </StyledMessageBubble>
           ))}
