@@ -32,6 +32,7 @@ export interface Discussion {
 export interface DiscussionMessage {
   id?: string;
   discussionId: string;
+  senderAvatar?: string;
   senderName: string;
   senderId: string;
   content: string;

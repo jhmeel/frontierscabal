@@ -25,7 +25,11 @@ import {
   CircularProgress,
   Menu,
   MenuItem,
+  Box,
 } from "@mui/material";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import ReplyIcon from "@mui/icons-material/Reply";
+import DeleteIcon from "@mui/icons-material/Delete";
 import {
   Delete,
   AttachFile,
@@ -42,6 +46,8 @@ import styled from "styled-components";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import Div100vh from "react-div-100vh";
+import { IconArrowLeftfunction } from "../../assets/icons";
 
 const StyledDiscussionRoom = styled.div`
   display: flex;
@@ -78,17 +84,13 @@ const MessageBubble = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
   maxWidth: "60%",
   position: "relative",
   width: "fit-content",
-  padding: "10px",
+  padding: "5px 10px 20px 10px",
   borderTopRightRadius: "20px",
   borderTopLeftRadius: "20px",
   borderBottomRightRadius: isCurrentUser ? "0" : "20px",
   borderBottomLeftRadius: isCurrentUser ? "20px" : "0",
-  backgroundColor: isDeleted
-    ? "transparent"
-    : isCurrentUser
-    ? "#3498db"
-    : "#f0f0f0",
-  color: isDeleted ? "#888" : isCurrentUser ? "white" : "#333",
+  backgroundColor: isDeleted ? "transparent" : "#276168",
+  color: isDeleted ? "#888" : `#fff`,
   alignSelf: isCurrentUser ? "flex-end" : "flex-start",
   marginBottom: "14px",
   cursor: "pointer",
@@ -100,7 +102,7 @@ const MessageBubble = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
 }));
 
 const UserInfo = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
-  maxWidth: "60%",
+  maxWidth: "100%",
   position: "relative",
   width: "fit-content",
   alignSelf: isCurrentUser ? "flex-end" : "flex-start",
@@ -118,10 +120,12 @@ const Username = styled(Typography)`
   margin-right: 8px;
 `;
 
-const Time = styled(Typography)`
-  font-size: 10px;
-  color: #888888;
-`;
+const Time = styled(Typography)(({ isCurrentUser }) => ({
+  position: "absolute",
+  right: isCurrentUser ? "5px" : `-100`,
+  bottom: "5",
+  color: "#888888",
+}));
 
 const StyledLoader = styled(CircularProgress)`
   position: absolute;
@@ -246,6 +250,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
         const messageData: DiscussionMessage = {
           discussionId,
           senderId: currentUser._id,
+          senderAvatar: currentUser.avatar?.url,
           senderName: currentUser.username,
           content: newMessage.trim(),
           fileUrl,
@@ -374,6 +379,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
         <Button
           variant="contained"
           color="primary"
+          size="small"
           onClick={() => navigate(-1)}
           style={{ marginTop: "20px" }}
         >
@@ -384,80 +390,144 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   }
 
   return (
-    <>
+    <Div100vh>
       <StyledDiscussionRoom>
         <TopBar>
-          <IconButton color="#fff" onClick={() => navigate(-1)} color="inherit">
-            <ArrowBack />
+          <IconButton color="#fff" onClick={() => navigate(-1)}>
+            <IconArrowLeftfunction fill="#fff" />
           </IconButton>
-          <Typography
-            variant="h6"
-            style={{
-              marginLeft: 16,
-              overflow: "hidden",
-              color: "#fff",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {discussion?.title || "Discuss"}
-          </Typography>
+          <Box>
+            <Typography
+              variant="h6"
+              style={{
+                marginLeft: 16,
+                overflow: "hidden",
+                color: "#fff",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {discussion?.title}
+            </Typography>
+
+            <Typography variant="caption" color="#ededed">
+              ●
+              {discussion?.participants.length > 1
+                ? ` ${discussion?.participants.length} participants`
+                : ` ${discussion?.participants.length} participant`}
+            </Typography>
+          </Box>
         </TopBar>
         <MessageList>
-          {messages.map((message) => (
-            <div key={message.id}>
-              <UserInfo
-                isCurrentUser={message.senderId === currentUser?._id}
-                isDeleted={message.isDeleted}
-              >
-                <Avatar
-                  sx={{ width: 24, height: 24, fontSize: 12, marginRight: 1 }}
-                >
-                  {message.senderName
-                    ? message.senderName[0].toUpperCase()
-                    : "U"}
-                </Avatar>
-                <Username variant="caption">{message.senderName}</Username>
-                <Time variant="caption">
-                {new Date(message.createdAt).toUTCString().slice(3).replace(`GMT`, ``).slice(0, -4)}
+          {messages.map((message, index) => {
+            const messageDate = message.createdAt.toLocaleDateString();
+            const previousMessageDate =
+              index > 0
+                ? messages[index - 1].createdAt.toLocaleDateString()
+                : null;
 
-                </Time>
-              </UserInfo>
-              <MessageBubble
-                isCurrentUser={message.senderId === currentUser?._id}
-                isDeleted={message.isDeleted}
-                onDoubleClick={(event) => handleOpenMenu(event, message)}
-              >
-                {message.replyTo && !message.isDeleted && (
+            const isNewDay = messageDate !== previousMessageDate;
+
+            return (
+              <>
+                {isNewDay && (
                   <Typography
-                    variant="caption"
-                    style={{ marginBottom: 4, display: "block", color: "#666" }}
+                    variant="subtitle2"
+                    style={{
+                      color: "#888",
+                      margin: "10px 0",
+                      textAlign: "center",
+                    }}
                   >
-                    Replying to:{" "}
-                    {messages
-                      .find((m) => m.id === message.replyTo)
-                      ?.content.substring(0, 30)}
+                    {new Date(messageDate).toDateString()}
                   </Typography>
                 )}
-                <Typography variant="body1" fontSize={!message.isDeleted?16:10}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {message.content}
-                  </ReactMarkdown>
-                </Typography>
-                {message.fileUrl && (
-                  <Button
-                    href={message.fileUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    size="small"
-                    style={{ marginTop: 4, padding: 0 }}
+                <div key={message.id}>
+                  <MessageBubble
+                    isCurrentUser={message.senderId === currentUser?._id}
+                    isDeleted={message.isDeleted}
+                    onDoubleClick={(event) => handleOpenMenu(event, message)}
                   >
-                    View Attachment
-                  </Button>
-                )}
-              </MessageBubble>
-            </div>
-          ))}
+                    <UserInfo
+                      isCurrentUser={message.senderId === currentUser?._id}
+                      isDeleted={message.isDeleted}
+                    >
+                      <Username variant="caption" color="#e7b984">
+                        {message.senderName}
+                      </Username>
+                    </UserInfo>
+
+                    {message.replyTo && !message.isDeleted && (
+                      <Typography
+                        variant="caption"
+                        style={{
+                          marginBottom: 4,
+                          display: "block",
+                          color: "#666",
+                        }}
+                      >
+                        Replying to:{" "}
+                        {messages
+                          .find((m) => m.id === message.replyTo)
+                          ?.content.substring(0, 30)}
+                      </Typography>
+                    )}
+                    {!message.isDeleted && (
+                      <Typography variant="body1" color="#fff" fontSize={16}>
+                        <ReactMarkdown
+                          remarkPlugins={[remarkGfm]}
+                          style={{ color: "white !important" }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      </Typography>
+                    )}
+                    {message.fileUrl && (
+                      <Button
+                        href={message.fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        size="small"
+                        style={{ marginTop: 4, padding: 0 }}
+                      >
+                        View Attachment
+                      </Button>
+                    )}
+
+                    {!message.isDeleted && (
+                      <Time
+                        variant="caption"
+                        fontSize={9}
+                        isCurrentUser={message.senderId === currentUser?._id}
+                      >
+                        {new Date(message.createdAt).toTimeString().slice(0, 5)}
+                      </Time>
+                    )}
+
+                    {!message.isDeleted && (
+                      <Avatar
+                        src={message.senderAvatar}
+                        sx={{
+                          width: 20,
+                          height: 20,
+                          fontSize: 10,
+                          marginRight: 1,
+                          position: `absolute`,
+                          left:
+                            message.senderId === currentUser?._id ? `95%` : -14,
+                          bottom: -20,
+                        }}
+                      >
+                        {message.senderName
+                          ? message.senderName[0].toUpperCase()
+                          : "U"}
+                      </Avatar>
+                    )}
+                  </MessageBubble>
+                </div>
+              </>
+            );
+          })}
           <div ref={messagesEndRef} />
         </MessageList>
         <MessageInput>
@@ -542,16 +612,44 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={handleCloseMenu}
+          PaperProps={{
+            style: {
+              borderRadius: "8px",
+            
+            },
+          }}
         >
-          <MenuItem onClick={() => handleMenuAction("reply")}>Reply</MenuItem>
+          <MenuItem
+            onClick={() => handleMenuAction("reply")}
+            sx={{
+              gap: 5,
+            }}
+            divider
+          >
+            Reply
+            <ListItemIcon>
+              <ReplyIcon fontSize="small" />
+            </ListItemIcon>
+          </MenuItem>
+
           {selectedMessage?.senderId === currentUser._id && (
-            <MenuItem onClick={() => handleMenuAction("delete")}>
-              Delete
-            </MenuItem>
+            <>
+              <MenuItem
+                onClick={() => handleMenuAction("delete")}
+                sx={{
+                  gap: 5,
+                }}
+              >
+                Delete
+                <ListItemIcon>
+                  <DeleteIcon fontSize="small" />
+                </ListItemIcon>
+              </MenuItem>
+            </>
           )}
         </Menu>
       </StyledDiscussionRoom>
-    </>
+    </Div100vh>
   );
 };
 

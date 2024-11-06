@@ -21,6 +21,7 @@ import { MailIcon } from "../../assets/icons";
 import fcabal from "../../assets/logos/fcabal.png";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import Div100vh from 'react-div-100vh'
 
 const Login = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -66,6 +67,7 @@ const Login = () => {
   }, [dispatch, error, isAuthenticated, navigate]);
 
   return (
+    <Div100vh>
     <LoginContainer>
       <Box component="form" onSubmit={formik.handleSubmit} sx={{ width: isMobile ? '90%' : '30%' }}>
       <div className="logo_container">
@@ -136,6 +138,7 @@ const Login = () => {
         </Typography>
       </Box>
     </LoginContainer>
+    </Div100vh>
   );
 };
 

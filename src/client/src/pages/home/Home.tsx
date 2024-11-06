@@ -163,7 +163,7 @@ const Home: React.FC = () => {
       try {
         setLibraryPickLoading(true);
         const response = await axios.get(
-          "https://www.googleapis.com/books/v1/volumes?q=subject:science&orderBy=newest&maxResults=1"
+          "https://www.googleapis.com/books/v1/volumes?q=subject:science&orderBy=newest&maxResults=10"
         );
         const r = cachedIndex !== null ? parseInt(cachedIndex) : Math.floor(Math.random() * (response.data.items?.length || 1)); 
         setLibraryPickOfTheDay(response.data.items[r]);

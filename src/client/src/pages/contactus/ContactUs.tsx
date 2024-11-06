@@ -5,6 +5,7 @@ import { IconWhatsapp } from "../../assets/icons";
 import { useSnackbar } from "notistack";
 import { TextField, Button, Typography, Divider, Box } from "@mui/material";
 import { styled } from "@mui/system";
+import Div100vh from 'react-div-100vh'
 
 const ContactUs = () => {
   const [enquiry, setEnquiry] = useState("");
@@ -34,6 +35,7 @@ const ContactUs = () => {
   return (
     <>
       <MetaData title="Contact Us" />
+      <Div100vh>
       <StyledContactUs>
         <Box className="contact-holder">
           <Box className="contact-header">
@@ -44,6 +46,7 @@ const ContactUs = () => {
           </Box>
           <Box className="contact-us-enq-cont">
             <TextField
+            size="small"
               id="subject"
               label="Subject*"
               variant="outlined"
@@ -53,6 +56,7 @@ const ContactUs = () => {
               margin="normal"
             />
             <TextField
+            size="small"
               id="enquiry"
               label="Enquiry*"
               variant="outlined"
@@ -78,6 +82,7 @@ const ContactUs = () => {
           </Typography>
         </Box>
       </StyledContactUs>
+      </Div100vh>
       <Footer />
     </>
   );

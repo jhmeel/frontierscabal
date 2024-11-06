@@ -10,6 +10,7 @@ import { UPDATE_PASSWORD_RESET } from "../../constants/user";
 import getToken from "../../utils/getToken";
 import styled from "styled-components";
 import { RootState } from "../../store";
+import Div100vh from 'react-div-100vh'
 
 const UpdatePassword = () => {
   const dispatch = useDispatch();
@@ -62,7 +63,7 @@ const UpdatePassword = () => {
   return (
     <>
       <MetaData title="Reset password" />
-      <>
+      <Div100vh>
         <UpdatePasswordRenderer onSubmit={handleSubmit}>
           <h2>Update Password</h2>
           <div className="up-input_cont">
@@ -95,7 +96,7 @@ const UpdatePassword = () => {
             {loading ? <RDotLoader /> : "Update"}
           </button>
         </UpdatePasswordRenderer>
-      </>
+        </Div100vh>
     </>
   );
 };

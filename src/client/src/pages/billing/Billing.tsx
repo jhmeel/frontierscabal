@@ -224,7 +224,7 @@ const Pricing: React.FC = () => {
         <CloseButton onClick={handleClose} aria-label="close">
           <CloseIcon />
         </CloseButton>
-        <Typography variant="h2" align="center" gutterBottom>
+        <Typography variant="h1" align="center" gutterBottom>
           Choose Your Plan
         </Typography>
         <Typography variant="h6" align="center" color="textSecondary" paragraph>

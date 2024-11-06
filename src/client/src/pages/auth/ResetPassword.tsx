@@ -8,6 +8,7 @@ import RDotLoader from "../../components/loaders/RDotLoader";
 import { isOnline } from "../../utils";
 import styled from "styled-components";
 import { RootState } from "../../store";
+import Div100vh from 'react-div-100vh'
 
 const ResetPassword = () => {
   const dispatch = useDispatch();
@@ -62,6 +63,7 @@ const ResetPassword = () => {
   return (
     <>
       <MetaData title="Reset password" />
+      <Div100vh>
       <ResetPasswordRenderer>
         <h2>Reset Password</h2>
         <form onSubmit={handleSubmit} className="r-form_container">
@@ -96,6 +98,7 @@ const ResetPassword = () => {
           </button>
         </form>
       </ResetPasswordRenderer>
+      </Div100vh>
     </>
   );
 };
