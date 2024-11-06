@@ -158,22 +158,26 @@ const Home: React.FC = () => {
   }, [selectedCategory]);
 
   useEffect(() => {
+    const cachedIndex = localStorage.getItem('LPIndex');
     const fetchLibraryPickOfTheDay = async () => {
       try {
         setLibraryPickLoading(true);
         const response = await axios.get(
-          "https://www.googleapis.com/books/v1/volumes?q=subject:fiction&orderBy=newest&maxResults=1"
+          "https://www.googleapis.com/books/v1/volumes?q=subject:science&orderBy=newest&maxResults=1"
         );
-        setLibraryPickOfTheDay(response.data.items[0]);
+        const r = cachedIndex !== null ? parseInt(cachedIndex) : Math.floor(Math.random() * (response.data.items?.length || 1)); 
+        setLibraryPickOfTheDay(response.data.items[r]);
+        localStorage.setItem('LPIndex', r);
         setLibraryPickLoading(false);
       } catch (error) {
         console.error("Error fetching library pick of the day:", error);
         setLibraryPickLoading(false);
       }
     };
-
+  
     fetchLibraryPickOfTheDay();
   }, []);
+  
 
   useEffect(() => {
     const getTrendingArticles = async () => {
@@ -610,7 +614,7 @@ const Home: React.FC = () => {
           </ViewMoreButton>
         </SectionTitle>
         <Grid container spacing={2}>
-          {recentArticleLoading|| !recentArticles.length
+          {recentArticleLoading|| !recentArticles?.length
             ? Array(12)
                 .fill(null)
                 .map((_, i) => (
