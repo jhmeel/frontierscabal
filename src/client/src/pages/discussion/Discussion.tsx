@@ -392,7 +392,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   return (
     <Div100vh>
       <StyledDiscussionRoom>
-        <TopBar>
+        <TopBar style={{height:65}}>
           <IconButton color="#fff" onClick={() => navigate(-1)}>
             <IconArrowLeftfunction fill="#fff" />
           </IconButton>
