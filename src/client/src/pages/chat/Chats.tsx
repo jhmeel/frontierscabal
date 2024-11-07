@@ -45,7 +45,7 @@ const SearchContainer = styled(Paper)(({ theme }) => ({
   alignItems: "center",
   padding: theme.spacing(1),
   marginBottom: theme.spacing(2),
-  background:`transparent`
+  background: `transparent`,
 }));
 
 const RecentChatsContainer = styled(Box)(({ theme }) => ({
@@ -53,6 +53,7 @@ const RecentChatsContainer = styled(Box)(({ theme }) => ({
   display: "flex",
   flexDirection: "column",
 }));
+
 const SearchBar = styled(TextField)`
   flex-grow: 1;
   margin-right: 16px;
@@ -107,54 +108,45 @@ const Chats: React.FC = () => {
       setLoading(false);
       return;
     }
-
-
+  
     const db = getFirestore(firebaseApp);
     const chatroomsRef = collection(db, "chatrooms");
     const q = query(
       chatroomsRef,
       where("participants", "array-contains", user._id),
-      orderBy("lastMessageTime", "desc"),
-      limit(20)
+      orderBy("lastMessageTimestamp", "desc")
     );
-
+    
+  
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        console.log(
-          "Received snapshot with",
-          snapshot.docs.length,
-          "documents"
-        );
         const newChats: ChatData[] = [];
         const newUsers: { [key: string]: string } = {};
-
+  
         snapshot.forEach((doc) => {
           const data = doc.data() as ChatData;
-
+  
           if (data.lastMessageTime) {
             newChats.push({
               id: doc.id,
               ...data,
               lastMessageTime: data.lastMessageTime,
             });
-
+  
             data.participants.forEach((userId) => {
               if (userId !== user._id) {
                 newUsers[userId] = userId;
               }
             });
-          } else {
-            console.warn("Chat", doc.id, "has no lastMessageTime. Skipping.");
           }
         });
-
+  
         setChats(newChats);
-
+  
         const usersRef = collection(db, "users");
         const userIds = Object.keys(newUsers);
-        console.log("Fetching details for users:", userIds);
-
+  
         userIds.forEach((userId) => {
           const userQuery = query(usersRef, where("_id", "==", userId));
           onSnapshot(userQuery, (userSnapshot) => {
@@ -167,17 +159,19 @@ const Chats: React.FC = () => {
             });
           });
         });
-
+  
         setLoading(false);
       },
       (err) => {
+        console.error("Error fetching chats:", err);
         setError("Failed to load chats. Please try again later.");
         setLoading(false);
       }
     );
-
+  
     return () => unsubscribe();
   }, [user?._id]);
+  
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -205,20 +199,20 @@ const Chats: React.FC = () => {
   return (
     <ChatsPageContainer>
       <SearchContainer elevation={0}>
-      <SearchBar
-            label="Search chats..."
-            variant="outlined"
-            size="small"
-            value={searchTerm}
+        <SearchBar
+          label="Search chats..."
+          variant="outlined"
+          size="small"
+          value={searchTerm}
           onChange={handleSearchChange}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon />
+              </InputAdornment>
+            ),
+          }}
+        />
       </SearchContainer>
 
       <RecentChatsContainer>
@@ -239,15 +233,16 @@ const Chats: React.FC = () => {
           </Button>
         </Box>
 
-        {!loading ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            flex={1}
-          >
+        {loading ? (
+          <Box display="flex" justifyContent="center" alignItems="center" flex={1}>
             <CircularProgress />
           </Box>
+        ) : error ? (
+          <NoChatsPlaceholder>
+            <Typography variant="body1" color="error" gutterBottom>
+              {error}
+            </Typography>
+          </NoChatsPlaceholder>
         ) : filteredChats.length === 0 ? (
           <NoChatsPlaceholder>
             <Typography variant="h6" color="textSecondary" gutterBottom>
@@ -280,17 +275,8 @@ const Chats: React.FC = () => {
                       </Typography>
                     }
                     secondary={
-                      <Box
-                        display="flex"
-                        justifyContent="space-between"
-                        alignItems="center"
-                      >
-                        <Typography
-                          variant="body2"
-                          color="textSecondary"
-                          noWrap
-                          sx={{ maxWidth: "70%" }}
-                        >
+                      <Box display="flex" justifyContent="space-between" alignItems="center">
+                        <Typography variant="body2" color="textSecondary" noWrap sx={{ maxWidth: "70%" }}>
                           {chat.lastMessageSender === user?._id ? "You: " : ""}
                           {chat.lastMessage}
                         </Typography>

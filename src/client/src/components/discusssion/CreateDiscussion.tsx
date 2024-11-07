@@ -14,15 +14,18 @@ import {
   Container,
 } from "@mui/material";
 import styled from "styled-components";
+import Div100vh from "react-div-100vh";
+import { useNavigate } from "react-router-dom";
 
 const StyledForm = styled.form`
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   gap: 16px;
   max-width: 600px;
   height: 100vh;
   margin: 32px auto;
-  padding: 32px;
+  padding: 10px 20px;
 `;
 
 const TagInput = styled(TextField)`
@@ -47,6 +50,7 @@ const CreateDiscussion: React.FC<CreateDiscussionProps> = ({ currentUser }) => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
 
+  const navigate = useNavigate()
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await addDoc(collection(db, "discussions"), {
@@ -64,6 +68,8 @@ const CreateDiscussion: React.FC<CreateDiscussionProps> = ({ currentUser }) => {
     setDescription("");
     setIsPrivate(false);
     setTags([]);
+
+    navigate(`/discuss`)
   };
 
   const handleAddTag = () => {
@@ -78,12 +84,11 @@ const CreateDiscussion: React.FC<CreateDiscussionProps> = ({ currentUser }) => {
   };
 
   return (
-    <Container maxWidth="sm">
-      
+    <Div100vh>
       <StyledForm onSubmit={handleSubmit}>
-      <Typography variant="h5" fontWeight={600}>
-        Create Discuss
-      </Typography>
+        <Typography variant="h5" fontWeight={600}>
+          Create Discuss
+        </Typography>
 
         <TextField
           label="Discussion Title"
@@ -135,7 +140,7 @@ const CreateDiscussion: React.FC<CreateDiscussionProps> = ({ currentUser }) => {
           Create Discussion
         </Button>
       </StyledForm>
-    </Container>
+    </Div100vh>
   );
 };
 

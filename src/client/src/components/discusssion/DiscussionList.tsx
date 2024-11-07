@@ -229,7 +229,7 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
     return date?.toDate().toLocaleString();
   };
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="md" sx={{paddingTop:2}}>
       <Typography variant="h5" fontWeight={600}>
         Discuss
       </Typography>
@@ -260,7 +260,7 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
           </Button>
         </TopBar>
 
-        {filteredDiscussions.map((discussion) => (
+        {filteredDiscussions.length > 0 ? filteredDiscussions.map((discussion) => (
           <StyledCard key={discussion.id}>
             <CardHeader
               avatar={
@@ -344,7 +344,29 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
               </Button>
             </CardActions>
           </StyledCard>
-        ))}
+        )):<Box sx={{
+          width:`60%`,
+          margin:`0 auto`,
+          display:`flex`,
+          flexDirection:`column`,
+          alignContent:`center`,
+          padding:`20px`,
+          justifyContent:`center`,
+
+        }}>
+          <Typography paddingBottom={2} align="center" variant="body1"> No discuss found!</Typography>
+        
+        <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            style={{ marginLeft: "5px" }}
+            onClick={handleCreateDiscussion}
+          >Create New
+           
+          </Button>
+        
+        </Box>}
 
         <Menu
           anchorEl={menuAnchorEl}
@@ -352,8 +374,8 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
           onClose={handleMenuClose}
           elevation={1}
         >
-          <MenuItem onClick={handleDeleteDiscussion}>Delete</MenuItem>
-          <MenuItem onClick={handleShareDiscussion}>Share</MenuItem>
+          <MenuItem divider onClick={handleDeleteDiscussion}>Delete</MenuItem>
+          <MenuItem divider onClick={handleShareDiscussion}>Share</MenuItem>
           <MenuItem onClick={handleReportDiscussion}>Report</MenuItem>
         </Menu>
 

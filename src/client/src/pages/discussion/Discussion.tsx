@@ -27,9 +27,6 @@ import {
   MenuItem,
   Box,
 } from "@mui/material";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ReplyIcon from "@mui/icons-material/Reply";
-import DeleteIcon from "@mui/icons-material/Delete";
 import {
   Delete,
   AttachFile,
@@ -48,20 +45,22 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Div100vh from "react-div-100vh";
 import { IconArrowLeftfunction } from "../../assets/icons";
+import { genRandomColor } from "../../utils";
 
 const StyledDiscussionRoom = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
   width: 100%;
-  background-color: #f0f4f8;
+  background-color: #ffffff;
   font-size: 14px;
+  overflow-x: hidden;
 `;
 
 const MessageList = styled.div`
   flex-grow: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 0 30px 0 30px;
   display: flex;
   flex-direction: column;
 `;
@@ -84,7 +83,7 @@ const MessageBubble = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
   maxWidth: "60%",
   position: "relative",
   width: "fit-content",
-  padding: "5px 10px 20px 10px",
+  padding: "5px 20px 20px 10px",
   borderTopRightRadius: "20px",
   borderTopLeftRadius: "20px",
   borderBottomRightRadius: isCurrentUser ? "0" : "20px",
@@ -271,6 +270,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
           fileInputRef.current.value = "";
         }
       } catch (error) {
+        console.log(error);
         setError("Failed to send message. Please try again.");
       }
     }
@@ -392,7 +392,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   return (
     <Div100vh>
       <StyledDiscussionRoom>
-        <TopBar style={{height:65}}>
+        <TopBar style={{ height: 65 }}>
           <IconButton color="#fff" onClick={() => navigate(-1)}>
             <IconArrowLeftfunction fill="#fff" />
           </IconButton>
@@ -452,7 +452,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                       isCurrentUser={message.senderId === currentUser?._id}
                       isDeleted={message.isDeleted}
                     >
-                      <Username variant="caption" color="#e7b984">
+                      <Username variant="caption" color={genRandomColor()}>
                         {message.senderName}
                       </Username>
                     </UserInfo>
@@ -461,9 +461,13 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                       <Typography
                         variant="caption"
                         style={{
+                          borderLeft: `2px solid #a0a6b3`,
+                          background: `#324b55`,
+                          borderRadius: 10,
+                          padding: `10px`,
                           marginBottom: 4,
                           display: "block",
-                          color: "#666",
+                          color: "#8c8c8c",
                         }}
                       >
                         Replying to:{" "}
@@ -508,14 +512,15 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                       <Avatar
                         src={message.senderAvatar}
                         sx={{
-                          width: 20,
-                          height: 20,
-                          fontSize: 10,
-                          marginRight: 1,
+                          width: 28,
+                          backgroundColor: genRandomColor(),
+                          height: 28,
+                          fontSize: 12,
+                          marginRight: 4,
                           position: `absolute`,
                           left:
-                            message.senderId === currentUser?._id ? `95%` : -14,
-                          bottom: -20,
+                            message.senderId === currentUser?._id ? `99%` : -28,
+                          bottom: -23,
                         }}
                       >
                         {message.senderName
@@ -540,10 +545,13 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                 marginBottom: 8,
                 backgroundColor: "#f0f4f8",
                 borderRadius: 4,
+                borderLeft: `4px solid ${genRandomColor()}`,
               }}
             >
               <Typography variant="caption">
-                Replying to:{" "}
+                <h5 style={{ color: genRandomColor() }}>
+                  {replyTo.senderName}
+                </h5>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {replyTo.content.substring(0, 30)}
                 </ReactMarkdown>
@@ -615,35 +623,17 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
           PaperProps={{
             style: {
               borderRadius: "8px",
-            
             },
           }}
         >
-          <MenuItem
-            onClick={() => handleMenuAction("reply")}
-            sx={{
-              gap: 5,
-            }}
-            divider
-          >
+          <MenuItem onClick={() => handleMenuAction("reply")} divider>
             Reply
-            <ListItemIcon>
-              <ReplyIcon fontSize="small" />
-            </ListItemIcon>
           </MenuItem>
 
           {selectedMessage?.senderId === currentUser._id && (
             <>
-              <MenuItem
-                onClick={() => handleMenuAction("delete")}
-                sx={{
-                  gap: 5,
-                }}
-              >
+              <MenuItem onClick={() => handleMenuAction("delete")}>
                 Delete
-                <ListItemIcon>
-                  <DeleteIcon fontSize="small" />
-                </ListItemIcon>
               </MenuItem>
             </>
           )}
