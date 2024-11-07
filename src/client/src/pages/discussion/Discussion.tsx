@@ -26,6 +26,16 @@ import {
   Menu,
   MenuItem,
   Box,
+  Tooltip,
+  Divider,
+  Drawer,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  ListItemButton,
+  ListItemIcon,
+  InputAdornment,
 } from "@mui/material";
 import {
   Delete,
@@ -36,8 +46,10 @@ import {
   FormatUnderlined,
   InsertLink,
   Code,
-  ArrowBack,
   RemoveCircle,
+  Download,
+  MoreVert,
+  Search,
 } from "@mui/icons-material";
 import styled from "styled-components";
 import { motion } from "framer-motion";
@@ -45,6 +57,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Div100vh from "react-div-100vh";
 import { IconArrowLeftfunction } from "../../assets/icons";
+import getToken from "../../utils/getToken";
+import axiosInstance from "../../utils/axiosInstance";
+import toast from "react-hot-toast";
 import { genRandomColor } from "../../utils";
 
 const StyledDiscussionRoom = styled.div`
@@ -91,7 +106,7 @@ const MessageBubble = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
   backgroundColor: isDeleted ? "transparent" : "#276168",
   color: isDeleted ? "#888" : `#fff`,
   alignSelf: isCurrentUser ? "flex-end" : "flex-start",
-  marginBottom: "14px",
+  marginBottom: "50px",
   cursor: "pointer",
   transition: "all 0.3s ease",
   border: isDeleted ? "none" : "1px solid #ededed",
@@ -143,6 +158,41 @@ const TopBar = styled.div`
   z-index: 1;
 `;
 
+const FilePreview = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background-color: #f0f4f8;
+  border-radius: 4px;
+  margin-bottom: 8px;
+`;
+
+const FileIcon = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: #c4c4c4;
+  border-radius: 4px;
+  margin-right: 8px;
+`;
+
+const ParticipantDrawer = styled(Drawer)`
+  .MuiDrawer-paper {
+    width: 100%;
+    maxwidth: 400px;
+    padding: 16px;
+  }
+`;
+
+const ParticipantList = styled(List)`
+  .MuiListItem-root {
+    padding-left: 0;
+    padding-right: 0;
+  }
+`;
+
 const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   const { discussionId } = useParams<{ discussionId: string }>();
   const navigate = useNavigate();
@@ -158,6 +208,8 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedMessage, setSelectedMessage] =
     useState<DiscussionMessage | null>(null);
+  const [participantDrawerOpen, setParticipantDrawerOpen] = useState(false);
+  const [participantSearch, setParticipantSearch] = useState("");
 
   const fetchDiscussion = useCallback(async () => {
     try {
@@ -167,7 +219,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
       if (docSnap.exists()) {
         const discussionData = docSnap.data();
         setDiscussion({
-          id: docSnap.id,
+          id: docRef.id,
           ...discussionData,
           lastActivityAt:
             discussionData.lastActivityAt instanceof Timestamp
@@ -240,10 +292,14 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
     if (newMessage.trim() || file) {
       try {
         let fileUrl = "";
+        let fileType = "";
+        let fileName = "";
         if (file) {
           const storageRef = ref(storage, `files/${discussionId}/${file.name}`);
           await uploadBytes(storageRef, file);
           fileUrl = await getDownloadURL(storageRef);
+          fileType = file.type;
+          fileName = file.name;
         }
 
         const messageData: DiscussionMessage = {
@@ -253,6 +309,8 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
           senderName: currentUser.username,
           content: newMessage.trim(),
           fileUrl,
+          fileType,
+          fileName,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           replyTo: replyTo ? replyTo.id : "",
@@ -359,12 +417,51 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
         case "delete":
           handleDeleteMessage(selectedMessage.id);
           break;
+        case "download":
+          window.open(selectedMessage.fileUrl, "_blank");
+          break;
         default:
           break;
       }
     }
     handleCloseMenu();
   };
+
+  const handleParticipantDrawerToggle = () => {
+    setParticipantDrawerOpen((prev) => !prev);
+  };
+
+
+
+  const [discussionParticipants, setDiscussionParticipants] = useState<USER[]>([]);
+
+  const getParticipants = async () => {
+    try {
+      const authToken = await getToken();
+      const participantPromises: Promise<USER>[] = [];
+  
+      if (discussion?.participants) {
+        for (const participantId of discussion.participants) {
+          if (participantId !== currentUser?._id) {
+            const { data } = await axiosInstance(authToken).get(
+              `/api/v1/userdetails/${participantId}`
+            );
+            participantPromises.push(data.user);
+          }
+        }
+      }
+  
+      const participants = await Promise.all(participantPromises);
+      setDiscussionParticipants(participants);
+    } catch (err) {
+      console.error(err);
+      toast.error("Error fetching participant details");
+    }
+  };
+  
+  useEffect(() => {
+    getParticipants();
+  }, []);
 
   if (loading) {
     return <StyledLoader size={40} />;
@@ -396,7 +493,16 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
           <IconButton color="#fff" onClick={() => navigate(-1)}>
             <IconArrowLeftfunction fill="#fff" />
           </IconButton>
-          <Box>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexGrow: 1,
+              overflow: "hidden",
+              cursor: "pointer",
+            }}
+           
+          >
             <Typography
               variant="h6"
               style={{
@@ -417,6 +523,9 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                 : ` ${discussion?.participants.length} participant`}
             </Typography>
           </Box>
+          <IconButton color="#fff" onClick={handleParticipantDrawerToggle}>
+            <MoreVert />
+          </IconButton>
         </TopBar>
         <MessageList>
           {messages.map((message, index) => {
@@ -443,62 +552,86 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                   </Typography>
                 )}
                 <div key={message.id}>
-                  <MessageBubble
-                    isCurrentUser={message.senderId === currentUser?._id}
-                    isDeleted={message.isDeleted}
-                    onDoubleClick={(event) => handleOpenMenu(event, message)}
-                  >
-                    <UserInfo
+                  {!message.isDeleted && (
+                    <MessageBubble
                       isCurrentUser={message.senderId === currentUser?._id}
                       isDeleted={message.isDeleted}
+                      onDoubleClick={(event) => handleOpenMenu(event, message)}
                     >
-                      <Username variant="caption" color={genRandomColor()}>
-                        {message.senderName}
-                      </Username>
-                    </UserInfo>
-
-                    {message.replyTo && !message.isDeleted && (
-                      <Typography
-                        variant="caption"
-                        style={{
-                          borderLeft: `2px solid #a0a6b3`,
-                          background: `#324b55`,
-                          borderRadius: 10,
-                          padding: `10px`,
-                          marginBottom: 4,
-                          display: "block",
-                          color: "#8c8c8c",
-                        }}
+                      <UserInfo
+                        isCurrentUser={message.senderId === currentUser?._id}
+                        isDeleted={message.isDeleted}
                       >
-                        Replying to:{" "}
-                        {messages
-                          .find((m) => m.id === message.replyTo)
-                          ?.content.substring(0, 30)}
-                      </Typography>
-                    )}
-                    {!message.isDeleted && (
-                      <Typography variant="body1" color="#fff" fontSize={16}>
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          style={{ color: "white !important" }}
+                        <Username variant="caption" color={genRandomColor()}>
+                          {message.senderName}
+                        </Username>
+                      </UserInfo>
+
+                      {message.replyTo && (
+                        <Typography
+                          variant="caption"
+                          style={{
+                            borderLeft: `2px solid #a0a6b3`,
+                            background: `#324b55`,
+                            borderRadius: 10,
+                            padding: `10px`,
+                            marginBottom: 4,
+                            display: "block",
+                            color: "#8c8c8c",
+                          }}
                         >
-                          {message.content}
-                        </ReactMarkdown>
-                      </Typography>
-                    )}
-                    {message.fileUrl && (
-                      <Button
-                        href={message.fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        size="small"
-                        style={{ marginTop: 4, padding: 0 }}
-                      >
-                        View Attachment
-                      </Button>
-                    )}
+                          Replying to:{" "}
+                          {messages
+                            .find((m) => m.id === message.replyTo)
+                            ?.content.substring(0, 30)}
+                        </Typography>
+                      )}
+                      {!message.isDeleted && (
+                        <Typography variant="body1" color="#fff" fontSize={16}>
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            style={{ color: "white !important" }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        </Typography>
+                      )}
+                      {message.fileUrl && !message.isDeleted && (
+                        <div>
+                          {message?.fileType?.startsWith("image/") ? (
+                            <img
+                              src={message?.fileUrl}
+                              alt={message?.fileName}
+                              style={{
+                                maxWidth: "200px",
+                                height: "auto",
+                                borderRadius: "8px",
+                                marginTop: 8,
+                              }}
+                            />
+                          ) : (
+                            <FilePreview>
+                              <FileIcon>
+                                <AttachFile />
+                              </FileIcon>
+                              <div
+                                style={{
+                                  display: `flex`,
+                                  flexDirection: `column`,
+                                }}
+                              >
+                                <Typography variant="caption">
+                                  {message?.fileName}
+                                </Typography>
+                                <Typography variant="caption">
+                                  {message?.fileType}
+                                </Typography>
+                              </div>
+                            </FilePreview>
+                          )}
+                        </div>
+                      )}
 
-                    {!message.isDeleted && (
                       <Time
                         variant="caption"
                         fontSize={9}
@@ -506,9 +639,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                       >
                         {new Date(message.createdAt).toTimeString().slice(0, 5)}
                       </Time>
-                    )}
 
-                    {!message.isDeleted && (
                       <Avatar
                         src={message.senderAvatar}
                         sx={{
@@ -527,8 +658,8 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                           ? message.senderName[0].toUpperCase()
                           : "U"}
                       </Avatar>
-                    )}
-                  </MessageBubble>
+                    </MessageBubble>
+                  )}
                 </div>
               </>
             );
@@ -552,6 +683,34 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                 <h5 style={{ color: genRandomColor() }}>
                   {replyTo.senderName}
                 </h5>
+                {replyTo?.fileType?.startsWith("image/") ? (
+                  <img
+                    src={replyTo?.fileUrl}
+                    alt={replyTo?.fileName}
+                    style={{
+                      maxWidth: "20px",
+                      height: "auto",
+                      borderRadius: "8px",
+                      marginTop: 8,
+                    }}
+                  />
+                ) : (
+                  <div style={{ display: `flex` }}>
+                    {replyTo?.fileType && (
+                      <FileIcon>
+                        <AttachFile />
+                      </FileIcon>
+                    )}
+                    <div>
+                      <Typography variant="subtitle2">
+                        {replyTo?.fileName}
+                      </Typography>
+                      <Typography variant="caption">
+                        {replyTo?.fileType}
+                      </Typography>
+                    </div>
+                  </div>
+                )}
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                   {replyTo.content.substring(0, 30)}
                 </ReactMarkdown>
@@ -561,37 +720,89 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
               </IconButton>
             </div>
           )}
+          {file && (
+            <FilePreview>
+              <FileIcon>
+                {file.type.startsWith("image/") ? (
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={file.name}
+                    style={{
+                      maxWidth: "100%",
+                      height: "auto",
+                      borderRadius: "4px",
+                    }}
+                  />
+                ) : (
+                  <AttachFile />
+                )}
+              </FileIcon>
+              <div>
+                <Typography variant="subtitle2">{file.name}</Typography>
+                <Typography variant="caption">{file.type}</Typography>
+              </div>
+              <Tooltip title="Remove" placement="bottom">
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    setFile(null);
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                    }
+                  }}
+                >
+                  <RemoveCircle fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </FilePreview>
+          )}
           <Toolbar>
-            <IconButton size="small" onClick={() => handleFormatText("bold")}>
-              <FormatBold fontSize="small" />
-            </IconButton>
-            <IconButton size="small" onClick={() => handleFormatText("italic")}>
-              <FormatItalic fontSize="small" />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={() => handleFormatText("underline")}
-            >
-              <FormatUnderlined fontSize="small" />
-            </IconButton>
-            <IconButton size="small" onClick={() => handleFormatText("link")}>
-              <InsertLink fontSize="small" />
-            </IconButton>
-            <IconButton size="small" onClick={() => handleFormatText("code")}>
-              <Code fontSize="small" />
-            </IconButton>
+            <Tooltip title="Bold" placement="bottom">
+              <IconButton size="small" onClick={() => handleFormatText("bold")}>
+                <FormatBold fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="italic" placement="bottom">
+              <IconButton
+                size="small"
+                onClick={() => handleFormatText("italic")}
+              >
+                <FormatItalic fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="underline" placement="bottom">
+              <IconButton
+                size="small"
+                onClick={() => handleFormatText("underline")}
+              >
+                <FormatUnderlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="link" placement="bottom">
+              <IconButton size="small" onClick={() => handleFormatText("link")}>
+                <InsertLink fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="code" placement="bottom">
+              <IconButton size="small" onClick={() => handleFormatText("code")}>
+                <Code fontSize="small" />
+              </IconButton>
+            </Tooltip>
             <input
               type="file"
               onChange={handleFileChange}
               style={{ display: "none" }}
               ref={fileInputRef}
+              accept="image/*"
             />
-            <IconButton
-              size="small"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <AttachFile fontSize="small" />
-            </IconButton>
+            <Tooltip title="file" placement="bottom">
+              <IconButton
+                size="small"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <AttachFile fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Toolbar>
           <div style={{ display: "flex" }}>
             <TextField
@@ -616,6 +827,60 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
             </Button>
           </div>
         </MessageInput>
+        <ParticipantDrawer
+          anchor="bottom"
+          open={participantDrawerOpen}
+          onClose={handleParticipantDrawerToggle}
+        >
+          <Typography variant="h6" style={{ marginBottom: 16 }}>
+            Participants
+          </Typography>
+          <TextField
+            fullWidth
+            placeholder="Search participants..."
+            value={participantSearch}
+            onChange={(e) => setParticipantSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search />
+                </InputAdornment>
+              ),
+            }}
+            style={{ marginBottom: 16 }}
+          />
+          <ParticipantList>
+  {discussionParticipants.map((participant) => (
+  
+    <ListItem key={participant?._id} disableGutters>
+      <ListItemButton>
+        <ListItemAvatar>
+          <Avatar src={participant?.avatar?.url}>
+            {participant?.username[0]?.toUpperCase()}
+          </Avatar>
+        </ListItemAvatar>
+        <ListItemText
+          primary={participant?.username}
+          secondary={participant?._id === currentUser._id ? "You" : null}
+        />
+        <ListItemIcon>
+          <IconButton
+            size="small"
+            onClick={(event) => handleOpenMenu(event, participant?._id)}
+          >
+            <MoreVert />
+          </IconButton>
+        </ListItemIcon>
+      </ListItemButton>
+    </ListItem>
+
+    
+  ))}
+</ParticipantList>
+
+
+        </ParticipantDrawer>
+
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
@@ -632,9 +897,14 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
 
           {selectedMessage?.senderId === currentUser._id && (
             <>
-              <MenuItem onClick={() => handleMenuAction("delete")}>
+              <MenuItem onClick={() => handleMenuAction("delete")} divider>
                 Delete
               </MenuItem>
+              {selectedMessage?.fileUrl && (
+                <MenuItem onClick={() => handleMenuAction("download")}>
+                  Download File
+                </MenuItem>
+              )}
             </>
           )}
         </Menu>

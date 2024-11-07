@@ -8,6 +8,7 @@ import {
   doc,
   addDoc,
   arrayUnion,
+  arrayRemove,
   updateDoc,
 } from "firebase/firestore";
 import {
@@ -48,6 +49,7 @@ import styled from "styled-components";
 import { Alert } from "@mui/material";
 import InputAdornment from "@mui/material/InputAdornment";
 import toast from "react-hot-toast";
+import format from "date-fns/format";
 
 const StyledCard = styled(Card)`
   margin: 16px 0;
@@ -124,6 +126,7 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [reportCategory, setReportCategory] = useState("");
   const [reportDetails, setReportDetails] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -133,14 +136,20 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
     );
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const discussionsData: Discussion[] = [];
+      let unreadCount = 0;
       querySnapshot.forEach((doc) => {
-        discussionsData.push({ id: doc.id, ...doc.data() } as Discussion);
+        const discussion = { id: doc.id, ...doc.data() } as Discussion;
+        if (!discussion.participants.includes(currentUser?._id)) {
+          unreadCount++;
+        }
+        discussionsData.push(discussion);
       });
       setDiscussions(discussionsData);
       setFilteredDiscussions(discussionsData);
+      setUnreadCount(unreadCount);
     });
     return () => unsubscribe();
-  }, []);
+  }, [currentUser]);
 
   const handleMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -162,6 +171,20 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
     ) {
       await deleteDoc(doc(db, "discussions", selectedDiscussion.id));
       setDeleteConfirmationOpen(true);
+    }
+    handleMenuClose();
+  };
+
+  const handleLeaveDiscussion = async () => {
+    if (
+      selectedDiscussion &&
+      selectedDiscussion.participants.includes(currentUser?._id)
+    ) {
+      const discussionRef = doc(db, "discussions", selectedDiscussion.id);
+      await updateDoc(discussionRef, {
+        participants: arrayRemove(currentUser._id),
+      });
+      toast.success("You have left the discussion");
     }
     handleMenuClose();
   };
@@ -225,13 +248,10 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
     navigate("/discuss/create");
   };
 
-  const isValidDate = (date: string) => {
-    return date?.toDate().toLocaleString();
-  };
   return (
-    <Container maxWidth="md" sx={{paddingTop:2}}>
+    <Container maxWidth="md" sx={{ paddingTop: 2 }}>
       <Typography variant="h5" fontWeight={600}>
-        Discuss
+        Discuss {unreadCount > 0 && `(${unreadCount} new)`}
       </Typography>
       <DiscussionListWrapper>
         <TopBar>
@@ -260,113 +280,120 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
           </Button>
         </TopBar>
 
-        {filteredDiscussions.length > 0 ? filteredDiscussions.map((discussion) => (
-          <StyledCard key={discussion.id}>
-            <CardHeader
-              avatar={
-                <Avatar
-                  sx={{
-                    bgcolor: discussion.isPrivate
-                      ? "secondary.main"
-                      : "primary.main",
+        {filteredDiscussions.length > 0 ? (
+          filteredDiscussions.map((discussion) => (
+            <StyledCard key={discussion.id}>
+              <CardHeader
+                avatar={
+                  <Avatar
+                    sx={{
+                      bgcolor: discussion.isPrivate
+                        ? "secondary.main"
+                        : "primary.main",
+                    }}
+                  >
+                    {discussion.isPrivate ? <Lock /> : <Public />}
+                  </Avatar>
+                }
+                action={
+                  (discussion.creatorId === currentUser?._id ||
+                    discussion.participants.includes(currentUser?._id)) && (
+                    <IconButton onClick={(e) => handleMenuOpen(e, discussion)}>
+                      <MoreVert />
+                    </IconButton>
+                  )
+                }
+                title={
+                  <Typography variant="h6" fontSize="1rem">
+                    {discussion.title}
+                  </Typography>
+                }
+                subheader={
+                  <Typography variant="subtitle2" color="textSecondary">
+                    {`${discussion.participants.length} participant${
+                      discussion.participants.length > 1 ? "s" : ""
+                    }`}
+                    {" • "}
+                    <ActivityIcon
+                      sx={{ fontSize: "1rem", verticalAlign: "middle" }}
+                    />
+                    {` ${format(discussion.lastActivityAt.toDate(), "MMM d, yyyy h:mm a")}`}
+                  </Typography>
+                }
+              />
+
+              <CardContent>
+                <TagContainer>
+                  {discussion.tags.map((tag) => (
+                    <Chip
+                      key={tag}
+                      label={`#${tag}`}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
+                </TagContainer>
+                <MessageBubble>
+                  <Typography variant="body2" color="textPrimary">
+                    {discussion.description}
+                  </Typography>
+                </MessageBubble>
+              </CardContent>
+
+              <CardActions
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  padding: "8px",
+                }}
+              >
+                <Button
+                  variant="contained"
+                  color="primary"
+                  size="small"
+                  onClick={() => {
+                    if (discussion.participants.includes(currentUser?._id)) {
+                      navigate(`/discuss-room/${discussion.id}`);
+                    } else {
+                      handleJoinDiscussion(discussion.id);
+                    }
                   }}
                 >
-                  {discussion.isPrivate ? <Lock /> : <Public />}
-                </Avatar>
-              }
-              action={
-                discussion.creatorId === currentUser?._id && (
-                  <IconButton onClick={(e) => handleMenuOpen(e, discussion)}>
-                    <MoreVert />
-                  </IconButton>
-                )
-              }
-              title={
-                <Typography variant="h6" fontSize="1rem">
-                  {discussion.title}
-                </Typography>
-              }
-              subheader={
-                <Typography variant="subtitle2" color="textSecondary">
-                  {`${discussion.participants.length} participant${
-                    discussion.participants.length > 1 ? "s" : ""
-                  }`}
-                  {" • "}
-                  <ActivityIcon
-                    sx={{ fontSize: "1rem", verticalAlign: "middle" }}
-                  />
-                  {` ${isValidDate(discussion.lastActivityAt)}`}
-                </Typography>
-              }
-            />
+                  {discussion.participants.includes(currentUser?._id)
+                    ? "View"
+                    : "Join"}
+                </Button>
+              </CardActions>
+            </StyledCard>
+          ))
+        ) : (
+          <Box
+            sx={{
+              width: `60%`,
+              margin: `0 auto`,
+              display: `flex`,
+              flexDirection: `column`,
+              alignContent: `center`,
+              padding: `20px`,
+              justifyContent: `center`,
+            }}
+          >
+            <Typography paddingBottom={2} align="center" variant="body1">
+              No discussions found!
+            </Typography>
 
-            <CardContent>
-              <TagContainer>
-                {discussion.tags.map((tag) => (
-                  <Chip
-                    key={tag}
-                    label={`#${tag}`}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                  />
-                ))}
-              </TagContainer>
-              <MessageBubble>
-                <Typography variant="body2" color="textPrimary">
-                  {discussion.description}
-                </Typography>
-              </MessageBubble>
-            </CardContent>
-
-            <CardActions
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                padding: "8px",
-              }}
+            <Button
+              variant="contained"
+              color="primary"
+              size="small"
+              style={{ marginLeft: "5px" }}
+              onClick={handleCreateDiscussion}
             >
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
-                onClick={() => {
-                  if (discussion.participants.includes(currentUser?._id)) {
-                    navigate(`/discuss-room/${discussion.id}`);
-                  } else {
-                    handleJoinDiscussion(discussion.id);
-                  }
-                }}
-              > 
-                {discussion.participants.includes(currentUser?._id)
-                  ? "View"
-                  : "Join"}
-              </Button>
-            </CardActions>
-          </StyledCard>
-        )):<Box sx={{
-          width:`60%`,
-          margin:`0 auto`,
-          display:`flex`,
-          flexDirection:`column`,
-          alignContent:`center`,
-          padding:`20px`,
-          justifyContent:`center`,
-
-        }}>
-          <Typography paddingBottom={2} align="center" variant="body1"> No discuss found!</Typography>
-        
-        <Button
-            variant="contained"
-            color="primary"
-            size="small"
-            style={{ marginLeft: "5px" }}
-            onClick={handleCreateDiscussion}
-          >Create New
-           
-          </Button>
-        
-        </Box>}
+              Create New
+            </Button>
+          </Box>
+        )}
 
         <Menu
           anchorEl={menuAnchorEl}
@@ -374,8 +401,21 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
           onClose={handleMenuClose}
           elevation={1}
         >
-          <MenuItem divider onClick={handleDeleteDiscussion}>Delete</MenuItem>
-          <MenuItem divider onClick={handleShareDiscussion}>Share</MenuItem>
+          {selectedDiscussion &&
+            selectedDiscussion.creatorId === currentUser?._id && (
+              <MenuItem divider onClick={handleDeleteDiscussion}>
+                Delete
+              </MenuItem>
+            )}
+          {selectedDiscussion &&
+            selectedDiscussion.participants.includes(currentUser?._id) && (
+              <MenuItem divider onClick={handleLeaveDiscussion}>
+                Leave
+              </MenuItem>
+            )}
+          <MenuItem divider onClick={handleShareDiscussion}>
+            Share
+          </MenuItem>
           <MenuItem onClick={handleReportDiscussion}>Report</MenuItem>
         </Menu>
 

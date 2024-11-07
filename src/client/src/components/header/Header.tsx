@@ -187,17 +187,6 @@ const Header: React.FC = () => {
                 <ListItemText primary="Blog" />
               </ListItemButton>
             </ListItem>
-
-            {user?.username && authToken !== undefined && (
-              <ListItem disablePadding component={Link} to={`/chats`}>
-                <ListItemButton>
-                  <ListItemIcon>
-                    <MessageIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Chat" />
-                </ListItemButton>
-              </ListItem>
-            )}
            
            {user?.username && authToken !== undefined && (
               <ListItem disablePadding component={Link} to={`/discuss`}>
@@ -209,6 +198,7 @@ const Header: React.FC = () => {
                 </ListItemButton>
               </ListItem>
             )}
+            
            
             {user?.username && authToken !== undefined && (
               <ListItem disablePadding component={Link} to={`/profile/${user?.username}`}>

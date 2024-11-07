@@ -120,7 +120,7 @@ const Profile: React.FC = () => {
   const fetchUser = useCallback(async () => {
     const authToken = await getToken();
     let username: string =
-      params?.username || (await LocalForageProvider.getItem("FC:USERNAME"))
+      params?.username || (await LocalForageProvider.getItem("FC:USERNAME"));
     username && dispatch<any>(await getUserDetails(username, authToken));
   }, []);
   useEffect(() => {
@@ -215,9 +215,7 @@ const Profile: React.FC = () => {
     navigate("/login");
   };
 
-  const messageUser = () => {
-    navigate(`/chat/${user?.username}`);
-  };
+ 
 
   const mailUser = () => {
     const mail = `mailto:${user?.email}`;
@@ -348,17 +346,8 @@ const Profile: React.FC = () => {
 
                 {!isCurrentUser && (
                   <div className="p-cnt-cont">
-                    <div
-                      title="Message on whatsapp"
-                      className="usr-msg"
-                      onClick={messageUser}
-                    >
-                      Message&nbsp;
-                      <Message fontSize="28px" />
-                    </div>
-
                     <div title="Mail" className="usr-mail" onClick={mailUser}>
-                      Email&nbsp;
+                      Mail&nbsp;
                       <IconMinutemailer fill="#fff" />
                     </div>
                   </div>
@@ -366,13 +355,12 @@ const Profile: React.FC = () => {
 
                 <div className="user-bio-segment">
                   <p className="user-bio">{user?.bio}</p>
-                  {(currentUser?.school ||
-                    user?.school) && (
-                      <p className="user-sch">
-                        <IconSchool height="16" width="16" fill="black" />{" "}
-                        {currentUser?.school || user?.school}
-                      </p>
-                    )}
+                  {(currentUser?.school || user?.school) && (
+                    <p className="user-sch">
+                      <IconSchool height="16" width="16" fill="black" />{" "}
+                      {currentUser?.school || user?.school}
+                    </p>
+                  )}
                   <p className="user-joined-date">
                     <IconCalendarEventFill
                       height="16"
@@ -408,7 +396,11 @@ const Profile: React.FC = () => {
                             (currentUser?.username && navigate("/bookmarks"));
                         }}
                       >
-                     <CategoryChip key={int} icon={getCategoryIcon(int)} label={int.replace('_', ' ')} />
+                        <CategoryChip
+                          key={int}
+                          icon={getCategoryIcon(int)}
+                          label={int.replace("_", " ")}
+                        />
                       </div>
                     ))}
                   </div>
@@ -964,8 +956,8 @@ const ProfileRenderer = styled.div`
 `;
 
 const CategoryChip = styled(Chip)`
-
-&:hover {
-  background-color: #176984;
-  color: #ffffff;
-}`
+  &:hover {
+    background-color: #176984;
+    color: #ffffff;
+  }
+`;

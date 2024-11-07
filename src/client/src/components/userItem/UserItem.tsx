@@ -52,19 +52,13 @@ const UserBio = styled(Typography)`
 
 const ButtonWrapper = styled(Box)`
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
   margin-top: 8px;
   gap: 8px;
-  @media (max-width: 600px) {
-    justify-content: center;
-  }
+
 `;
 
 const ViewButton = styled(Button)`
-  color: #fff;
-`;
-
-const MessageButton = styled(Button)`
   color: #fff;
 `;
 
@@ -95,13 +89,6 @@ const UserItem: React.FC<UserItemProps> = ({ username, bio, img }) => {
           >
             View Profile
           </ViewButton>
-          <MessageButton
-            variant="outlined"
-            size="small"
-            onClick={() => navigate(`/chat/${username}`)}
-          >
-            Message
-          </MessageButton>
         </ButtonWrapper>
       </ContentWrapper>
     </StyledCard>
