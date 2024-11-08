@@ -44,18 +44,16 @@ export const isYouTubeVideoActive = async (
   videoUrl: string
 ): Promise<{ response: boolean | Response; loading: boolean }> => {
   let loading = false;
-  // Extract video ID from YouTube link
   const videoId = videoUrl.split("v=")[1];
 
   try {
     loading = true;
-    // Make a request to the oEmbed endpoint
+
     const response = await fetch(
       `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}`
     );
     loading = false;
 
-    // Check if the response indicates an active video
     return { response: response.ok, loading };
   } catch (error: any) {
     loading = false;

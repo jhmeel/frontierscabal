@@ -39,7 +39,7 @@ const ContactUs = () => {
       <StyledContactUs>
         <Box className="contact-holder">
           <Box className="contact-header">
-            <Typography variant="h5">Contact Us!</Typography>
+            <Typography variant="h2">Contact Us!</Typography>
             <Typography variant="body1" className="contact-description">
               If you have any questions, feedback, or inquiries, feel free to get in touch with us.
             </Typography>
@@ -96,7 +96,7 @@ const StyledContactUs = styled(Box)`
   padding: 10px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items:center;
   font-family: "Roboto", sans-serif;
 

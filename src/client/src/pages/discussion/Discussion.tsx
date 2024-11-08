@@ -61,6 +61,7 @@ import getToken from "../../utils/getToken";
 import axiosInstance from "../../utils/axiosInstance";
 import toast from "react-hot-toast";
 import { genRandomColor } from "../../utils";
+import SpinLoader from "../../components/loaders/SpinLoader";
 
 const StyledDiscussionRoom = styled.div`
   display: flex;
@@ -431,15 +432,15 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
     setParticipantDrawerOpen((prev) => !prev);
   };
 
-
-
-  const [discussionParticipants, setDiscussionParticipants] = useState<USER[]>([]);
+  const [discussionParticipants, setDiscussionParticipants] = useState<USER[]>(
+    []
+  );
 
   const getParticipants = async () => {
     try {
       const authToken = await getToken();
       const participantPromises: Promise<USER>[] = [];
-  
+
       if (discussion?.participants) {
         for (const participantId of discussion.participants) {
           if (participantId !== currentUser?._id) {
@@ -450,27 +451,26 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
           }
         }
       }
-  
+
       const participants = await Promise.all(participantPromises);
       setDiscussionParticipants(participants);
     } catch (err) {
       console.error(err);
-      toast.error("Error fetching participant details");
     }
   };
-  
+
   useEffect(() => {
     getParticipants();
   }, []);
 
   if (loading) {
-    return <StyledLoader size={40} />;
+    return <SpinLoader />;
   }
 
   if (error) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
-        <Typography variant="h6" color="error">
+        <Typography variant="body1" color="error">
           {error}
         </Typography>
         <Button
@@ -501,7 +501,6 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
               overflow: "hidden",
               cursor: "pointer",
             }}
-           
           >
             <Typography
               variant="h6"
@@ -850,35 +849,34 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
             style={{ marginBottom: 16 }}
           />
           <ParticipantList>
-  {discussionParticipants.map((participant) => (
-  
-    <ListItem key={participant?._id} disableGutters>
-      <ListItemButton>
-        <ListItemAvatar>
-          <Avatar src={participant?.avatar?.url}>
-            {participant?.username[0]?.toUpperCase()}
-          </Avatar>
-        </ListItemAvatar>
-        <ListItemText
-          primary={participant?.username}
-          secondary={participant?._id === currentUser._id ? "You" : null}
-        />
-        <ListItemIcon>
-          <IconButton
-            size="small"
-            onClick={(event) => handleOpenMenu(event, participant?._id)}
-          >
-            <MoreVert />
-          </IconButton>
-        </ListItemIcon>
-      </ListItemButton>
-    </ListItem>
-
-    
-  ))}
-</ParticipantList>
-
-
+            {discussionParticipants.map((participant) => (
+              <ListItem key={participant?._id} disableGutters>
+                <ListItemButton>
+                  <ListItemAvatar>
+                    <Avatar src={participant?.avatar?.url}>
+                      {participant?.username[0]?.toUpperCase()}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={participant?.username}
+                    secondary={
+                      participant?._id === currentUser._id ? "You" : null
+                    }
+                  />
+                  <ListItemIcon>
+                    <IconButton
+                      size="small"
+                      onClick={(event) =>
+                        handleOpenMenu(event, participant?._id)
+                      }
+                    >
+                      <MoreVert />
+                    </IconButton>
+                  </ListItemIcon>
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </ParticipantList>
         </ParticipantDrawer>
 
         <Menu
@@ -894,18 +892,15 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
           <MenuItem onClick={() => handleMenuAction("reply")} divider>
             Reply
           </MenuItem>
-
+          {selectedMessage?.fileUrl && (
+            <MenuItem onClick={() => handleMenuAction("download")} divider>
+              Download File
+            </MenuItem>
+          )}
           {selectedMessage?.senderId === currentUser._id && (
-            <>
-              <MenuItem onClick={() => handleMenuAction("delete")} divider>
-                Delete
-              </MenuItem>
-              {selectedMessage?.fileUrl && (
-                <MenuItem onClick={() => handleMenuAction("download")}>
-                  Download File
-                </MenuItem>
-              )}
-            </>
+            <MenuItem onClick={() => handleMenuAction("delete")}>
+              Delete
+            </MenuItem>
           )}
         </Menu>
       </StyledDiscussionRoom>

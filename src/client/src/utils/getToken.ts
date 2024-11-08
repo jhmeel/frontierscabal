@@ -1,6 +1,6 @@
 import LocalForageProvider from "./localforage";
 
-const getToken = async (): Promise<string | undefined> => {
+const getToken = async (): Promise<string | null> => {
   try {
     const token = await LocalForageProvider.getAuthToken();
 

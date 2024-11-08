@@ -18,7 +18,6 @@ import MainLoader from "./components/loaders/MainLoader";
 const CreateModulePage = lazy(() => import("./pages/module/CreateModule"));
 const HomePage = lazy(() => import("./pages/home/Home"));
 const ModulePage = lazy(() => import("./pages/module/Module"));
-const Misc = lazy(() => import("./pages/misc/Misc"));
 const ModuleListPage = lazy(() => import("./pages/module/ModuleList"));
 const HelpPage = lazy(() => import("./pages/help/Help"));
 const ContactUsPage = lazy(() => import("./pages/contactus/ContactUs"));
@@ -380,9 +379,7 @@ function App() {
               }
             />
 
-            {
-              //<Route path="/misc" element={<Misc />} />
-            }
+            
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

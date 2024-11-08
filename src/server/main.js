@@ -11,7 +11,7 @@ dotenv.config();
 const app = express();
 
 const dependencyList = [
-   DbProvider.getInstance(Config),
+  DbProvider.getInstance(Config),
   new CloudinaryProvider(Config), 
   new MiddlewaresProvider(app),
   new RouteProvider(app),

@@ -7,8 +7,6 @@ import { Box, Typography, Card, CardContent, Container} from "@mui/material";
 import { styled } from "@mui/system";
 
 const NotificationPage: React.FC = (): React.ReactElement => {
-  const [timeframe, setTimeFrame] = useState("Today");
-  const [menuOpen, setIsMenuOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(1);
 
@@ -24,19 +22,6 @@ const NotificationPage: React.FC = (): React.ReactElement => {
     loadNotifications();
   }, [notificationService]);
 
-  const toggleTimeFrameMenu = () => {
-    setIsMenuOpen(!menuOpen);
-  };
-
-  const handleTimeframeSelection = (tf: string) => {
-    setTimeFrame(tf);
-    toggleTimeFrameMenu();
-  };
-
-  const deleteAllNotifications = () => {
-    notificationService.deleteAllNotifications();
-    window.location.reload();
-  };
 
   return (
     <>

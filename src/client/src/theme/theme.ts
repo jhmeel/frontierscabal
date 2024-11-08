@@ -59,6 +59,7 @@ export const getTheme = (mode: 'light' | 'dark') => {
             borderRadius: 20,
             textTransform: 'none',
             fontWeight: 600,
+            boxShadow:`none`,
           },
         },
       },

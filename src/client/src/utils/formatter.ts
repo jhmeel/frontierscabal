@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import LocalForageProvider from "./localforage";
-// import yts from 'yt-search';
 
 export const FormattedCount = (count: number | undefined): string | number => {
   if (!count) return 0;
@@ -68,7 +66,6 @@ export const getVideoDuration = async (
 ): Promise<string | null> => {
   try {
     const video = { seconds: 343 };
-    // await yts({ videoId: youtubeUrl });
 
     const durationSeconds = video.seconds;
 
