@@ -1,13 +1,7 @@
-import SibApiSDK from 'sib-api-v3-sdk';
+
 import {Config} from '../config/config.js';
 import {logger} from './logger.js';
 
-// Instantiate the SendinBlue API client
-const sendinblue = new SibApiSDK.TransactionalEmailsApi();
-
-// Set API key authentication
-const SibClient = SibApiSDK.ApiClient.instance;
-SibClient.authentications['api-key'].apiKey = Config.MAILER.API_KEY;
 
 // Define the sender information
 const sender = {
@@ -16,6 +10,7 @@ const sender = {
 };
 
 const SendMail = async (userData, content) => {
+  /**
   try {
     const smtpMailData = new SibApiSDK.SendSmtpEmail();
 
@@ -48,7 +43,7 @@ const SendMail = async (userData, content) => {
   } catch (error) {
     logger.error(error);
     throw error
-  }
+  }**/
 };
 
 export { SendMail};

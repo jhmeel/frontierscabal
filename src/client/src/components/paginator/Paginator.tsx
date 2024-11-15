@@ -6,7 +6,6 @@ import {
   IconChevronRight,
 } from "../../assets/icons";
 import styled from "styled-components";
-import { useSelector } from "react-redux";
 
 const Paginator = ({ currentPage, totalPages, onPageChange }) => {
   if (!totalPages) return
@@ -145,8 +144,9 @@ const PaginatorRenderer = styled.div`
   padding-left: 1rem;
   display: flex;
   justify-content: center;
-  margin: 1.5rem 0 2rem;
+  margin:0 auto;
   width: 100px;
+
 
 button {
   margin-right: 0.5rem;

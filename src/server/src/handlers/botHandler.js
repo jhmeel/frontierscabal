@@ -48,7 +48,7 @@ export const respondToQuery = catchAsync(async (req, res, next) => {
 
   const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
-  const result = await model.generateContent(`${query}`);
+  const result = await model.generateContent(`You are named Dex. ${query}`);
   const response = await result.response;
   const article = response.text();
 

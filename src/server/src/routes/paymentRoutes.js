@@ -4,5 +4,5 @@ import { authenticator } from "../middlewares/authenticator.js";
 
 const Payment = express();
 
-Payment.route('/payment-success').get(authenticator, onPaymentSuccess)
+Payment.route('/payment-success').post(authenticator, onPaymentSuccess)
 export { Payment };

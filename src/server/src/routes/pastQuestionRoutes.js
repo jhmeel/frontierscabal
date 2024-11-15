@@ -10,6 +10,7 @@ import { getMostRecents } from "../handlers/pastQuestionHandler.js";
 import { searchPastQuestionByCourseSessionAndLevel } from "../handlers/pastQuestionHandler.js";
 import { authenticator } from "../middlewares/authenticator.js";
 import { RestrictTo } from "../middlewares/restrictTo.js";
+import { checkmateSubscription } from "../middlewares/subMiddleware.js";
 
 const PastQuestion = express();
 

@@ -16,7 +16,7 @@ class DbProvider {
       logger.info(`initializing ${this._name}...`);
 
       this.connection = await this.mongoose.connect(this.db_url);
-
+ 
       this.emitter.emit(`${this._name}Ready`);
 
       logger.info(`${this._name} initialized! `);

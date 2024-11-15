@@ -1,10 +1,10 @@
-import { User} from "../models/userModel.js";
-import { CourseMaterial} from "../models/courseMaterialModel.js";
+import { User } from "../models/userModel.js";
+import { CourseMaterial } from "../models/courseMaterialModel.js";
 import catchAsync from "../middlewares/catchAsync.js";
-import {ErrorHandler} from "./errorHandler.js";
+import { ErrorHandler } from "./errorHandler.js";
 import cloudinary from "cloudinary";
 import axios from "axios";
-
+import { Config } from "../config/config.js";
 
 export const newCourseMaterial = catchAsync(async (req, res, next) => {
   const { courseTitle, level, courseCode, session, file } = req.body;
@@ -44,17 +44,19 @@ export const downloadCourseMaterialById = catchAsync(async (req, res, next) => {
     return next(new ErrorHandler("Document not found", 404));
   }
 
-  // const user = await User.findById(req.user._id);
-
-  // if (
-  //   user.subscriptionDue !== false &&
-  //   user.tokenBalance <= 0 &&
-  //   !["FC:SUPER:ADMIN", "FC:ADMIN"].includes(user.role)
-  // ) {
-  //   return next(
-  //     new ErrorHandler("Please Subscribe To Access The Document!", 401)
-  //   );
-  // }
+  const user = await User.findById(req.user._id);
+  if (Config.SUBSCRIPTION.ACTIVE) {
+    if (
+      user.subscriptionDue !== false &&
+      user.dailyFreeDownloadCount >=
+        Config.SUBSCRIPTION.PLANS.FREE.DAILY_MAX_DOWNLOADS &&
+      !["FC:SUPER:ADMIN", "FC:ADMIN"].includes(user.role)
+    ) {
+      return next(
+        new ErrorHandler("Please Subscribe To download The Document!", 401)
+      );
+    }
+  }
 
   const publicId = courseMaterial?.file.public_id;
   if (!publicId) {
@@ -77,17 +79,14 @@ export const downloadCourseMaterialById = catchAsync(async (req, res, next) => {
       courseMaterial.downloads += 1;
       await courseMaterial.save();
 
-      // if (
-      //   !["FC:SUPER:ADMIN", "FC:ADMIN"].includes(user.role) &&
-      //   user.tokenBalance > 0
-      // ) {
-      //   user.tokenBalance -= 3;
-      // }
-
-      // await user.save();
+      //update daily free count for freemium users
+      if (user.subscriptionDue !== false) {
+        user.dailyFreeDownloadCount += 1;
+        await user.save();
+      }
 
       res.set("Content-Disposition", `attachment; filename=${publicId}`);
-      res.set("Content-Length", response.headers['content-length'])
+      res.set("Content-Length", response.headers["content-length"]);
       res.set("Content-Type", "application/pdf");
       response.data.pipe(res);
     } catch (error) {
@@ -114,7 +113,7 @@ export const deleteCourseMaterialById = catchAsync(async (req, res, next) => {
 
   await cloudinary.v2.uploader.destroy(courseMaterial.file?.public_id);
 
-  // Delete the past question entry
+  // Delete the  course material entry
   await CourseMaterial.findByIdAndDelete(req.params.id);
 
   const user = await User.findById(req?.user._id);

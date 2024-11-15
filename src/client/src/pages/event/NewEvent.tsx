@@ -1,16 +1,25 @@
 import React, { useEffect, useState, useRef } from "react";
-import MetaData from "../../MetaData";
-import { useSelector, useDispatch } from "react-redux";
+import {
+  Typography,
+  Button,
+  TextField,
+  Box,
+  IconButton,
+  InputAdornment,
+  Menu,
+  MenuItem,
+} from "@mui/material";
+import { styled } from "@mui/system";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { IconCaretDown } from "../../assets/icons";
-import { addNewEvent, clearErrors, updateEvent } from "../../actions/event";
-import RDotLoader from "../../components/loaders/RDotLoader";
-import getToken from "../../utils/getToken";
-import { isOnline } from "../../utils";
-import { NEW_EVENT_RESET, UPDATE_EVENT_RESET } from "../../constants/event";
-import styled from "styled-components";
-import toast from "react-hot-toast";
+import { addNewEvent, updateEvent, clearErrors } from "../../actions/event";
 import { RootState } from "../../store";
+import RDotLoader from "../../components/loaders/RDotLoader";
+import { IconCaretDown } from "../../assets/icons";
+import toast from "react-hot-toast";
+import getToken from "../../utils/getToken";
+import { NEW_EVENT_RESET, UPDATE_EVENT_RESET } from "../../constants/event";
+import { isOnline } from "../../utils";
 
 const NewEvent = ({
   eveId,
@@ -42,10 +51,10 @@ const NewEvent = ({
   const [endDate, setEndDate] = useState<string | undefined>("");
   const [avenue, setAvenue] = useState<string | undefined>("");
   const [avatar, setAvatar] = useState<string | undefined>("");
-  const [optionVisible, setIsOptionVisible] = useState<boolean>(false);
+  const [anchorEl, setAnchorEl] = useState<any>(null);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const { loading, success, event, message, error } = useSelector(
     (state: RootState) => state.newEvent
   );
@@ -55,17 +64,6 @@ const NewEvent = ({
     error: updateError,
   } = useSelector((state: RootState) => state.eventUpdate);
 
-  const handleAvatar = (e) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      if (reader.readyState === 2) {
-        setAvatar(reader.result as string);
-      }
-    };
-
-    e.target.files && reader.readAsDataURL(e.target.files[0]);
-  };
   useEffect(() => {
     if (
       eveTitle ||
@@ -85,14 +83,20 @@ const NewEvent = ({
       setEndDate(eveEndDate);
     }
   }, []);
+  const handleAvatar = (e: any) => {
+    const reader = new FileReader();
+    reader.onload = () =>
+      reader.readyState === 2 && setAvatar(reader.result as string);
+    e.target.files && reader.readAsDataURL(e.target.files[0]);
+  };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     if (!category) {
-      toast.error(`Event Category is required!`);
+      toast.error(`event Category is required!`);
       return;
     } else if (!avatar) {
-      toast.error(`Event avatar is required!`);
+      toast.error(`event avatar is required!`);
       return;
     }
 
@@ -113,13 +117,6 @@ const NewEvent = ({
     }
   };
 
-  const toggleOptionVisible = () => {
-    setIsOptionVisible(!optionVisible);
-  };
-  const handleSelectedCategory = (category: string) => {
-    setCategory(category);
-    toggleOptionVisible();
-  };
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -142,306 +139,143 @@ const NewEvent = ({
     }
   }, [toast, updateError, updateMessage, navigate]);
 
-  const cRef = useRef(null);
-  const handleClickOutside = (e) => {
-    if (cRef.current && !cRef.current.contains(e.target)) {
-      setIsOptionVisible(false);
-    }
+  const handleCategorySelect = (selected: string) => {
+    setCategory(selected);
+    setAnchorEl(null);
   };
 
-  useEffect(() => {
-    document.addEventListener("click", handleClickOutside);
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, []);
   return (
-    <>
-      <MetaData title="New-Event" />
-      <NewEventFormRenderer
-        onSubmit={handleSubmit}
-        encType="multipart/form-data"
-      >
-        {avatar && <img src={avatar} loading="lazy" />}
-        <div className="eve-inp-cont">
-          <label htmlFor="title">Title:</label>
-          <input
-            type="text"
-            title="Event Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required={true}
-            autoFocus
-          />
-        </div>
-        <div className="eve-inp-cont">
-          <label htmlFor="desription">Description:</label>
-          <textarea
-            title="Event Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            required={true}
-          />
-        </div>
+    <EventContainer component="form" onSubmit={handleSubmit}>
+      <Typography variant="h5" component="h1" gutterBottom>
+        Create Event
+      </Typography>
 
-        <div className="event-date-cont">
-          <div className="eve-inp-cont">
-            <label htmlFor="startdate">Start Date:</label>
-            <input
-              type="datetime-local"
-              title="Event Start Date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              required={true}
-            />
-          </div>
-          <div className="eve-inp-cont">
-            <label htmlFor="enddate">End Date:</label>
-            <input
-              type="datetime-local"
-              title="Event End Date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              required={true}
-            />
-          </div>
-        </div>
+      {avatar && <StyledImg src={avatar} loading="lazy" />}
+      <TextField
+        fullWidth
+        label="Title"
+        value={title}
+        onChange={(e: any) => setTitle(e.target.value)}
+        required
+      />
+      <TextField
+        fullWidth
+        label="Description"
+        value={description}
+        onChange={(e: any) => setDescription(e.target.value)}
+        multiline
+        rows={3}
+        required
+      />
 
-        <div className="eve-inp-cont">
-          <label htmlFor="avenue">Avenue:</label>
+      <DateContainer>
+        <TextField
+          label="Start Date"
+          type="datetime-local"
+          value={startDate}
+          onChange={(e: any) => setStartDate(e.target.value)}
+          required
+          InputLabelProps={{ shrink: true }}
+        />
+        <TextField
+          label="End Date"
+          type="datetime-local"
+          value={endDate}
+          onChange={(e: any) => setEndDate(e.target.value)}
+          required
+          InputLabelProps={{ shrink: true }}
+        />
+      </DateContainer>
 
-          <input
-            type="text"
-            value={avenue}
-            title="Event Avenue"
-            onChange={(e) => setAvenue(e.target.value)}
-            required={true}
-          />
-        </div>
-        <div className="eve-inp-cont">
-          <label htmlFor="event-avatar" className="ne-select-avatar">
-            {"Select event banner"}
-          </label>
-          <input
-            id="event-avatar"
-            name="avatar"
-            type="file"
-            accept="image/jpeg, image/png, image/gif"
-            onChange={handleAvatar}
-          />
-        </div>
-        <div
-          className="nw-event-category"
-          onClick={toggleOptionVisible}
-          ref={cRef}
+      <TextField
+        fullWidth
+        label="Avenue"
+        value={avenue}
+        onChange={(e: any) => setAvenue(e.target.value)}
+        required
+      />
+
+      <Button variant="outlined" component="label" color="primary">
+        Upload Avatar
+        <input hidden accept="image/*" type="file" onChange={handleAvatar} />
+      </Button>
+
+      <Box>
+        <TextField
+          label="Category"
+          value={category}
+          InputProps={{
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton onClick={(e: any) => setAnchorEl(e.currentTarget)}>
+                  <IconCaretDown />
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+          readOnly
+        />
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={() => setAnchorEl(null)}
         >
-          <span className="event-selected-catg" title="Categories">
-            {category}
-          </span>
-          <span className="catg-toggle-icon">
-            {!category && "Select a category"}
-          </span>
-          <IconCaretDown
-            className="catg-toggle-icon"
-            onClick={toggleOptionVisible}
-          />
+          {[
+            "Fashion Shows",
+            "Film Festivals",
+            "Workshops",
+            "Conferences",
+            "Religious Gatherings",
+            "Comedy Shows",
+          ].map((opt) => (
+            <MenuItem key={opt} onClick={() => handleCategorySelect(opt)}>
+              {opt}
+            </MenuItem>
+          ))}
+        </Menu>
+      </Box>
 
-          {optionVisible && (
-            <div className="event-categories-menu">
-              <ul className="event-categories-menu-options">
-                {[
-                  "Fashion Shows",
-                  "Film Festivals",
-                  "Workshops and Seminars",
-                  "Charity Galas",
-                  "Dinner Party",
-                  "Symposium",
-                  "Colloquium",
-                  "Conference",
-                  "Business Conferences",
-                  "Comedy Shows",
-                  "Literary Festivals",
-                  "Trade Exhibitions",
-                  "Dance Performances",
-                  "Health and Wellness Retreats",
-                  "Praise and worship",
-                  "Jummat Prayer",
-                  "Religious Gatherings",
-                ]
-                  .sort()
-                  .map((opt) => (
-                    <li key={opt} onClick={() => handleSelectedCategory(opt)}>
-                      {opt}
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        <button type="submit">
-          {loading || updateLoading ? (
-            <RDotLoader />
-          ) : action == "New" ? (
-            "Create"
-          ) : (
-            "Update"
-          )}
-        </button>
-      </NewEventFormRenderer>
-    </>
+      <Button
+        variant="contained"
+        color="primary"
+        type="submit"
+        disabled={loading}
+      >
+        {loading || updateLoading ? (
+          <RDotLoader />
+        ) : action == "New" ? (
+          "Create"
+        ) : (
+          "Update"
+        )}
+      </Button>
+    </EventContainer>
   );
 };
 
 export default NewEvent;
 
-const NewEventFormRenderer = styled.form`
-  max-width: 600px;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  overflow: hidden;
-  margin: 0 auto;
-  justify-content: center;
-  gap: 10px;
-  font-family: "Inter", sans-serif;
+const EventContainer = styled(Box)(({ theme }) => ({
+  maxWidth: 600,
+  margin: "auto",
+  padding: theme.spacing(4),
+  display: "flex",
+  flexDirection: "column",
+  gap: theme.spacing(2),
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(2),
+  },
+}));
 
-  .eve-inp-cont {
-    width: 100%;
-    height: fit-content;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-  }
-  .eve-inp-cont label {
-    font-size: 0.75rem;
-    color: #8b8e98;
-    font-weight: 600;
-    width: 90%;
-  }
-  input {
-    width: 95%;
-    height: auto;
-    border-radius: 8px;
-    outline: none;
-    border: 1px solid #e5e5e5;
-    filter: drop-shadow(0px 1px 0px #efefef)
-      drop-shadow(0px 1px 0.5px rgba(239, 239, 239, 0.5));
-    transition: all 0.3s cubic-bezier(0.15, 0.83, 0.66, 1);
-    padding: 10px;
-    font-size: medium;
-  }
-  textarea {
-    width: 90%;
-    height: 70px;
-    border-radius: 8px;
-    outline: none;
-    border: 1px solid #e5e5e5;
-    filter: drop-shadow(0px 1px 0px #efefef)
-      drop-shadow(0px 1px 0.5px rgba(239, 239, 239, 0.5));
-    transition: all 0.3s cubic-bezier(0.15, 0.83, 0.66, 1);
-    padding: 10px;
-    font-size: medium;
-  }
-  input[id="event-avatar"] {
-    display: none;
-  }
-  input:focus,
-  textarea:focus {
-    border: 2px solid #176984;
-  }
-  .ne-select-avatar {
-    font-size: 12px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-      sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-    width: fit-content;
-    padding: 5px;
-    width: 80%;
-  }
+const StyledImg = styled("img")({
+  width: "100%",
+  maxHeight: 200,
+  objectFit: "cover",
+  borderRadius: 8,
+  marginBottom: 16,
+});
 
-  .event-date-cont {
-    width: 40%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-  }
-
-  button {
-    padding: 10px 20px;
-    background-color: #176984;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
-  }
-
-  img {
-    width: 90%;
-    height: 230px;
-    object-fit: cover;
-    cursor: pointer;
-    margin: 5px;
-    border-radius: 5px;
-    border: 2px solid #ededed;
-  }
-
-  .nw-event-category {
-    color: rgb(0, 0, 0);
-    cursor: pointer;
-  }
-
-  .event-categories-menu {
-    position: absolute;
-    z-index: 999;
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
-    border-radius: 5px;
-    background-color: #fff;
-    top: 55%;
-    right: 38%;
-    max-height: 300px;
-    min-height: 30px;
-    overflow-y: scroll;
-  }
-  @media (max-width: 767px) {
-    .event-categories-menu {
-      top: 50%;
-      right: 20%;
-    }
-    img {
-      height: 200px;
-    }
-  }
-  .event-categories-menu ul li {
-    border-bottom: 0.5px solid #dedede;
-    padding: 5px 10px;
-    transition: 0.3s ease-out;
-    font-size: 12px;
-    border-radius: 3px;
-    cursor: pointer;
-  }
-  .event-categories-menu ul li:hover {
-    background-color: rgb(1, 95, 123);
-    color: #fff;
-  }
-
-  .event-selected-catg {
-    font-size: 14px;
-    font-weight: 700;
-    color: #000;
-    padding: 3px 6px;
-    cursor: pointer;
-  }
-  .catg-toggle-icon {
-    cursor: pointer;
-    font-size: small;
-    color: gray;
-  }
-`;
+const DateContainer = styled(Box)({
+  display: "flex",
+  gap: 16,
+});

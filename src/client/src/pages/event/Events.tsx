@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import MetaData from "../../MetaData";
-import styled, { ThemeProvider } from "styled-components";
-import { IconFilter } from "../../assets/icons";
-import EventItem from "../../components/eventItem/EventItem";
-import Footer from "../../components/footer/Footer";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
@@ -13,223 +9,134 @@ import {
   clearErrors,
   searchEventByCategory,
 } from "../../actions/event";
-import { isOnline } from "../../utils";
-import EventSkeletonLoader from "../../components/loaders/EventSkeletonLoader";
-import { useLocation, useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import { RootState } from "../../store";
+import EventItem from "../../components/eventItem/EventItem";
+import EventSkeletonLoader from "../../components/loaders/EventSkeletonLoader";
+import Footer from "../../components/footer/Footer";
+import {
+  Box,
+  Button,
+  Menu,
+  MenuItem,
+  Typography,
+  Container,
+  useMediaQuery,
+} from "@mui/material";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import AddIcon from "@mui/icons-material/Add";
+import styled from "styled-components";
+import { useTheme } from "@mui/material/styles";
 
 const Event = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [currentSelection, setCurrentSelection] = useState("Ongoing");
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const { loading, events, error } = useSelector(
     (state: RootState) => state.eventSearch
   );
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const location = useLocation();
-  const navigate = useNavigate();
-  const toggleMenuOpen = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-  const handleSelection = (selection: string) => {
-    navigate({
-      pathname: "/events/search",
-      search: `?selection=${encodeURIComponent(selection)}`,
-    });
-    toggleMenuOpen();
-  };
-  const events_timelines = ["Ongoing", "Upcoming", "Recents"];
-
-  useEffect(() => {
-    const search = location.search;
-
-    const searchCatg = new URLSearchParams(search).get("category");
-    searchCatg && setSelectedCategory(decodeURIComponent(searchCatg.trim()));
-
-    const searchSelection = new URLSearchParams(search).get("selection");
-    if (searchSelection) {
-      const regex = new RegExp(decodeURIComponent(searchSelection.trim()), "i");
-      for (const timeline of events_timelines) {
-        if (regex.test(timeline)) {
-          setCurrentSelection(timeline);
-          return;
-        } else {
-          setCurrentSelection("Ongoing");
-        }
-      }
-    }
-  }, [location, selectedCategory, currentSelection]);
+  const theme = useTheme();
 
   useEffect(() => {
     if (error) {
       toast.error(error);
       dispatch<any>(clearErrors());
     }
-    if (selectedCategory && selectedCategory !== "All" && isOnline()) {
+    if (selectedCategory && selectedCategory !== "All") {
       dispatch<any>(searchEventByCategory(selectedCategory));
-    } else if (currentSelection == "Upcoming" && isOnline()) {
+    } else if (currentSelection === "Upcoming") {
       dispatch<any>(searchUpcomingEvents());
-    } else if (currentSelection === "Recents" && isOnline()) {
+    } else if (currentSelection === "Recents") {
       dispatch<any>(searchRecentEvent());
     } else {
-      isOnline() && dispatch<any>(searchOngoingEvents());
+      dispatch<any>(searchOngoingEvents());
     }
-  }, [currentSelection, error, dispatch]);
+  }, [currentSelection, error, selectedCategory, dispatch]);
 
-  const menuRef = useRef(null);
-
-  const handleClickOutside = (e) => {
-    if (menuRef.current && !menuRef.current.contains(e.target)) {
-      setIsMenuOpen(false);
-    }
+  const handleSelection = (selection: string) => {
+    setCurrentSelection(selection);
+    handleClose();
   };
 
-  useEffect(() => {
-    document.addEventListener("click", handleClickOutside);
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, []);
+  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   return (
     <>
       <MetaData title="Events" />
-      <main>
-        <EventRenderer>
-          <div className="event-header">
-            <span
-              ref={menuRef}
-              className="e-selection"
-              onClick={toggleMenuOpen}
-            >
-              <IconFilter className="e-filter-icon" />
-              &nbsp;&nbsp;
-              {currentSelection}
-            </span>
-            {isMenuOpen && (
-              <div className="e-menu">
-                <ul>
-                  {events_timelines.map((e, i) => (
-                    <li key={i} onClick={() => handleSelection(e)}>
-                      {e}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-          <div className="event-holder">
-            {!loading && events?.length == 0 && (
-              <span>No "{currentSelection}" event found!</span>
-            )}
+      <Container maxWidth="md" sx={{ paddingTop: 4, minHeight:`100vh` }}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={() => navigate("/event/new")}
+          >
+            Create Event
+          </Button>
+          <Button
+            variant="outlined"
+             size="small"
+            startIcon={<FilterListIcon />}
+            onClick={handleMenuClick}
+          >
+            {currentSelection}
+          </Button>
+          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+            {["Ongoing", "Upcoming", "Recents"].map((timeline) => (
+              <MenuItem
+                key={timeline}
+                onClick={() => handleSelection(timeline)}
+                selected={timeline === currentSelection}
+              >
+                {timeline}
+              </MenuItem>
+            ))}
+          </Menu>
+        </Box>
 
-            {events?.length
-              ? events.map((eve, i) => (
-                  <EventItem
-                    key={i}
-                    id={eve?._id}
-                    slug={eve?.slug}
-                    title={eve?.title}
-                    avatar={eve?.avatar.url}
-                    description={eve?.description}
-                    category={eve?.category}
-                    createdBy={eve?.createdBy}
-                  />
-                ))
-              : loading && Array(10)
-                  .fill(null)
-                  .map((_, i) => <EventSkeletonLoader key={i} />)}
-          </div>
-        </EventRenderer>
-        <Footer />
-      </main>
+        <EventHolder>
+          {!loading && events?.length === 0 && (
+            <Typography>No "{currentSelection}" event found!</Typography>
+          )}
+
+          {events?.length
+            ? events.map((eve, i) => (
+                <EventItem
+                  key={i}
+                  id={eve?._id}
+                  slug={eve?.slug}
+                  title={eve?.title}
+                  avatar={eve?.avatar.url}
+                  description={eve?.description}
+                  category={eve?.category}
+                  createdBy={eve?.createdBy}
+                />
+              ))
+            : loading && Array(10)
+                .fill(null)
+                .map((_, i) => <EventSkeletonLoader key={i} />)}
+        </EventHolder>
+      </Container>
+      <Footer />
     </>
   );
 };
 
 export default Event;
 
-const EventRenderer = styled.div`
-  max-width: 600px;
-  min-height: 100vh;
+const EventHolder = styled(Box)`
+  margin-top: 5px;
   display: flex;
   flex-direction: column;
-  margin: 0 auto;
-
-  .event-header {
-    position: fixed;
-    width: inherit;
-    padding-top: 20px;
-    border-bottom: 1px solid #ededed;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    -moz-backdrop-filter: blur(10px);
-    -o-backdrop-filter: blur(10px);
-    transform: 0.5s;
-    z-index: 99;
-  }
-  .e-selection {
-    margin-left: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 13px;
-  }
-
-  .e-menu {
-    position: fixed;
-    left: 10px;
-    z-index: 999;
-    background-color: #fff;
-    height: fit-content;
-    width: fit-content;
-    border-radius: 5px;
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.5);
-  }
-  .e-menu ul {
-    list-style: none;
-  }
-
-  .e-menu li {
-    padding: 8px;
-    border-bottom: 1px solid #ededed;
-    font-size: 12px;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-      sans-serif;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .e-menu li:hover {
-    background-color: #176984;
-    color: #fff;
-  }
-
-  .e-menu li:first-child:hover {
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-  }
-  .e-menu li:last-child {
-    border-bottom: none;
-  }
-  .e-menu li:last-child:hover {
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
-  }
-  .e-filter-icon {
-    cursor: pointer;
-    height: 18px;
-    width: 18px;
-  }
-  .event-holder {
-    max-width: 600px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    top: 52px;
-    margin-bottom: 40px;
-    padding: 5px 10px;
-  }
+  align-items: center;
+  padding: 0 10px;
 `;

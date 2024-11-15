@@ -10,7 +10,6 @@ import {
   Typography,
   Button,
   Container,
-  CircularProgress,
   Tabs,
   Tab,
   Drawer,
@@ -44,6 +43,7 @@ import {
   Bookmark as BookmarkIcon,
   Share as ShareIcon,
   Download as DownloadIcon,
+  LocalActivity,
 } from "@mui/icons-material";
 import AcUnitIcon from "@mui/icons-material/AcUnit";
 import Footer from "../../components/footer/Footer";
@@ -66,6 +66,13 @@ import LocalForageProvider from "../../utils/localforage";
 import HorizontalArticleItemSkeletonLoader from "../../components/loaders/HorizontalArticleItemSkeletonLoader";
 import HorizontalArticleItem from "../../components/horizontalArticleItem/HorizontalArticleItem";
 import NASA from "../../components/nasa/Nasa";
+import { IconCalendarEventFill } from "../../assets/icons";
+import {
+  clearErrors as clearEventErrors,
+  searchOngoingEvents,
+  searchUpcomingEvents,
+} from "../../actions/event";
+import EventItem from "../../components/eventItem/EventItem";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -81,8 +88,13 @@ const Home: React.FC = () => {
   const [modules, setModules] = useState([]);
   const [moduleLoading, setModuleLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [popularBooks, setPopularBooks] = useState([]);
   const [booksLoading, setBooksLoading] = useState(false);
+
+  const {
+    loading: eventFetchLoading,
+    events,
+    error: eventFetchError,
+  } = useSelector((state: RootState) => state.eventSearch);
 
   const [bookCategories] = useState([
     "Fiction",
@@ -98,6 +110,9 @@ const Home: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [libraryPickOfTheDay, setLibraryPickOfTheDay] = useState<any>(null);
   const [libraryPickLoading, setLibraryPickLoading] = useState(true);
+  const [currentEventSelection, setCurrentEventSelection] = useState<
+    "Ongoing Events" | "Upcoming Event"
+  >("Ongoing Events");
 
   const { isAuthenticated, user } = useSelector(
     (state: RootState) => state.user
@@ -140,6 +155,18 @@ const Home: React.FC = () => {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
+    if (eventFetchError) {
+      enqueueSnackbar(eventFetchError, { variant: "error" });
+      dispatch<any>(clearEventErrors());
+    }
+    if (currentEventSelection.split(" ")[0] === "Upcoming") {
+      dispatch<any>(searchUpcomingEvents());
+    } else {
+      dispatch<any>(searchOngoingEvents());
+    }
+  }, [currentEventSelection, eventFetchError, dispatch]);
+
+  useEffect(() => {
     const fetchCategoryBooks = async () => {
       try {
         setBooksLoading(true);
@@ -158,26 +185,28 @@ const Home: React.FC = () => {
   }, [selectedCategory]);
 
   useEffect(() => {
-    const cachedIndex = localStorage.getItem('LPIndex');
+    const cachedIndex = localStorage.getItem("LPIndex");
     const fetchLibraryPickOfTheDay = async () => {
       try {
         setLibraryPickLoading(true);
         const response = await axios.get(
           "https://www.googleapis.com/books/v1/volumes?q=subject:science&orderBy=newest&maxResults=10"
         );
-        const r = cachedIndex !== null ? parseInt(cachedIndex) : Math.floor(Math.random() * (response.data.items?.length || 1)); 
+        const r =
+          cachedIndex !== null
+            ? parseInt(cachedIndex)
+            : Math.floor(Math.random() * (response.data.items?.length || 1));
         setLibraryPickOfTheDay(response.data.items[r]);
-        localStorage.setItem('LPIndex', r);
+        localStorage.setItem("LPIndex", r);
         setLibraryPickLoading(false);
       } catch (error) {
         console.error("Error fetching library pick of the day:", error);
         setLibraryPickLoading(false);
       }
     };
-  
+
     fetchLibraryPickOfTheDay();
   }, []);
-  
 
   useEffect(() => {
     const getTrendingArticles = async () => {
@@ -352,7 +381,7 @@ const Home: React.FC = () => {
             </Typography>
           </Box>
         </SectionTitle>
-        {libraryPickLoading|| !libraryPickOfTheDay ? (
+        {libraryPickLoading || !libraryPickOfTheDay ? (
           <LibraryPickCard>
             <Grid container spacing={3}>
               <Grid item xs={12} md={4}>
@@ -463,7 +492,7 @@ const Home: React.FC = () => {
           </ViewMoreButton>
         </SectionTitle>
         <TrendingArticlesWrapper>
-          {trendingLoading|| !trendingArticles.length
+          {trendingLoading || !trendingArticles.length
             ? Array(10)
                 .fill(null)
                 .map((_, i) => <VerticalArticleItemSkeletonLoader key={i} />)
@@ -490,33 +519,43 @@ const Home: React.FC = () => {
           <Grid item xs={12} md={8}>
             <SectionTitle>
               <Box display="flex" alignItems="center">
-                <VideoLibraryIcon />
-                <Typography variant="h5" component="h2" ml={1}>
-                  Modules
-                </Typography>
+                <IconCalendarEventFill fontSize={20} />
+                <Tabs
+                  value={currentEventSelection}
+                  variant="scrollable"
+                  scrollButtons="auto"
+                  onChange={(e, selectedCatg)=> setCurrentEventSelection(selectedCatg)}
+                >
+                  {["Ongoing Events", "Upcoming Events"].map((category) => (
+                    <Tab key={category} label={category} value={category} />
+                  ))}
+                </Tabs>
               </Box>
               <ViewMoreButton
                 endIcon={<ChevronRightIcon />}
-                onClick={handleViewMore("/modules")}
+                onClick={handleViewMore("/events")}
               >
                 View More
               </ViewMoreButton>
             </SectionTitle>
-            <ModuleListWrapper>
-              {!modules.length
+            <EventListWrapper>
+              {!events?.length
                 ? Array(2)
                     .fill(null)
                     .map((_, i) => <ModuleItemSkeletonLoader key={i} />)
-                : modules.map((mod: any, i: number) => (
-                    <ModuleItem
+                : events.map((eve: any, i: number) => (
+                    <EventItem
                       key={i}
-                      _id={mod?._id}
-                      title={mod?.title}
-                      description={mod?.description}
-                      banner={mod?.banner}
+                      id={eve?._id}
+                      slug={eve?.slug}
+                      title={eve?.title}
+                      avatar={eve?.avatar.url}
+                      description={eve?.description}
+                      category={eve?.category}
+                      createdBy={eve?.createdBy}
                     />
                   ))}
-            </ModuleListWrapper>
+            </EventListWrapper>
           </Grid>
           <Grid item xs={12} md={4}>
             <FactGenerator />
@@ -614,7 +653,7 @@ const Home: React.FC = () => {
           </ViewMoreButton>
         </SectionTitle>
         <Grid container spacing={2}>
-          {recentArticleLoading|| !recentArticles?.length
+          {recentArticleLoading || !recentArticles?.length
             ? Array(12)
                 .fill(null)
                 .map((_, i) => (
@@ -623,7 +662,7 @@ const Home: React.FC = () => {
                   </Grid>
                 ))
             : recentArticles?.map((art: any, i: number) => (
-                <Grid item xs={12} sm={6} md={4} key={i}>
+                <Grid item xs={12} sm={6} md={6} key={i}>
                   <HorizontalArticleItem
                     id={art._id}
                     title={art.title}
@@ -750,7 +789,7 @@ const TrendingArticlesWrapper = styled.div`
   }
 `;
 
-const ModuleListWrapper = styled.div`
+const EventListWrapper = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 16px;

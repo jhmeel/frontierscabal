@@ -218,12 +218,13 @@ const ArticleViewer: React.FC = () => {
   const handleLike = async () => {
     const authToken = await getToken();
     if (!authToken) {
-      toast.error("Please log in to like articles");
+      navigate("/login");
       return;
     }
     if (isOnline()) {
       dispatch(likeArticle(authToken, article?._id) as any);
       setLiked(!liked);
+      
     }
   };
 
@@ -343,9 +344,8 @@ const ArticleViewer: React.FC = () => {
             <IconButton
               onClick={handleLike}
               color={liked ? "secondary" : "default"}
-              sx={{  marginRight: 2 , color: liked ? "crimson" : "inherit" }}
+              sx={{ marginRight: 2, color: liked ? "crimson" : "inherit" }}
             >
-              
               <Badge
                 badgeContent={FormattedCount(article?.likes?.length)}
                 color="primary"

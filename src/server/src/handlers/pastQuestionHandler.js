@@ -1,11 +1,11 @@
 import catchAsync from "../middlewares/catchAsync.js";
-import {ErrorHandler} from "./errorHandler.js";
+import { ErrorHandler } from "./errorHandler.js";
 import { pdfGen } from "../utils/pdfGen.js";
 import cloudinary from "cloudinary";
 import axios from "axios";
-import { User} from "../models/userModel.js";
-import { PastQuestion} from "../models/pastQuestionModel.js";
-
+import { User } from "../models/userModel.js";
+import { PastQuestion } from "../models/pastQuestionModel.js";
+import { Config } from "../config/config.js";
 
 export const newPastQuestion = catchAsync(async (req, res, next) => {
   const {
@@ -13,8 +13,8 @@ export const newPastQuestion = catchAsync(async (req, res, next) => {
     level,
     courseCode,
     school,
-    session, 
-    pqImg, 
+    session,
+    pqImg,
     answer,
     reference,
     logo,
@@ -22,7 +22,7 @@ export const newPastQuestion = catchAsync(async (req, res, next) => {
   } = req.body;
   const pqImages = [];
 
-  for (let i = 0; i < pqImgTotal; i++) { 
+  for (let i = 0; i < pqImgTotal; i++) {
     pqImages.push(req.body[`pqImg${i}`]);
   }
   const result = await pdfGen(
@@ -68,6 +68,20 @@ export const downloadPastQuestionById = catchAsync(async (req, res, next) => {
   if (!pastQuestion) {
     return next(new ErrorHandler("Past question not found", 404));
   }
+  const user = await User.findById(req.user._id);
+
+  if (Config.SUBSCRIPTION.ACTIVE) {
+    if (
+      user.subscriptionDue !== false &&
+      user.dailyFreeDownloadCount >=
+        Config.SUBSCRIPTION.PLANS.FREE.DAILY_MAX_DOWNLOADS &&
+      !["FC:SUPER:ADMIN", "FC:ADMIN"].includes(user.role)
+    ) {
+      return next(
+        new ErrorHandler("Please Subscribe To download The Document!", 401)
+      );
+    }
+  }
 
   const publicId = pastQuestion?.pdfFile.public_id;
   if (!publicId) {
@@ -85,17 +99,23 @@ export const downloadPastQuestionById = catchAsync(async (req, res, next) => {
 
     try {
       const response = await axios({
-        method: "GET",  
-        url: pdfUrl, 
+        method: "GET",
+        url: pdfUrl,
         responseType: "stream",
-      }); 
+      });
       pastQuestion.downloads += 1;
       await pastQuestion.save();
 
 
+      //update daily free count for freemium users
+      if (user.subscriptionDue !== false) {
+        user.dailyFreeDownloadCount += 1;
+        await user.save();
+      }
+
       res.set("Content-Disposition", `attachment; filename=${publicId}`);
       res.set("Content-Type", "application/pdf");
-      res.set("Content-Length", response.headers['content-length'])
+      res.set("Content-Length", response.headers["content-length"]);
       response.data.pipe(res);
     } catch (error) {
       return next(new ErrorHandler(error.message));
@@ -258,4 +278,3 @@ export const getMostRecents = catchAsync(async (req, res, next) => {
     totalPages: totalPages,
   });
 });
- 

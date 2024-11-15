@@ -1,8 +1,9 @@
 import { User } from '../models/userModel.js'
 import  catchAsync from './catchAsync.js';
 import { ErrorHandler } from '../handlers/errorHandler.js';
+import { Config } from '../config/config.js';
 
-const checkSubscriptionMiddleware = catchAsync(async (req, res, next) => {
+const checkmateSubscription = catchAsync(async (req, res, next) => {
 
   try {
     const userId = req.user._id;
@@ -13,15 +14,15 @@ const checkSubscriptionMiddleware = catchAsync(async (req, res, next) => {
 
     const user = await User.findOne({ _id: userId, subscriptionDue: false });
 
-    if (!user) {
-      return res.status(403).redirect('https://frontierscabal.onrender.com/#/subscription/new')
+    if (!user && Config.SUBSCRIPTION.ACTIVE) {
+      return res.status(403).redirect('https://frontierscabal.com/#/billing')
     }
 
     next();
   } catch (error) {
-    next(new ErrorHandler('Error checking subscription:', error))
+    next(new ErrorHandler(`Error checking subscription: ${error.message}`))
   }
 });
 
 
-export { checkSubscriptionMiddleware }
+export { checkmateSubscription }

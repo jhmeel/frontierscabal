@@ -191,7 +191,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
 
             <Route path="/" element={<HomePage />} />
-            <Route
+            { /*<Route
               path="/module/:moduleId"
               element={
                 <PrivateRoute>
@@ -199,7 +199,7 @@ function App() {
                 </PrivateRoute>
               }
             />
-            <Route
+           <Route
               path="/modules"
               element={
                 <PrivateRoute>
@@ -230,7 +230,7 @@ function App() {
                   <UpdateLessonPage />
                 </PrivateRoute>
               }
-            />
+            />*/}
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/blog/search" element={<BlogPage />} />
             <Route path="/blog/article/:slug" element={<ArticleViewPage />} />
@@ -272,13 +272,11 @@ function App() {
 
             <Route path="/biller" element={<Pricing />} />
 
-            {
-              // <Route path="/events" element={<EventPage />} />
-              // <Route path="/event/:slug" element={<EventViewPage />} />
-              // <Route path="/events/search" element={<EventPage />} />
-              // <Route path="/event/new" element={<NewEventPage />} />
-              // <Route path="/event/update/:slug" element={<UpdateEventPage />} />
-            }
+            <Route path="/events" element={<EventPage />} />
+            <Route path="/event/:slug" element={<EventViewPage />} />
+            <Route path="/events/search" element={<EventPage />} />
+            <Route path="/event/new" element={<NewEventPage />} />
+            <Route path="/event/update/:slug" element={<UpdateEventPage />} />
 
             <Route
               path="/study-materials"
@@ -379,7 +377,6 @@ function App() {
               }
             />
 
-            
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>

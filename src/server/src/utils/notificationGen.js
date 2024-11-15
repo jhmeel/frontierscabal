@@ -1,111 +1,125 @@
 import { v4 as uuidv4 } from "uuid";
 
-const generateNotification = (type, entity) => {
+const generateNotification = (type, context) => {
+  const baseNotification = {
+    _id: uuidv4(),
+    type,
+    date: Date.now(),
+    avatar: context?.avatar?.url || context?.createdBy?.avatar?.url || "",
+    slug: "",
+    message: "",
+  };
+
   switch (type) {
     case "NEW:USER":
       return {
-        _id: uuidv4(),
-        user: entity?.username,
-        type: "NEW:USER",
+        ...baseNotification,
         slug: "/profile/edit",
-        message: `Welcome aboard!\nwe are thrilled to have you on board. To enhance your experience\n
-      take a moment to update your profile.`,
-        date: Date.now(),
+        message: `Welcome aboard, ${context?.username}!\nWe are thrilled to have you on board. To enhance your experience, take a moment to update your profile.`,
       };
 
     case "NEW:EVENT":
       return {
-        _id: uuidv4(),
-        type: "NEW:EVENT",
-        slug: `/event/${entity.slug}`,
-        eventFrom: entity?.createdBy?.username,
-        message: `New event from ${entity?.createdBy?.username} in ${entity?.category}: \n ${entity?.description} `,
-        avatar: entity?.createdBy.avatar?.url,
-        image: entity?.avatar?.url,
-        date: Date.now(),
+        ...baseNotification,
+        slug: `/event/${context.slug}`,
+        message: `New event from ${context?.createdBy?.username} in ${context?.category}: ${context?.description}`,
+        eventFrom: context?.createdBy?.username,
+        image: context?.avatar?.url,
       };
+
     case "ONGOING:EVENT":
       return {
-        _id: uuidv4(),
-        type: "ONGOING:EVENT",
-        slug: `/event/${entity.slug}`,
-        eventFrom: entity?.createdBy?.username,
-        message: `${entity.title} in ${entity?.category} is commencing today `,
-        avatar: entity?.createdBy.avatar?.url,
-        image: entity?.avatar?.url,
-        date: Date.now(),
+        ...baseNotification,
+        slug: `/event/${context.slug}`,
+        message: `${context?.title} in ${context?.category} is commencing today.`,
+        eventFrom: context?.createdBy?.username,
+        image: context?.avatar?.url,
       };
+
     case "NEW:ARTICLE":
       return {
-        _id: uuidv4(),
-        type: "NEW:ARTICLE",
-        slug: `/blog/article/${entity.slug}`,
-        articleFrom: entity?.postedBy?.username,
-        message: `New from ${entity?.postedBy?.username} in ${entity?.category}:\n "${entity?.title}" `,
-        avatar: entity?.postedBy?.avatar?.url,
-        image: entity?.image?.url,
-        date: Date.now(),
+        ...baseNotification,
+        slug: `/blog/article/${context.slug}`,
+        message: `New article from ${context?.postedBy?.username} in ${context?.category}: "${context?.title}"`,
+        articleFrom: context?.postedBy?.username,
+        image: context?.image?.url,
       };
 
     case "UPDATED:PROFILE":
       return {
-        _id: uuidv4(),
-        type: "UPDATED:PROFILE",
+        ...baseNotification,
         slug: "/profile/",
         message: "You have just updated your profile successfully!",
-        avatar: "",
-        date: Date.now(),
       };
 
     case "NEW:SUBSCRIPTION":
       return {
-        _id: uuidv4(),
-        type: "NEW:SUBSCRIPTION",
-        username: entity?.username,
+        ...baseNotification,
         slug: "/profile",
-        message: "Subscription made successfully!",
-        avatar: "",
-        date: Date.now(),
+        message: `Subscription made successfully! Thank you, ${context?.username}.`,
+        username: context?.username,
+      };
+    case "SUBSCRIPTION:INVITE":
+      return {
+        ...baseNotification,
+        slug: "/biller",
+        message: `Upgrade to premium and unlock unlimited downloads of past questions, answers, and course materials. Get full access to our AI-powered features, enjoy an ad-free experience, and benefit from enhanced personalization options crafted just for you. Start making the most of your learning journey with all the tools and resources at your fingertips!`,
+        username: context?.username,
+      };
+    case "SUBSCRIPTION:DUE_REMINDER":
+      return {
+        ...baseNotification,
+        slug: "/subscription",
+        message: `Hi ${context?.username}, your subscription will be due soon. Please renew to continue enjoying premium benefits.`,
+      };
+
+    case "SUBSCRIPTION:RENEWAL":
+      return {
+        ...baseNotification,
+        slug: "/profile",
+        message: `Thank you, ${context?.username}, for renewing your subscription! Enjoy another term of premium benefits.`,
+      };
+
+    case "SUBSCRIPTION:DOWNGRADE":
+      return {
+        ...baseNotification,
+        slug: "/subscription",
+        message: `Your subscription has been downgraded to Free. Please renew to regain access to premium features.`,
       };
 
     case "ARTICLE:LIKE":
       return {
-        _id: uuidv4(),
-        type: "ARTICLE:LIKE",
-        username: entity?.username,
-        image: entity?.image?.url,
-        avatar: entity?.avatar?.url,
-        slug: `/blog/article/${entity?.slug}`,
-        message: `${entity?.username} likes your article "${entity?.title}"`,
-        date: Date.now(),
+        ...baseNotification,
+        slug: `/blog/article/${context?.slug}`,
+        message: `${context?.username} likes your article "${context?.title}"`,
+        username: context?.username,
+        image: context?.image?.url,
       };
 
     case "ARTICLE:COMMENT":
       return {
-        _id: uuidv4(),
-        type: "ARTICLE:COMMENT",
-        username: entity?.username,
-        avatar: entity?.avatar?.url,
-        image: entity?.image?.url,
-        slug: `/blog/article/${entity?.slug}`,
-        message: `${entity?.username} commented on your article ${entity?.title}`,
-        date: Date.now(),
+        ...baseNotification,
+        slug: `/blog/article/${context?.slug}`,
+        message: `${context?.username} commented on your article "${context?.title}"`,
+        username: context?.username,
+        image: context?.image?.url,
       };
+
     case "ARTICLE:COMMENT:REPLY":
       return {
-        _id: uuidv4(),
-        type: "ARTICLE:COMMENT:REPLY",
-        username: entity?.username,
-        avatar: entity?.avatar?.url,
-        image: entity?.image?.url,
-        slug: `/blog/article/${entity?.slug}`,
-        message: `${entity?.username} reply to your comment on  ${entity?.title}`,
-        date: Date.now(),
+        ...baseNotification,
+        slug: `/blog/article/${context?.slug}`,
+        message: `${context?.username} replied to your comment on "${context?.title}"`,
+        username: context?.username,
+        image: context?.image?.url,
       };
 
     default:
-      return {};
+      return {
+        ...baseNotification,
+        message: null,
+      };
   }
 };
 
-export {generateNotification};
+export { generateNotification };

@@ -1,15 +1,26 @@
-import React, { useState } from 'react';
-import styled from 'styled-components';
-import { Box, Card, CardContent, Typography, Button, Grid, IconButton } from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CancelIcon from '@mui/icons-material/Cancel';
-import CloseIcon from '@mui/icons-material/Close';
-import { PaystackButton } from 'react-paystack';
-import { Navigate, useNavigate } from 'react-router-dom';
-import Footer from '../../components/footer/Footer';
-import toast from 'react-hot-toast';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import React, { useState } from "react";
+import styled from "styled-components";
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Button,
+  Grid,
+  IconButton,
+} from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import CloseIcon from "@mui/icons-material/Close";
+import { PaystackButton } from "react-paystack";
+import { Navigate, useNavigate } from "react-router-dom";
+import Footer from "../../components/footer/Footer";
+import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
+import axiosInstance from "../../utils/axiosInstance";
+import { errorParser } from "../../utils";
+import getToken from "../../utils/getToken";
 
 const StyledCard = styled(Card)`
   height: 100%;
@@ -49,7 +60,7 @@ const Feature = styled(Box)`
 
 const FeatureText = styled(Typography)<{ included: boolean }>`
   margin-left: 8px;
-  color: ${({ included }) => (included ? 'inherit' : '#999')};
+  color: ${({ included }) => (included ? "inherit" : "#999")};
 `;
 
 const DiscountChip = styled(Box)`
@@ -89,138 +100,180 @@ interface Plan {
 
 const plans: Plan[] = [
   {
-    title: 'Free Plan',
-    price: '₦0',
-    description: 'Basic access to our platform',
+    title: "Free Plan",
+    price: "₦0",
+    description: "Basic access to our platform",
     features: [
-      { text: 'Access to blog', included: true },
-      { text: 'Real-time messaging with peers', included: true },
-      { text: 'Personalized content', included: true },
-      { text: 'Limited study materials to download', included: true },
-      { text: 'Ad-supported experience', included: true },
-      { text: 'AI-powered blog support', included: false },
-      { text: 'Unlimited study materials', included: false },
+      { text: "Access to blog", included: true },
+      { text: "Real-time messaging with peers", included: true },
+      { text: "Personalized content", included: true },
+      { text: "Limited study materials to download", included: true },
+      { text: "Ad-supported experience", included: true },
+      { text: "AI-powered blog support", included: false },
+      { text: "Unlimited study materials", included: false },
     ],
     discount: null,
   },
   {
-    title: 'Weekly Plan',
-    price: '₦1,250',
-    description: 'Full access for 7 days',
+    title: "Weekly Plan",
+    price: "₦1,250",
+    description: "Full access for 7 days",
     features: [
-      { text: 'All Free Plan features', included: true },
-      { text: 'AI-powered blog support', included: true },
-      { text: 'Unlimited study materials', included: true },
-      { text: 'Ad-free experience', included: true },
+      { text: "All Free Plan features", included: true },
+      { text: "AI-powered blog support", included: true },
+      { text: "Unlimited study materials", included: true },
+      { text: "Ad-free experience", included: true },
     ],
     discount: null,
   },
   {
-    title: 'Monthly Plan',
-    price: '₦4,500',
-    description: 'Full access for 30 days',
+    title: "Monthly Plan",
+    price: "₦4,500",
+    description: "Full access for 30 days",
     features: [
-      { text: 'All Weekly Plan features', included: true },
-      { text: 'Priority support', included: true },
-      { text: 'Exclusive webinars', included: true },
+      { text: "All Weekly Plan features", included: true },
+      { text: "Priority support", included: true },
+      { text: "Exclusive webinars", included: true },
     ],
-    discount: '22% off compared to weekly',
+    discount: "22% off compared to weekly",
   },
   {
-    title: 'Annual Plan',
-    price: '₦24,500',
-    description: 'Full access for 365 days',
+    title: "Annual Plan",
+    price: "₦24,500",
+    description: "Full access for 365 days",
     features: [
-      { text: 'All Monthly Plan features', included: true },
-      { text: 'Early access to new features', included: true },
-      { text: 'Personal learning coach', included: true },
+      { text: "All Monthly Plan features", included: true },
+      { text: "Early access to new features", included: true },
+      { text: "Personal learning coach", included: true },
     ],
-    discount: '17% off compared to monthly',
+    discount: "17% off compared to monthly",
   },
 ];
 
-const PricingCard: React.FC<{ plan: Plan; componentProps: (plan: Plan) => any }> = ({
-  plan,
-  componentProps,
-}) => {
-
-  const navigate = useNavigate(); 
+const PricingCard: React.FC<{
+  plan: Plan;
+  componentProps: (plan: Plan) => any;
+}> = ({ plan, componentProps }) => {
+  const navigate = useNavigate();
 
   const handleGetStartedClick = () => {
-    navigate('/profile'); 
+    navigate("/profile");
   };
-  return( <StyledCard>
-    <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-      <PlanTitle variant="h5">{plan.title}</PlanTitle>
-      <PlanPrice variant="h4">{plan.price}</PlanPrice>
-      {plan.discount && <DiscountChip>{plan.discount}</DiscountChip>}
-      <PlanDescription variant="body2" color="textSecondary">
-        {plan.description}
-      </PlanDescription>
-      <FeatureList>
-        {plan.features.map((feature, idx) => (
-          <Feature key={idx}>
-            {feature.included ? (
-              <GreenCheckCircleIcon fontSize="small" />
-            ) : (
-              <CancelIcon color="error" fontSize="small" />
-            )}
-            <FeatureText variant="body2" included={feature.included}>
-              {feature.text}
-            </FeatureText>
-          </Feature>
-        ))}
-      </FeatureList>
-      <Box sx={{ marginTop: 'auto' }}>
-        {plan.title === 'Free Plan' ? (
-          <Button variant="contained" color="primary" fullWidth onClick={handleGetStartedClick}>
-            Get Started
-          </Button>
-        ) : (
-          <Button variant="contained" color="primary" fullWidth>  <PaystackButton className='pay-btn' {...componentProps(plan)} /></Button>
-      
-        )}
-      </Box>
-    </CardContent>
-  </StyledCard>
-)
-}
-
-
- 
+  return (
+    <StyledCard>
+      <CardContent
+        sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}
+      >
+        <PlanTitle variant="h5">{plan.title}</PlanTitle>
+        <PlanPrice variant="h4">{plan.price}</PlanPrice>
+        {plan.discount && <DiscountChip>{plan.discount}</DiscountChip>}
+        <PlanDescription variant="body2" color="textSecondary">
+          {plan.description}
+        </PlanDescription>
+        <FeatureList>
+          {plan.features.map((feature, idx) => (
+            <Feature key={idx}>
+              {feature.included ? (
+                <GreenCheckCircleIcon fontSize="small" />
+              ) : (
+                <CancelIcon color="error" fontSize="small" />
+              )}
+              <FeatureText variant="body2" included={feature.included}>
+                {feature.text}
+              </FeatureText>
+            </Feature>
+          ))}
+        </FeatureList>
+        <Box sx={{ marginTop: "auto" }}>
+          {plan.title === "Free Plan" ? (
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={handleGetStartedClick}
+            >
+              Get Started
+            </Button>
+          ) : (
+            <Button variant="contained" color="primary" fullWidth>
+              {" "}
+              <PaystackButton className="pay-btn" {...componentProps(plan)} />
+            </Button>
+          )}
+        </Box>
+      </CardContent>
+    </StyledCard>
+  );
+};
 
 const Pricing: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.user);
+  const { isAuthenticated, user } = useSelector(
+    (state: RootState) => state.user
+  );
 
   const handleClose = () => {
-    navigate('/profile');
+    navigate("/profile");
   };
 
-  const publicKey = 'pk_live_e01be7df03cfd763e978d68adc9bc2dbd9867a6e';
+  const publicKey = "pk_live_e01be7df03cfd763e978d68adc9bc2dbd9867a6e";
 
-  const handlePaystackSuccessAction = (reference: any) => {
-    toast.success('Payment successful!');
+  const handlePaymentSuccess = async (reference: any, amount: number) => {
+    let plan;
+
+    if (amount < 1250) {
+      plan = "FREEMIUM";
+    } else if (amount < 4500) {
+      plan = "WEEKLY";
+    } else if (amount === 4500) {
+      plan = "MONTHLY";
+    } else {
+      plan = "ANNUAL";
+    }
+
+    try {
+      const authToken = await getToken();
+      await axiosInstance(authToken).post("/api/v1/payment-success", {
+        amount,
+        ref: reference,
+        plan,
+      });
+
+      toast.success("Subscription successful!");
+    } catch (err) {
+      toast.error(errorParser(err));
+    }
   };
 
-  const handlePaystackCloseAction = () => {
-    toast.error('Payment canceled');
+  const handlePaystackClose = () => {
+    toast.error("Payment canceled");
   };
 
   const componentProps = (plan: Plan) => {
     return {
-      email:user?.email,
-      amount: parseInt(plan.price.replace('₦', '').replace(',', '')) * 100,
+      email: user?.email,
+      amount: parseInt(plan.price.replace("₦", "").replace(",", "")),
       publicKey,
-      text: 'Subscribe Now',
-      onSuccess: (reference: any) => handlePaystackSuccessAction(reference),
-      onClose: handlePaystackCloseAction,
+      text: "Subscribe Now",
+      onSuccess: (reference: any) =>
+        handlePaymentSuccess(
+          reference,
+          parseInt(plan.price.replace("₦", "").replace(",", "")) * 100
+        ),
+      onClose: handlePaystackClose,
     };
   };
 
   return (
     <>
-      <Box sx={{ flexGrow: 1, padding: 4, backgroundColor: '#f5f5f5', position: 'relative' }}>
+      <Box
+        sx={{
+          flexGrow: 1,
+          padding: 4,
+          backgroundColor: "#f5f5f5",
+          position: "relative",
+        }}
+      >
         <CloseButton onClick={handleClose} aria-label="close">
           <CloseIcon />
         </CloseButton>
@@ -230,7 +283,12 @@ const Pricing: React.FC = () => {
         <Typography variant="h6" align="center" color="textSecondary" paragraph>
           Unlock your potential with our tailored pricing options
         </Typography>
-        <Grid container spacing={2} justifyContent="center" sx={{ marginTop: 2 }}>
+        <Grid
+          container
+          spacing={2}
+          justifyContent="center"
+          sx={{ marginTop: 2 }}
+        >
           {plans.map((plan, index) => (
             <Grid item xs={12} sm={6} md={3} key={index}>
               <PricingCard plan={plan} componentProps={componentProps} />

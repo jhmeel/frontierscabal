@@ -36,7 +36,7 @@ const Descriptor = () => {
     {
       icon: <IconCirclePlay />,
       text: "Modules",
-      link: "/modules",
+      link: "/",
       color: "#DF8D13",
       lightColor: "#FFF3E0",
     },

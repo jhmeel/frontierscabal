@@ -8,9 +8,6 @@ import { searchCourseMaterialByCourseSessionAndLevel } from "../handlers/courseM
 import { RestrictTo } from "../middlewares/restrictTo.js";
 import { authenticator } from "../middlewares/authenticator.js";
 
-
-
-
 const CourseMaterial = express();
 CourseMaterial.route("/course-material/new").post(
   authenticator,

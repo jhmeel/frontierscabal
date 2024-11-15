@@ -1,10 +1,9 @@
 import express from "express";
-import { authenticator } from "../middlewares/authenticator.js";
-import { processPastQuestionImage, respondToQuery } from "../handlers/Bot.js";
-
+import { processPastQuestionImage, respondToQuery } from "../handlers/botHandler.js";
+import { checkmateSubscription } from "../middlewares/subMiddleware.js";
 const Bot = express();
 
-Bot.route("/bot/pq-answers").post(processPastQuestionImage);
-Bot.route("/bot/query").post(respondToQuery);
+Bot.route("/bot/pq-answers").post(checkmateSubscription,processPastQuestionImage);
+Bot.route("/bot/query").post(checkmateSubscription, respondToQuery);
 
 export { Bot }; 

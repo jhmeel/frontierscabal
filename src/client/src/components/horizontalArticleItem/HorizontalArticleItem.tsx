@@ -8,10 +8,7 @@ import { enqueueSnackbar, closeSnackbar } from "notistack";
 import {
   FaBookmark,
   FaRegBookmark,
-  FaEllipsisH,
   FaEdit,
-  FaPen,
-  FaUnlink,
   FaShareAlt,
   FaTrash,
 } from "react-icons/fa";
@@ -26,21 +23,7 @@ import defaultImage from "../../assets/images/group_study.svg";
 import emptyAvatar from "../../assets/images/empty_avatar.png";
 import { MoreVert } from "@mui/icons-material";
 
-interface HorizontalArticleItemProps {
-  id: string;
-  title: string;
-  slug: string;
-  image: string;
-  caption: string;
-  postedBy: any;
-  category: string;
-  readDuration: string;
-  savedBy?: string[];
-  pinnedBy?: string[];
-  onProfile?: boolean;
-}
-
-const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
+const HorizontalArticleItem = ({
   id,
   title,
   slug,
@@ -48,9 +31,9 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
   caption,
   postedBy,
   category,
-  savedBy,
+  savedBy = [],
   readDuration,
-  pinnedBy,
+  pinnedBy = [],
   onProfile = false,
 }) => {
   const navigate = useNavigate();
@@ -60,22 +43,21 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const { user } = useSelector((state: RootState) => state.user);
+  const { user } = useSelector((state) => state.user);
 
-  const menuRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
-    setIsSaved(savedBy?.some((id) => id === user?._id));
-    setIsPinned(pinnedBy?.some((id) => id === user?._id));
+    setIsSaved(savedBy.includes(user?._id));
+    setIsPinned(pinnedBy.includes(user?._id));
   }, [savedBy, pinnedBy, user]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
         setIsMenuOpen(false);
       }
     };
-
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
@@ -91,7 +73,6 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
       const { data } = await axiosInstance(authToken).get(
         `/api/v1/article/bookmark/${id}`
       );
-
       if (data.success) {
         setIsSaved(!isSaved);
         toast.success(`${title} ${data.message}`);
@@ -104,45 +85,38 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
   };
 
   const handleShare = async () => {
-    const imgBlob = await fetch(image).then((r) => r.blob());
+    const imgBlob = await fetch(image).then((res) => res.blob());
     if (navigator.share) {
       navigator.share({
-        title: title,
+        title,
         text: removeHtmlAndHashTags(caption),
         url: `https://${window.location.host}/#/blog/article/${slug}`,
-        files: [new File([imgBlob], "file.png", { type: imgBlob.type })],
+        files: [new File([imgBlob], "image.png", { type: imgBlob.type })],
       });
     }
   };
+
   const showAuthDialogue = () => {
     enqueueSnackbar("Please signup to complete your action!", {
       variant: "info",
       persist: true,
       action: (key) => (
         <>
-          <Button
-            onClick={() => {
-              closeSnackbar();
-              navigate("/signup");
-            }}
-          >
-            Signup
-          </Button>
-          <Button onClick={() => closeSnackbar()}>Cancel</Button>
+          <Button onClick={() => navigate("/signup")}>Signup</Button>
+          <Button onClick={() => closeSnackbar(key)}>Cancel</Button>
         </>
       ),
     });
   };
 
-  const handlePinAndUnpin = async () => {
+  const handlePinToggle = async () => {
     try {
       const authToken = await getToken();
       await axiosInstance(authToken).get(`/api/v1/article/pin/${id}`);
       setIsPinned(!isPinned);
       toast.success(isPinned ? "Article unpinned!" : "Article pinned!");
-      window.location.reload();
-    } catch (err) {
-      toast.error(errorParser(err));
+    } catch (error) {
+      toast.error(errorParser(error));
     }
   };
 
@@ -168,120 +142,104 @@ const HorizontalArticleItem: React.FC<HorizontalArticleItemProps> = ({
     }
   };
 
-  const showConfirmation = () => {
+  const showDeleteConfirmation = () => {
     enqueueSnackbar(`Are you sure you want to delete ${title}?`, {
       variant: "info",
       persist: true,
       action: (key) => (
         <>
           <Button onClick={handleDelete}>Proceed</Button>
-          <Button onClick={() => closeSnackbar()}>Cancel</Button>
+          <Button onClick={() => closeSnackbar(key)}>Cancel</Button>
         </>
       ),
     });
   };
 
   return (
-    <ArticleCard
-      as={motion.div}
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: "spring", stiffness: 300 }}
-    >
-      <CategoryBadge
-        onClick={() => navigate(`/blog/search?category=${category}`)}
-      >
+    <Card as={motion.div} whileHover={{ scale: 1.02 }}>
+      <Badge onClick={() => navigate(`/blog/search?category=${category}`)}>
         {category}
-      </CategoryBadge>
-      <ImageContainer>
+      </Badge>
+      <ImageWrapper>
         <Link to={`/blog/article/${slug}`}>
-          <ArticleImage src={image || defaultImage} alt={title} />
+          <Image src={image || defaultImage} alt={title} />
         </Link>
-      </ImageContainer>
-      <ContentContainer>
+      </ImageWrapper>
+      <Content>
         {onProfile ? (
-          <MenuContainer ref={menuRef}>
-            <MenuIcon onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          <MenuWrapper ref={menuRef}>
+            <MenuButton onClick={() => setIsMenuOpen(!isMenuOpen)}>
               <MoreVert />
-            </MenuIcon>
+            </MenuButton>
             <AnimatePresence>
               {isMenuOpen && (
-                <Menu
+                <DropdownMenu
                   as={motion.div}
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                 >
                   {user?.username === postedBy?.username && (
-                    <MenuItem onClick={handleEdit}>
+                    <DropdownItem onClick={handleEdit}>
                       <FaEdit /> Edit
-                    </MenuItem>
+                    </DropdownItem>
                   )}
-                  {user?.username === postedBy?.username && (
-                    <MenuItem onClick={handlePinAndUnpin}>
-                      {isPinned ? <FaUnlink /> : <FaPen />}{" "}
-                      {isPinned ? "Unpin" : "Pin"}
-                    </MenuItem>
-                  )}
-                  <MenuItem onClick={handleShare}>
+                  <DropdownItem onClick={handleShare}>
                     <FaShareAlt /> Share
-                  </MenuItem>
+                  </DropdownItem>
                   {(user?.username === postedBy?.username ||
                     user?.role === "FC:SUPER:ADMIN") && (
-                    <MenuItem onClick={showConfirmation}>
+                    <DropdownItem onClick={showDeleteConfirmation}>
                       {deleteLoading ? <RDotLoader /> : <FaTrash />} Delete
-                    </MenuItem>
+                    </DropdownItem>
                   )}
-                </Menu>
+                </DropdownMenu>
               )}
             </AnimatePresence>
-          </MenuContainer>
+          </MenuWrapper>
         ) : (
-          <BookmarkIcon onClick={handleBookmarkToggle}>
+          <Bookmark onClick={handleBookmarkToggle}>
             {bookmarkLoading ? (
               <RDotLoader />
             ) : isSaved ? (
-              <FaBookmark size={20} />
+              <FaBookmark />
             ) : (
-              <FaRegBookmark size={20} />
+              <FaRegBookmark />
             )}
-          </BookmarkIcon>
+          </Bookmark>
         )}
         <Link to={`/blog/article/${slug}`}>
-          <Title>
-            {title?.length > 60 ? `${title.slice(0, 60)}...` : title}
-          </Title>
+          <Title>{title?.length > 60 ? `${title.slice(0, 60)}...` : title}</Title>
         </Link>
-        <Caption
+        <Description
           dangerouslySetInnerHTML={{
             __html: removeHtmlAndHashTags(`${caption?.slice(0, 120)}...`),
           }}
         />
-        <MetaContainer>
-          <AuthorInfo>
-            <AuthorAvatar
+        <Metadata>
+          <Author>
+            <Avatar
               src={postedBy?.avatar?.url || emptyAvatar}
               alt={postedBy?.username}
             />
-            <AuthorName to={`/profile/${postedBy?.username}`}>
+            <Username to={`/profile/${postedBy?.username}`}>
               {postedBy?.username}
-            </AuthorName>
-          </AuthorInfo>
-          <ReadDuration>
-            {readDuration === "less than a minute read"
-              ? "1 min read"
-              : readDuration}
-          </ReadDuration>
-        </MetaContainer>
-      </ContentContainer>
-    </ArticleCard>
+            </Username>
+          </Author>
+          <Duration>
+            {readDuration === "less than a minute read" ? "1 min read" : readDuration}
+          </Duration>
+        </Metadata>
+      </Content>
+    </Card>
   );
 };
 
 export default HorizontalArticleItem;
 
-const ArticleCard = styled.div`
+const Card = styled.div`
   display: flex;
-  background-color: #ffffff;
+  background: #fff;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid #ededed;
@@ -292,36 +250,36 @@ const ArticleCard = styled.div`
   position: relative;
 `;
 
-const CategoryBadge = styled.span`
+const Badge = styled.span`
   position: absolute;
   top: 16px;
   left: 16px;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: #ffffff;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
   padding: 4px 8px;
   border-radius: 4px;
-  font-size: clamp(0.7rem, 1vw, 0.75rem);
+  font-size: 0.75rem;
   z-index: 1;
   cursor: pointer;
 `;
 
-const ImageContainer = styled.div`
+const ImageWrapper = styled.div`
   flex: 0 0 40%;
   overflow: hidden;
 `;
 
-const ArticleImage = styled.img`
+const Image = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.3s;
 
   &:hover {
     transform: scale(1.05);
   }
 `;
 
-const ContentContainer = styled.div`
+const Content = styled.div`
   flex: 1;
   padding: 20px;
   display: flex;
@@ -330,14 +288,14 @@ const ContentContainer = styled.div`
 `;
 
 const Title = styled.h2`
-  font-size: clamp(1rem, 2vw, 1.2rem);
+  font-size: 1rem;
   font-weight: 700;
   color: #333;
   margin-bottom: 10px;
 `;
 
-const Caption = styled.p`
-  font-size: clamp(0.75rem, 1.5vw, 0.9rem);
+const Description = styled.p`
+  font-size: 0.9rem;
   color: #666;
   font-weight: 500;
   margin-bottom: 16px;
@@ -347,99 +305,79 @@ const Caption = styled.p`
   -webkit-box-orient: vertical;
 `;
 
-const MetaContainer = styled.div`
+const Metadata = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
 `;
 
-const AuthorInfo = styled.div`
+const Author = styled.div`
   display: flex;
   align-items: center;
 `;
 
-const AuthorAvatar = styled.img`
-  width: 32px;
-  height: 32px;
+const Avatar = styled.img`
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
-  margin-right: 8px;
+  margin-right: 10px;
 `;
 
-const AuthorName = styled(Link)`
-  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
+const Username = styled(Link)`
+  font-size: 0.9rem;
   color: #333;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
+  font-weight: 600;
 `;
 
-const ReadDuration = styled.span`
-  font-size: clamp(0.5rem, 1vw, 0.75rem);
-  color: #666;
+const Duration = styled.span`
+  font-size: 0.8rem;
+  color: #999;
 `;
 
-const BookmarkIcon = styled.div`
+const Bookmark = styled.div`
   position: absolute;
   top: 16px;
   right: 16px;
-  cursor: pointer;
-  font-size: clamp(1.25rem, 2vw, 1.5rem);
-  color: #176984;
-`;
-
-const MenuContainer = styled.div`
-  position: absolute;
-  top: 16px;
-  right: 16px;
-`;
-
-const MenuIcon = styled.div`
-  cursor: pointer;
-  font-size: clamp(1.25rem, 2vw, 1.5rem);
+  font-size: 1.5rem;
   color: #333;
+  cursor: pointer;
 `;
 
-const Menu = styled.div`
+const MenuWrapper = styled.div`
   position: absolute;
-  top: 100%;
+  top: 10px;
+  right: 10px;
+`;
+
+const MenuButton = styled.button`
+  background: transparent;
+  border: none;
+  cursor: pointer;
+`;
+
+const DropdownMenu = styled.div`
+  position: absolute;
+  top: 40px;
   right: 0;
-  background-color: #ffffff;
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   z-index: 10;
+  width: 200px;
 `;
 
-const MenuItem = styled.div`
-  padding: 8px 16px;
-  font-size: clamp(0.75rem, 1.2vw, 0.9rem);
-  color: #333;
+const DropdownItem = styled.div`
+  padding: 10px 20px;
   cursor: pointer;
   display: flex;
-  font-weight: 500;
   align-items: center;
+  font-size: 0.9rem;
 
   &:hover {
-    background-color: #f5f5f5;
+    background: #f8f8f8;
   }
 
   svg {
     margin-right: 8px;
-  }
-`;
-
-const Button = styled.button`
-  background-color: #176984;
-  color: #ffffff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: clamp(0.875rem, 1.2vw, 1rem);
-  margin-right: 8px;
-
-  &:hover {
-    background-color: #124e63;
   }
 `;

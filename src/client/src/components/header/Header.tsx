@@ -27,6 +27,7 @@ import {
   IconProfile,
   IconVideoTwentyFour,
   IconBxSearchAlt,
+  IconCalendarEventFill,
 } from '../../assets/icons';
 import ForumIcon from '@mui/icons-material/Forum';
 import { Assistant } from '@mui/icons-material';
@@ -171,12 +172,13 @@ const Header: React.FC = () => {
                 <ListItemText primary="Study Materials" />
               </ListItemButton>
             </ListItem>
-            <ListItem disablePadding component={Link} to="/modules">
+      
+            <ListItem disablePadding component={Link} to="/events">
               <ListItemButton>
                 <ListItemIcon>
-                  <IconVideoTwentyFour fontSize={20}/>
+                  <IconCalendarEventFill fontSize={20}/>
                 </ListItemIcon>
-                <ListItemText primary="Modules" />
+                <ListItemText primary="events" />
               </ListItemButton>
             </ListItem>
             <ListItem disablePadding component={Link} to="/blog">

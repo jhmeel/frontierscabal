@@ -4,7 +4,7 @@ import {Config} from '../config/config.js'
 const { createLogger, transports } = winston;
 const { combine, colorize, timestamp, printf } = winston.format;
 
-const {LOG_STORAGE_PATH, MAX_FILE_SIZE, MAX_FILES}  = Config.LOGGER;
+const {STORAGE_PATH, MAX_FILE_SIZE, MAX_FILES}  = Config.LOGGER;
 
 const logFormat = combine(
    colorize({
@@ -21,7 +21,7 @@ const logger = createLogger({
   transports: [
     new transports.Console(),
     new transports.File({
-      filename: LOG_STORAGE_PATH,
+      filename: STORAGE_PATH,
       maxFiles: MAX_FILES,
       maxsize: MAX_FILE_SIZE
     })

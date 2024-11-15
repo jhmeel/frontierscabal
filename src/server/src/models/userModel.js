@@ -1,19 +1,18 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { Config } from "../config/config.js";
-import crypto from "crypto"
-
-const { RESET_PASSWORD_EXPIRY } = Config.RESET_PASSWORD
+import crypto from "crypto";
+const { EXPIRY } = Config.PASSWORD_RESET;
 
 const UserSchema = new mongoose.Schema({
   username: {
     type: String,
-    required: true, 
+    required: true,
     minlength: 3,
     maxlength: 15,
     trim: true,
-  }, 
-  email: { 
+  },
+  email: {
     type: String,
     required: true,
     unique: true,
@@ -77,18 +76,13 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  courseMaterial: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "CourseMaterial",
-  }],
-  subscriptionRef: [
+  courseMaterial: [
     {
-      amount: String,
-      reference: String,
-      date: Date,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CourseMaterial",
     },
   ],
-  pqFreeDownloadCount: {
+  dailyFreeDownloadCount: {
     type: Number,
     default: 0,
   },
@@ -146,11 +140,19 @@ const UserSchema = new mongoose.Schema({
       ref: "Article",
     },
   ],
-  tokenBalance: {
-    type: Number,
-    default: 0,
+  subscriptionRef: [
+    {
+      plan: String,
+      amount: String,
+      reference: String,
+      date: Date,
+    },
+  ],
+  lastSubscriptionNotificationSentAt: Date,
+  subscriptionDue: {
+    type: Boolean,
+    default: true,
   },
-  subscriptionDue: Boolean,
   resetPasswordToken: String,
   resetPasswordExpiry: Date,
   createdAt: {
@@ -174,7 +176,7 @@ UserSchema.methods.comparePassword = async function (candidatePassword) {
   try {
     return await bcrypt.compare(candidatePassword, this.password);
   } catch (err) {
-    throw err
+    throw err;
   }
 };
 
@@ -185,10 +187,10 @@ UserSchema.methods.generateResetPasswordToken = function () {
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
-    this.resetPasswordExpiry = RESET_PASSWORD_EXPIRY
+    this.resetPasswordExpiry = EXPIRY;
     return resetToken;
   } catch (err) {
-    throw err
+    throw err;
   }
 };
 

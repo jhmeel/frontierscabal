@@ -95,16 +95,12 @@ const Comment: React.FC<CommentProps> = ({ username, article, comments, onClose 
       toast.success('Comment added');
       dispatch({ type: NEW_COMMENT_RESET });
       setComment('');
-      // Instead of reloading the page, you could update the comments list locally
-      // This would provide a better user experience
-      // You'd need to modify your Redux state to handle this
     }
   }, [dispatch, success, error]);
 
   const handleCommentSubmit = async () => {
     const authToken = await getToken();
     if (!authToken) {
-      toast.error('Please log in to comment');
       navigate('/login');
       return;
     }
@@ -143,7 +139,7 @@ const Comment: React.FC<CommentProps> = ({ username, article, comments, onClose 
         <CommentList>
           <AnimatePresence>
             <motion.div variants={commentListVariants} initial="hidden" animate="visible">
-              {comments?.map((comment, index) => (
+              {comments?.map((comment, index) => (   
                 <motion.div key={comment._id} variants={commentItemVariants}>
                   <ListItem disablePadding>
                     <CommentItem
@@ -191,4 +187,4 @@ const Comment: React.FC<CommentProps> = ({ username, article, comments, onClose 
   );
 };
 
-export default Comment;
+export default Comment; 

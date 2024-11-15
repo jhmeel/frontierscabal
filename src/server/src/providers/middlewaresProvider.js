@@ -7,9 +7,7 @@ import rateLimit from "express-rate-limit";
 import { logger } from "../utils/logger.js";
 import { Emitter } from "../utils/emitter.js";
 
-const { WINDOW_MS, MAX, MESSAGE } = Config.RATE_LIMITER
-
-const { TTL } = Config.REDIS
+const { WINDOW_MS, MAX, MESSAGE } = Config.RATE_LIMITER;
 
 class MiddlewaresProvider {
   constructor(app) {
@@ -18,7 +16,7 @@ class MiddlewaresProvider {
     this.emitter = Emitter.getInstance();
   }
   async init() {
-    const limiter = rateLimit({ 
+    const limiter = rateLimit({
       windowMs: WINDOW_MS,
       max: MAX,
       message: MESSAGE,
@@ -28,24 +26,27 @@ class MiddlewaresProvider {
 
     try {
       logger.info(`initializing ${this._name}...`);
-      this.app.use(bodyParser.json({ limit: '50mb' }));
-      this.app.use(bodyParser.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 }));
+      this.app.use(bodyParser.json({ limit: "50mb" }));
+      this.app.use(
+        bodyParser.urlencoded({
+          limit: "50mb",
+          extended: true,
+          parameterLimit: 50000,
+        })
+      );
       this.app.use(cors());
       this.app.disable("x-powered-by");
 
       this.app.use(logRequest);
-      this.app.use(limiter);
+      //this.app.use(limiter);
 
       this.app.use(compression());
-
-
-      //this.app.use(cacheMiddleware(TTL))
 
       this.emitter.emit(`${this._name}Ready`);
       logger.info(` ${this._name} initialized!`);
     } catch (err) {
-      throw err
+      throw err;
     }
-  } 
+  }
 }
-export { MiddlewaresProvider }; 
+export { MiddlewaresProvider };

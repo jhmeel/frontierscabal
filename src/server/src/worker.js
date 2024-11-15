@@ -5,15 +5,15 @@ import { notifyforOngoingEvent } from "./handlers/webpushHandler.js";
 import { ErrorHandler } from "./handlers/errorHandler.js";
 import ViteExpress from "vite-express";
 
-class Core {
+class Worker {
   constructor(app, config) {
-    logger.info(`Starting Core... V${config.VERSION}`);
+    logger.debug(`Starting Worker... V${config.APP.VERSION}`);
     this.dependencies = {};
     this.readyPercentage = 0;
     this.config = config;
-    this.RETRIES = this.config.MAX_ASYNC_RETRY;
+    this.retries = this.config.ASYNC_RETRY.MAX_RETRIES;
     this.emitter = Emitter.getInstance();
-    this.port = this.config.PORT;
+    this.port = this.config.APP.PORT;
     this.app = app;
   }
 
@@ -23,7 +23,6 @@ class Core {
       logger.info(`server running on port ${this.port}`);
     });
 
-    //Notify users for ongoing event at evry 12.00am
     notifyforOngoingEvent();
   }
 
@@ -35,13 +34,13 @@ class Core {
   }
 
   listenForDependencyReady(name) {
-    logger.info(`[Core] Listening for ${name} ready state...`);
+    logger.debug(`[Worker] Listening for ${name} ready state...`);
     this.emitter.on(`${name}Ready`, () => {
       this.dependencies[name] = true;
       logger.info(`${name} is ready`);
       this.updateReadyPercentage();
     });
-  }
+  } 
 
   startPolling() {
     const intervalId = setInterval(() => {
@@ -51,7 +50,7 @@ class Core {
         this.initServer();
         clearInterval(intervalId);
       } else {
-        logger.info(`[Core] System is ${this.readyPercentage}% ready...`);
+        logger.debug(`[Worker] System is ${this.readyPercentage}% ready...`);
       }
     }, 500);
     return this;
@@ -68,28 +67,28 @@ class Core {
   }
 
   static getInstance(app, config) {
-    if (!Core.instance) {
-      Core.instance = new Core(app, config);
+    if (!Worker.instance) {
+      Worker.instance = new Worker(app, config);
     }
-    return Core.instance;
+    return Worker.instance;
   }
 
   async initializeDependencies() {
     if (!this.dependencies) {
-      throw new ErrorHandler("[CORE]: Missing dependencies... ");
+      throw new ErrorHandler("[Worker]: Missing dependencies... ");
     }
 
     try {
       for (const [name, dependency] of Object.entries(this.dependencies)) {
-        await asyncRetry(this.RETRIES)(dependency.init());
+        await asyncRetry(this.retries)(dependency.init());
       }
       return this;
     } catch (error) {
       throw new ErrorHandler(
-        `[CORE]: Error initializing dependencies: ${error}`
+        `[Worker]: Error initializing dependencies: ${error}`
       );
     }
   }
 }
 
-export { Core };
+export { Worker };

@@ -1,7 +1,6 @@
 import { createToken } from "../providers/tokenProvider.js";
-import { Config } from "../config/config.js";
 import { ErrorHandler } from "../handlers/errorHandler.js";
-const { SESSION_MAX_AGE } = Config.SESSION;
+
 
 export const createSession = async (user, status, res, next) => {
   try {
