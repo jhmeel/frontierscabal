@@ -1,41 +1,140 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  IconBxEditAlt,
-  IconDeleteForeverOutline,
-  IconDotsHorizontal,
-  IconShare,
-} from "../../assets/icons";
-import styled from "styled-components";
 import { useSelector } from "react-redux";
-import getToken from "../../utils/getToken";
 import { useSnackbar } from "notistack";
+import {
+  Card,
+  IconButton,
+  Menu,
+  MenuItem,
+  Typography,
+  Box,
+  Button,
+} from "@mui/material";
+import { styled } from "@mui/system";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ShareIcon from "@mui/icons-material/Share";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import RDotLoader from "../loaders/RDotLoader";
+import getToken from "../../utils/getToken";
 import { errorParser } from "../../utils/formatter";
 import axiosInstance from "../../utils/axiosInstance";
 import { RootState } from "../../store";
+
+
+const StyledCard = styled(Card)(({ theme }) => ({
+  position: "relative",
+  width: "100%",
+  maxWidth: 600,
+  height: 180,
+  marginBottom: theme.spacing(2),
+  padding: theme.spacing(2),
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "space-between",
+  transition: "transform 0.2s ease-in-out",
+  [theme.breakpoints.down("sm")]: {
+    maxWidth: "100%",
+  },
+}));
+
+const DateBadge = styled(Box)(({ theme }) => ({
+  position: "absolute",
+  top: theme.spacing(2),
+  left: theme.spacing(2),
+  zIndex: 2,
+  textAlign: "center",
+  borderRadius: theme.shape.borderRadius,
+  overflow: "hidden",
+  display: "flex",
+  flexDirection: "column",
+  boxShadow: theme.shadows[3],
+}));
+
+const DateTop = styled(Box)(({ theme }) => ({
+  background: "#176984",
+  color: theme.palette.common.white,
+  padding: theme.spacing(0.5, 1),
+  fontWeight: 700,
+  fontSize: "0.9rem",
+}));
+
+const DateBottom = styled(Box)(({ theme }) => ({
+  background: "#1abc9c",
+  color: theme.palette.common.white,
+  padding: theme.spacing(0.25, 1),
+  fontSize: "0.75rem",
+}));
+
+const EventAvatar = styled(Box)(({ theme }) => ({
+  width: 90,
+  height: 90,
+  borderRadius: "50%",
+  border: `3px solid #176984`,
+  overflow: "hidden",
+  marginRight: theme.spacing(2),
+  img: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+  },
+}));
+
+const CategoryBadge = styled(Box)(({ theme }) => ({
+  background: "linear-gradient(-45deg, #16aebc 0%, #176984 100%)",
+  color: theme.palette.common.white,
+  padding: theme.spacing(0.5, 1),
+  borderRadius: theme.shape.borderRadius,
+  fontSize: "0.75rem",
+  fontWeight: 600,
+  cursor: "pointer",
+  maxWidth: 90,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  marginTop: theme.spacing(1),
+}));
+
+const ViewButton = styled(Button)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius * 2,
+  fontSize: "0.8rem",
+  "&:hover": {
+    backgroundColor: "#176984",
+    color: theme.palette.common.white,
+  },
+}));
+
+
 const EventItem = ({
   id,
   slug,
   title,
-  description,
   category,
   avatar,
   createdBy,
+  eventDate = "2024-11-13",
 }) => {
   const navigate = useNavigate();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const [optionVisible, setIsOptionVisible] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const { user } = useSelector((state:RootState) => state.user);
+  const { user } = useSelector((state: RootState) => state.user);
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   const handleEventDelete = async () => {
     try {
       setDeleteLoading(true);
       const authToken = await getToken();
       closeSnackbar();
-      const { data } = await axiosInstance(authToken).delete(
-        `/api/v1/event/${id}`
-      );
+      const { data } = await axiosInstance(authToken).delete(`/api/v1/event/${id}`);
       setDeleteLoading(false);
       if (data.success) {
         enqueueSnackbar("Event Deleted", { variant: "success" });
@@ -48,276 +147,109 @@ const EventItem = ({
   };
 
   const showConfirmation = () => {
-    toggleOptionVisible();
+    handleMenuClose();
     enqueueSnackbar("Are you sure you want to delete the event?", {
       variant: "info",
       persist: true,
       action: (key) => (
-        <>
-          <button className="snackbar-btn" onClick={() => handleEventDelete()}>
+        <Box>
+          <Button color="primary" size="small" onClick={handleEventDelete}>
             Proceed
-          </button>
-          <button className="snackbar-btn" onClick={() => closeSnackbar()}>
+          </Button>
+          <Button color="secondary" size="small" onClick={() => closeSnackbar()}>
             No
-          </button>
-        </>
+          </Button>
+        </Box>
       ),
     });
   };
-  const toggleOptionVisible = () => {
-    setIsOptionVisible(!optionVisible);
-  };
-  const optionRef = useRef(null);
-  const handleClickOutside = (e) => {
-    if (optionRef.current && !optionRef.current.contains(e.target)) {
-      setIsOptionVisible(false);
-    }
-  };
-  useEffect(() => {
-    document.addEventListener("click", handleClickOutside);
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, []);
 
   const handleShare = async () => {
     const imgBlob = await fetch(avatar).then((r) => r.blob());
     if (navigator.share) {
       navigator.share({
         title: title,
-        text: description,
         url: `https://${window.location.host}/#/event/${slug}`,
         files: [new File([imgBlob], "image.png", { type: imgBlob.type })],
       });
     }
+    handleMenuClose();
   };
+
   const handleCategorySearch = () => {
     navigate({
       pathname: "/events/search",
       search: `?category=${encodeURIComponent(category)}`,
     });
   };
-  return (
-    <>
-        <EventItemRenderer>
-          <div className="event-item-head" ref={optionRef}>
-            <div className="event-avatar">
-              <img src={avatar} loading="lazy" alt="" />
-            </div>
 
-            <span onClick={toggleOptionVisible}>
-              <IconDotsHorizontal height="20" width="20" />
-              <div>
-                {optionVisible && (
-                  <div className="event-it-menu">
-                    <ul className="event-it-menu-options">
-                      <li title="Share" onClick={handleShare}>
-                        <IconShare height="22" width="22" />
-                        &nbsp; Share
-                      </li>
-                      {user?.username === createdBy?.username && (
-                        <li
-                          title="Edit"
-                          onClick={() => navigate(`/event/update/${slug}`)}
-                        >
-                          <IconBxEditAlt height="22" width="22" />
-                          &nbsp; Edit
-                        </li>
-                      )}
-                      {user?.username === createdBy?.username && (
-                        <li title="Delete" onClick={showConfirmation}>
-                          {deleteLoading ? (
-                            <RDotLoader />
-                          ) : (
-                            <IconDeleteForeverOutline
-                              height="22"
-                              width="22"
-                              fill="crimson"
-                            />
-                          )}
-                          &nbsp; Delete
-                        </li>
-                      )}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </span>
-          </div>
-          <div className="event-details">
-            <span className="event-category" onClick={handleCategorySearch}>
-              {category?.length > 14 ? `${category.slice(0, 14)}...` : category}
-            </span>
-            <span className="event-title">
-              {title?.length > 20 ? `${title.slice(0, 20)}...` : title}
-            </span>
-            <p className="event-desc">
-              {description?.length > 100
-                ? `${description.slice(0, 100)}...`
-                : description}
-            </p>
-          </div>
-          <div className="event-option">
-            <button
-              className="e-mar"
-              onClick={() => navigate(`/event/${slug}`)}
+  const date = new Date(eventDate);
+  const month = date.toLocaleString("default", { month: "short" }).toUpperCase();
+  const day = date.getDate();
+
+  return (
+    <StyledCard>
+
+      <DateBadge>
+        <DateTop>{day}</DateTop>
+        <DateBottom>{month}</DateBottom>
+      </DateBadge>
+
+      <Box display="flex" alignItems="center" mb={2}>
+    
+        <EventAvatar>
+          <img src={avatar} alt="Event Avatar" loading="lazy" />
+        </EventAvatar>
+        <Box flex={1}>
+          <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
+            {title}
+          </Typography>
+          <CategoryBadge onClick={handleCategorySearch}>{category}</CategoryBadge>
+        </Box>
+        <IconButton onClick={handleMenuOpen}>
+          <MoreVertIcon />
+        </IconButton>
+      </Box>
+
+      <Box textAlign="center" mt={1}>
+        <ViewButton
+          variant="outlined"
+          color="primary"
+          onClick={() => navigate(`/event/${slug}`)}
+        >
+          View Event
+        </ViewButton>
+      </Box>
+
+      {/* Dropdown Menu */}
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
+        <MenuItem onClick={handleShare}>
+          <ShareIcon sx={{ mr: 1 }} /> Share
+        </MenuItem>
+        {user?.username === createdBy?.username && (
+          <>
+            <MenuItem
+              onClick={() => {
+                handleMenuClose();
+                navigate(`/event/update/${slug}`);
+              }}
             >
-              View
-            </button>
-          </div>
-        </EventItemRenderer>
-  
-    </>
+              <EditIcon sx={{ mr: 1 }} /> Edit
+            </MenuItem>
+            <MenuItem onClick={showConfirmation}>
+              {deleteLoading ? (
+                <RDotLoader />
+              ) : (
+                <>
+                  <DeleteIcon sx={{ mr: 1, color: "crimson" }} /> Delete
+                </>
+              )}
+            </MenuItem>
+          </>
+        )}
+      </Menu>
+    </StyledCard>
   );
 };
 
 export default EventItem;
-const EventItemRenderer = styled.div`
-  position: relative;
-  color: #2e2e2f;
-  background-color: #fff;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  border-radius: 8px;
-  box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.2);
-  margin-bottom: 1rem;
-  border: 3px dashed transparent;
-  max-width: 600px;
-  min-width: 500px;
-  max-height: 200px;
-  overflow: hidden;
-
-  @media (max-width: 767px) {
-    .event-item-cont {
-      min-width: 340px;
-      max-width: 340px;
-    }
-  }
-  .event-item-head {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    justify-content: space-between;
-    position: relative;
-    height: 30px;
-  }
-  .event-item-cont p {
-    font-size: 15px;
-    margin: 1.2rem 0;
-  }
-
-  .event-avatar {
-    border-radius: 50%;
-    padding: 4px 13px;
-    height: 60px;
-    width: 60px;
-    border: 2px solid #176984;
-    position: relative;
-  }
-  .event-avatar img {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    top: 0;
-    border-radius: 50%;
-  }
-  .event-option {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
-
-  .event-it-menu {
-    position: absolute;
-    width: fit-content;
-    height: fit-content;
-    right: 10px;
-    top: 20px;
-    z-index: 999;
-    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
-    border-radius: 5px;
-    background-color: #fff;
-  }
-  .event-it-menu-options li {
-    display: flex;
-    align-items: center;
-    border-bottom: 0.1px solid #ededed;
-    padding: 6px 12px;
-    transition: 0.3s ease-in-out;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    text-align: center;
-    font-size: 13px;
-    gap: 6px;
-    cursor: pointer;
-  }
-
-  .event-it-menu-options li:hover {
-    background-color: rgb(1, 95, 123);
-    color: #fff;
-  }
-
-  .event-details {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 10px 5px 10px 0px;
-    flex-direction: column;
-    max-height: 70px;
-  }
-  .event-title {
-    font-size: 16px;
-    font-weight: 600;
-  }
-  .event-desc {
-    font-size: 13px;
-    color: gray;
-    margin: 10px 0px;
-    height: 30px;
-    line-height: 1.3rem;
-    width: 100%;
-    text-align: center;
-  }
-  .event-category {
-    position: absolute;
-    left: 0px;
-    bottom: 0;
-    font-size: 10px;
-    font-weight: 600;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
-      sans-serif;
-    padding: 3px;
-    z-index: 9;
-    background: linear-gradient(-45deg, #16aebc 0%, #176984 100%);
-    color: #fff;
-    max-width: 100px;
-    max-height: 30px;
-    cursor: pointer;
-    overflow: hidden;
-  }
-
-  .event-option button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 7px 15px;
-    border: none;
-    border-radius: 16px;
-    background-color: transparent;
-    border: 2px solid #176984;
-    color: #176984;
-    cursor: pointer;
-    font-weight: 500;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-      Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    margin-top: 15px;
-  }
-  .event-option button:hover {
-    background-color: #176984;
-    color: #fff;
-    transition: 0.3s ease-in;
-  }
-`;

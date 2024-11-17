@@ -5,7 +5,7 @@ import catchAsync from "../middlewares/catchAsync.js";
 import {ErrorHandler} from "../handlers/errorHandler.js";
 import {User} from "../models/userModel.js";
 
-const { JWT_SECRETE_KEY } = Config.JWT;
+const { SECRET_KEY } = Config.JWT;
 const authenticator = catchAsync(async (req, res, next) => {
   let token;
   let headers = req.headers.authorization;
@@ -21,7 +21,7 @@ const authenticator = catchAsync(async (req, res, next) => {
   }
 
   try {
-    const verified = await promisify(jwt.verify)(token, JWT_SECRETE_KEY);
+    const verified = await promisify(jwt.verify)(token, SECRET_KEY);
     req.user = await User.findById(verified.id);
   } catch (error) {
     return next(new ErrorHandler(error.message, 401));

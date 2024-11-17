@@ -116,7 +116,6 @@ const Event = () => {
                   slug={eve?.slug}
                   title={eve?.title}
                   avatar={eve?.avatar.url}
-                  description={eve?.description}
                   category={eve?.category}
                   createdBy={eve?.createdBy}
                 />

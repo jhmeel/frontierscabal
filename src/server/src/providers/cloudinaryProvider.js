@@ -13,9 +13,9 @@ class CloudinaryProvider {
       logger.info(`initializing ${this._name}...`);
 
       cloudinary.config({
-        cloud_name: this.config.CLOUDINARY.CLOUDINARY_NAME,
-        api_key: this.config.CLOUDINARY.CLOUDINARY_API_KEY,
-        api_secret: this.config.CLOUDINARY.CLOUDINARY_API_SECRET,
+        cloud_name: this.config.CLOUDINARY.NAME,
+        api_key: this.config.CLOUDINARY.API_KEY,
+        api_secret: this.config.CLOUDINARY.API_SECRET,
       });
 
       this.emitter.emit(`${this._name}Ready`);

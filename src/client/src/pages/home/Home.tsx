@@ -73,6 +73,7 @@ import {
   searchUpcomingEvents,
 } from "../../actions/event";
 import EventItem from "../../components/eventItem/EventItem";
+import EventSkeletonLoader from "../../components/loaders/EventSkeletonLoader";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -532,6 +533,7 @@ const Home: React.FC = () => {
                 </Tabs>
               </Box>
               <ViewMoreButton
+              size={`small`}
                 endIcon={<ChevronRightIcon />}
                 onClick={handleViewMore("/events")}
               >
@@ -542,7 +544,7 @@ const Home: React.FC = () => {
               {!events?.length
                 ? Array(2)
                     .fill(null)
-                    .map((_, i) => <ModuleItemSkeletonLoader key={i} />)
+                    .map((_, i) => <EventSkeletonLoader key={i} />)
                 : events.map((eve: any, i: number) => (
                     <EventItem
                       key={i}
@@ -550,7 +552,6 @@ const Home: React.FC = () => {
                       slug={eve?.slug}
                       title={eve?.title}
                       avatar={eve?.avatar.url}
-                      description={eve?.description}
                       category={eve?.category}
                       createdBy={eve?.createdBy}
                     />
@@ -791,7 +792,9 @@ const TrendingArticlesWrapper = styled.div`
 
 const EventListWrapper = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+
+  overflow-x:scroll;
   gap: 16px;
 `;
 
