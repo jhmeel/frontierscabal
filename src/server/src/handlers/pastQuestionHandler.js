@@ -108,7 +108,7 @@ export const downloadPastQuestionById = catchAsync(async (req, res, next) => {
 
 
       //update daily free count for freemium users
-      if (user.subscriptionDue !== false) {
+      if (Config.SUBSCRIPTION.ACTIVE && user.subscriptionDue !== false) {
         user.dailyFreeDownloadCount += 1;
         await user.save();
       }

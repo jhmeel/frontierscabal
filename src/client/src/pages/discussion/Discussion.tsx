@@ -104,7 +104,7 @@ const MessageBubble = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
   borderTopLeftRadius: "20px",
   borderBottomRightRadius: isCurrentUser ? "0" : "20px",
   borderBottomLeftRadius: isCurrentUser ? "20px" : "0",
-  backgroundColor: isDeleted ? "transparent" : "#276168",
+  backgroundColor: isDeleted ? "transparent" : "#82bfc4",
   color: isDeleted ? "#888" : `#fff`,
   alignSelf: isCurrentUser ? "flex-end" : "flex-start",
   marginBottom: "50px",

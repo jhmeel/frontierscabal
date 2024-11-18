@@ -8,27 +8,30 @@ import { SnackbarProvider } from "notistack";
 import App from "./App";
 import "./index.css";
 import { Toaster } from "react-hot-toast";
+import { SocketProvider } from "./context/SocketProvider";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-      <SnackbarProvider
+        <SnackbarProvider
           maxSnack={1}
           anchorOrigin={{
             vertical: "bottom",
             horizontal: "center",
           }}
         >
-        <Router>
-          <App />
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 2000,
-            }}
-            reverseOrder={false}
-          />
-        </Router>
+          <Router>
+            <SocketProvider>
+              <App />
+            </SocketProvider>
+            <Toaster
+              position="top-center"
+              toastOptions={{
+                duration: 2000,
+              }}
+              reverseOrder={false}
+            />
+          </Router>
         </SnackbarProvider>
       </PersistGate>
     </Provider>

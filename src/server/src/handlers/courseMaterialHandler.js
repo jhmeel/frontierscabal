@@ -80,7 +80,7 @@ export const downloadCourseMaterialById = catchAsync(async (req, res, next) => {
       await courseMaterial.save();
 
       //update daily free count for freemium users
-      if (user.subscriptionDue !== false) {
+      if (Config.SUBSCRIPTION.ACTIVE && user.subscriptionDue !== false) {
         user.dailyFreeDownloadCount += 1;
         await user.save();
       }

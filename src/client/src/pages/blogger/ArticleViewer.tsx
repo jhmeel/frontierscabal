@@ -16,8 +16,6 @@ import {
   Button,
 } from "@mui/material";
 import {
-  Favorite,
-  FavoriteBorder,
   Comment as CommentIcon,
   Share,
   Edit,
@@ -31,7 +29,6 @@ import {
   getArticleDetails,
   searchArticleByCategory,
   clearErrors,
-  likeArticle,
 } from "../../actions/article";
 import HorizontalArticleItem from "../../components/horizontalArticleItem/HorizontalArticleItem";
 import Footer from "../../components/footer/Footer";
@@ -42,7 +39,9 @@ import { isOnline } from "../../utils";
 import axiosInstance from "../../utils/axiosInstance";
 import { RootState } from "../../store";
 import SpinLoader from "../../components/loaders/SpinLoader";
-import { closeSnackbar, enqueueSnackbar } from "notistack";
+import { useSocket } from "../../context/SocketProvider";
+import { ARTICLE } from "../../types";
+import { IconHeartFill } from "../../assets/icons";
 
 const StyledArticleViewer = styled(Box)(({ theme }) => ({
   minHeight: "100vh",
@@ -95,7 +94,7 @@ const AuthorInfo = styled(Box)({
 });
 
 const ArticleContent = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(3),
+  padding: theme.spacing(2),
   "& img": {
     maxWidth: "100%",
     height: "auto",
@@ -111,20 +110,17 @@ const ArticleTags = styled(Box)(({ theme }) => ({
 
 const ReactionBar = styled(Paper)(({ theme }) => ({
   position: "fixed",
-  bottom: theme.spacing(3),
-  left: "35%",
+  bottom: theme.spacing(4),
+  left: "40%",
   transform: "translateX(-50%)",
   display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: theme.spacing(1, 2),
-  borderRadius: 30,
-  zIndex: 1000,
-  transition: "opacity 0.3s ease-in-out",
-  "@media (max-width: 768px)": {
-    left: "10%",
-    transform: "translateX(-50%)",
-  },
+  gap: theme.spacing(2),
+  padding: theme.spacing(1),
+  background: "rgba(255, 255, 255, 0.95)",
+  backdropFilter: "blur(12px)",
+  borderRadius: theme.spacing(3),
+  border: "1px solid #ededed",
+  zIndex: 1000
 }));
 
 const RelatedArticles = styled(Box)(({ theme }) => ({
@@ -156,6 +152,7 @@ const ArticleViewer: React.FC = () => {
   const { slug } = useParams();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const socket = useSocket();
 
   const [liked, setLiked] = useState(false);
   const [commentOpen, setCommentOpen] = useState(false);
@@ -171,6 +168,42 @@ const ArticleViewer: React.FC = () => {
   const { articles: relatedArticles } = useSelector(
     (state: RootState) => state.articleSearch
   );
+  const [updatedArticle, setUpdatedArticle] = useState<any>(article);
+
+  useEffect(() => {
+    if (socket && updatedArticle?._id) {
+      socket.emit("join_article", updatedArticle._id);
+
+      socket.on("comment_added", (response: ARTICLE) => {
+        setUpdatedArticle(response);
+      });
+
+      socket.on("reply_added", (response: ARTICLE) => {
+        setUpdatedArticle(response);
+      });
+
+      socket.on("comment_deleted", (response: ARTICLE) => {
+        setUpdatedArticle(response);
+      });
+
+      socket.on("reply_deleted", (response: ARTICLE) => {
+        setUpdatedArticle(response);
+      });
+
+      socket.on("like_updated", (response: ARTICLE) => {
+        setUpdatedArticle(response);
+      });
+
+      return () => {
+        socket.emit("leaveArticleRoom", { articleId: article._id });
+        socket.off("comment_added");
+        socket.off("reply_added");
+        socket.off("comment_deleted");
+        socket.off("reply_deleted");
+        socket.off("like_updated");
+      };
+    }
+  }, [socket, article?._id, slug, dispatch]);
 
   useEffect(() => {
     if (articleError) {
@@ -216,15 +249,26 @@ const ArticleViewer: React.FC = () => {
   }, [handleScroll]);
 
   const handleLike = async () => {
-    const authToken = await getToken();
-    if (!authToken) {
+    if (!user?._id) {
       navigate("/login");
       return;
     }
     if (isOnline()) {
-      dispatch(likeArticle(authToken, article?._id) as any);
-      setLiked(!liked);
-      
+      if (socket && article?._id) {
+        socket.emit(
+          "toggle_like",
+          { articleId: article._id, userId: user._id },
+          (response: any) => {
+            if (response.success) {
+              setLiked(!liked);
+            } else {
+              toast.error(
+                response?.error || "Failed to update like, try again later"
+              );
+            }
+          }
+        );
+      }
     }
   };
 
@@ -232,8 +276,8 @@ const ArticleViewer: React.FC = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: article?.title,
-          text: article?.description,
+          title: updatedArticle?.title,
+          text: updatedArticle?.description,
           url: window.location.href,
         });
       } catch (error) {
@@ -249,7 +293,7 @@ const ArticleViewer: React.FC = () => {
       try {
         const authToken = await getToken();
         await axiosInstance(authToken).delete(
-          `/api/v1/article/${article?._id}`
+          `/api/v1/article/${updatedArticle?._id}`
         );
         toast.success("Article deleted successfully!");
       } catch (error) {
@@ -257,24 +301,21 @@ const ArticleViewer: React.FC = () => {
       }
     };
 
-    enqueueSnackbar("Are you sure you want to delete this article?", {
-      variant: "warning",
-      persist: true,
-      action: (key) => (
-        <>
-          <Button
-            onClick={() => {
-              proceed();
-              closeSnackbar(key);
-            }}
-            color="primary"
-          >
-            Confirm
-          </Button>
-          <Button onClick={() => closeSnackbar(key)}>Cancel</Button>
-        </>
-      ),
-    });
+    toast((t) => (
+      <div>
+        <p>{`Are you sure you want to delete ${updatedArticle?.title}?`}</p>
+        <Button
+          onClick={() => {
+            toast.dismiss(t.id);
+            proceed();
+          }}
+          color="primary"
+        >
+          Proceed
+        </Button>
+        <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+      </div>
+    ));
   };
 
   if (articleLoading) {
@@ -289,36 +330,39 @@ const ArticleViewer: React.FC = () => {
         animate={{ scaleX: scrollProgress }}
       />
       <ArticleHeader>
-        <HeaderImage src={article?.image?.url} alt={article?.title} />
+        <HeaderImage
+          src={updatedArticle?.image?.url}
+          alt={updatedArticle?.title}
+        />
         <ArticleInfo>
           <AuthorInfo>
             <Avatar
-              src={article?.postedBy?.avatar?.url}
-              alt={article?.postedBy?.username}
+              src={updatedArticle?.postedBy?.avatar?.url}
+              alt={updatedArticle?.postedBy?.username}
             />
             <Box>
               <Typography color="#fff" variant="subtitle2">
-                {article?.postedBy?.username}
+                {updatedArticle?.postedBy?.username}
               </Typography>
               <Typography color="#fff" variant="caption">
-                {moment(article?.createdAt).format("MMMM DD, YYYY")}
+                {moment(updatedArticle?.createdAt).format("MMMM DD, YYYY")}
               </Typography>
             </Box>
           </AuthorInfo>
-          <Chip label={article?.category} color="primary" size="small" />
+          <Chip label={updatedArticle?.category} color="primary" size="small" />
         </ArticleInfo>
       </ArticleHeader>
 
       <ArticleContent>
         <Typography variant="h1" fontSize={28} gutterBottom>
-          {article?.title}
+          {updatedArticle?.title}
         </Typography>
         <Typography
           variant="body1"
-          dangerouslySetInnerHTML={{ __html: article?.sanitizedHtml }}
+          dangerouslySetInnerHTML={{ __html: updatedArticle?.sanitizedHtml }}
         />
         <ArticleTags>
-          {article?.tags?.split(",").map((tag, index) => (
+          {updatedArticle?.tags?.split(",").map((tag, index) => (
             <Chip
               key={index}
               label={`#${tag.trim()}`}
@@ -339,24 +383,24 @@ const ArticleViewer: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3 }}
-            elevation={3}
+            elevation={1}
           >
             <IconButton
               onClick={handleLike}
               color={liked ? "secondary" : "default"}
-              sx={{ marginRight: 2, color: liked ? "crimson" : "inherit" }}
+              sx={{ marginRight: 2 }}
             >
               <Badge
-                badgeContent={FormattedCount(article?.likes?.length)}
+                badgeContent={FormattedCount(updatedArticle?.likes?.length)}
                 color="primary"
               >
-                {liked ? <Favorite /> : <FavoriteBorder />}
+                {<IconHeartFill fill={liked ? "crimson" : "gray"} />}
               </Badge>
             </IconButton>
 
             <IconButton onClick={() => setCommentOpen(true)}>
               <Badge
-                badgeContent={FormattedCount(article?.comments?.length)}
+                badgeContent={FormattedCount(updatedArticle?.comments?.length)}
                 color="primary"
               >
                 <CommentIcon />
@@ -365,11 +409,11 @@ const ArticleViewer: React.FC = () => {
             <IconButton onClick={handleShare} sx={{ marginLeft: 2 }}>
               <Share />
             </IconButton>
-            {article?.postedBy?.username === user?.username && (
+            {updatedArticle?.postedBy?.username === user?.username && (
               <>
                 <IconButton
                   onClick={() =>
-                    navigate(`/blog/article/update/${article?.slug}`)
+                    navigate(`/blog/article/update/${updatedArticle?.slug}`)
                   }
                   sx={{ marginLeft: 2 }}
                 >
@@ -384,7 +428,7 @@ const ArticleViewer: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {relatedArticles.length > 1 && (
+      {relatedArticles?.length > 1 && (
         <RelatedArticles>
           <Typography variant="h5" gutterBottom>
             You may also like
@@ -429,14 +473,13 @@ const ArticleViewer: React.FC = () => {
             <Close />
           </IconButton>
         </CommentDrawerHeader>
-        <Box sx={{ padding: 2, maxHeight: "60vh", overflow: "auto" }}>
-          <Comment
-            username={user?.username}
-            article={article}
-            comments={article?.comments}
-            onClose={() => setCommentOpen(false)}
-          />
-        </Box>
+
+        <Comment
+          username={user?.username}
+          article={updatedArticle}
+          comments={updatedArticle?.comments}
+          onClose={() => setCommentOpen(false)}
+        />
       </CommentDrawer>
     </StyledArticleViewer>
   );

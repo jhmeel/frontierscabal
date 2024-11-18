@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useSelector, useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
 import { styled } from "@mui/system";
 import {
   Avatar,
@@ -13,17 +13,15 @@ import {
   Button,
 } from "@mui/material";
 import {
+  CopyAllOutlined,
   Delete as DeleteIcon,
   MoreVert as MoreVertIcon,
 } from "@mui/icons-material";
 import moment from "moment";
 import { RootState } from "../../store";
-import { deleteReply, clearErrors } from "../../actions/article";
-import { DELETE_REPLY_RESET } from "../../constants/article";
 import emptyImage from "../../assets/images/empty_avatar.png";
-import { closeSnackbar, enqueueSnackbar } from "notistack";
-import getToken from "../../utils/getToken";
 import toast from "react-hot-toast";
+import { useSocket } from "../../context/SocketProvider";
 
 interface ReplyItemProps {
   articleId: string;
@@ -45,26 +43,10 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
   date,
 }) => {
   const { user } = useSelector((state: RootState) => state.user);
-  const dispatch = useDispatch();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  const {
-    error: deleteReplyError,
-    loading: deleteReplyLoading,
-    success: deleteReplySuccess,
-  } = useSelector((state: RootState) => state.deleteReply);
-
-  useEffect(() => {
-    if (deleteReplyError) {
-      toast.error("Error while deleting your reply... try again");
-      dispatch<any>(clearErrors());
-    }
-    if (deleteReplySuccess) {
-      toast.success("Reply deleted successfully");
-      dispatch({ type: DELETE_REPLY_RESET });
-      window.location.reload();
-    }
-  }, [dispatch, deleteReplyError, deleteReplySuccess]);
+  const [deleteReplyLoading, setDeleteReplyLoading] = useState(false);
+  const socket = useSocket();
+  const navigate = useNavigate()
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -75,28 +57,53 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
   };
 
   const removeReply = async () => {
+    if(!user?._id){
+      navigate("/login")
+      return
+    }
     handleMenuClose();
-    const authToken = await getToken();
-    enqueueSnackbar("Are you sure you want to remove your reply?", {
-      variant: "warning",
-      persist: true,
-      action: (key) => (
-        <>
-          <Button
-            onClick={() => {
-              dispatch<any>(
-                deleteReply(authToken, articleId, commentId, replyId)
+    toast((t) => (
+      <div>
+        <p>Are you sure you want to remove your reply?</p>
+        <Button
+          onClick={() => {
+            setDeleteReplyLoading(true);
+            if (socket) {
+              socket.emit(
+                "delete_reply",
+                { articleId, commentId, replyId },
+                (response: any) => {
+                  setDeleteReplyLoading(false);
+                  if (response.success) {
+                    toast.success("Removed successfully");
+                  } else {
+                    toast.error(
+                      response.error ||
+                        "Failed to remove reply, try again later"
+                    );
+                  }
+                }
               );
-              closeSnackbar(key);
-            }}
-            color="primary"
-          >
-            Confirm
-          </Button>
-          <Button onClick={() => closeSnackbar(key)}>Cancel</Button>
-        </>
-      ),
-    });
+            }
+
+            toast.dismiss(t.id);
+          }}
+          color="primary"
+        >
+          Confirm
+        </Button>
+        <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+      </div>
+    ));
+  };
+
+  const copyReply = async () => {
+    try {
+      await navigator.clipboard.writeText(replyText);
+      toast.success("Copied!");
+    } catch (error) {
+      console.error("Error copying text to clipboard:", error);
+    }
   };
 
   return (
@@ -105,8 +112,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
         <CircularProgress size={24} className="delete-loader" />
       )}
       <Box className="reply-container">
-        {(user?.username === replyerName ||
-          user?.role === "FC:SUPER:ADMIN") && (
+      
           <IconButton
             aria-label="more"
             className="reply-more-icon"
@@ -115,7 +121,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
           >
             <MoreVertIcon fontSize="small" />
           </IconButton>
-        )}
+      
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
@@ -125,10 +131,16 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
             style: { zIndex: 1500 },
           }}
         >
-          <MenuItem onClick={removeReply}>
-            <DeleteIcon fontSize="small" style={{ marginRight: "8px" }} />
-            Delete
+          <MenuItem onClick={copyReply}>
+            <CopyAllOutlined fontSize="small" style={{ marginRight: "8px" }} />
+            Copy text
           </MenuItem>
+          {user.username == replyerName && (
+            <MenuItem onClick={removeReply}>
+              <DeleteIcon fontSize="small" style={{ marginRight: "8px" }} />
+              Delete
+            </MenuItem>
+          )}
         </Menu>
 
         <Box display="flex" alignItems="center" className="user-info">

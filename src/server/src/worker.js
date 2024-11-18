@@ -1,9 +1,9 @@
 import { asyncRetry } from "./utils/retryAsync.js";
 import { logger } from "./utils/logger.js";
 import { Emitter } from "./utils/emitter.js";
-import { notifyforOngoingEvent } from "./handlers/webpushHandler.js";
 import { ErrorHandler } from "./handlers/errorHandler.js";
 import ViteExpress from "vite-express";
+import http from 'http';
 
 class Worker {
   constructor(app, config) {
@@ -15,15 +15,17 @@ class Worker {
     this.emitter = Emitter.getInstance();
     this.port = this.config.APP.PORT;
     this.app = app;
+    this.server = http.createServer(this.app);
   }
 
   initServer() {
-    ViteExpress.listen(this.app, this.port, () => {
+    ViteExpress.bind(this.app, this.server,  () => {
+     logger.debug("vite server initialized")
+    });
+    this.server.listen(this.port, ()=>{
       this.emitter.emit("SYSTEM:READY:STATE", "100");
       logger.info(`server running on port ${this.port}`);
-    });
-
-    notifyforOngoingEvent();
+    })
   }
 
   addDependency(dependencies) {
@@ -80,7 +82,13 @@ class Worker {
 
     try {
       for (const [name, dependency] of Object.entries(this.dependencies)) {
-        await asyncRetry(this.retries)(dependency.init());
+        if(name == "<SOCKET_PROVIDER>" ){
+          await asyncRetry(this.retries)(dependency.init(this.server));
+        }
+        else{
+          await asyncRetry(this.retries)(dependency.init());
+        }
+   
       }
       return this;
     } catch (error) {

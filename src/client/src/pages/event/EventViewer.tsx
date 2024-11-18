@@ -13,7 +13,7 @@ import {
   Chip,
   Divider,
   Avatar,
-  Badge
+  Button
 } from "@mui/material";
 import { styled } from "@mui/system";
 import {
@@ -31,6 +31,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import axiosInstance from "../../utils/axiosInstance";
 import getToken from "../../utils/getToken";
 import { RootState } from "../../store";
+import toast from "react-hot-toast";
 
 const EventWrapper = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(4),
@@ -105,11 +106,11 @@ const LocationChip = styled(Chip)(({ theme }) => ({
 const ActionBar = styled(motion.div)(({ theme }) => ({
   position: "fixed",
   bottom: theme.spacing(4),
-  left: "25%",
+  left: "40%",
   transform: "translateX(-50%)",
   display: "flex",
   gap: theme.spacing(2),
-  padding: theme.spacing(1,2),
+  padding: theme.spacing(1),
   background: "rgba(255, 255, 255, 0.95)",
   backdropFilter: "blur(12px)",
   borderRadius: theme.spacing(3),
@@ -165,6 +166,7 @@ const EventViewer = () => {
   }, [dispatch, error, slug]);
 
   const handleEventDelete = async () => {
+    const proceed = ()=>{
     setDeleteLoading(true);
     try {
       const authToken = await getToken();
@@ -180,6 +182,23 @@ const EventViewer = () => {
       setSnackbarMessage("Failed to delete event.");
       setSnackbarOpen(true);
     }
+  }
+
+  toast((t) => (
+    <div>
+      <p>{`Are you sure you want to delete ${event?.title}?`}</p>
+      <Button
+        onClick={() => {
+          toast.dismiss(t.id);
+          proceed();
+        }}
+        color="primary"
+      >
+        Proceed
+      </Button>
+      <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+    </div>
+  ));
   };
 
   const handleEventShare = async () => {

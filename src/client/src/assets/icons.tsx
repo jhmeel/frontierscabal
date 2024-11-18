@@ -1250,8 +1250,8 @@ export const clapIcon = (props: React.SVGProps<SVGSVGElement>) => {
 export const IconHeartFill = (props: React.SVGProps<SVGSVGElement>) => {
   return (
     <svg
-      height=""
-      width="18"
+      height="24"
+      width="24"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
       {...props}

@@ -79,7 +79,7 @@ const StudyMaterialItem = ({
 
   useEffect(() => {
     if (error) {
-      enqueueSnackbar(error, { variant: "error" });
+      toast.error(error);
       dispatch<any>(clearErrors());
     } else if (success) {
       toast.success("Deleted successfully!");
@@ -137,37 +137,33 @@ const StudyMaterialItem = ({
         user?.username === postedBy?.username ||
         user?.role === "FC:SUPER:ADMIN"
       ) {
-        enqueueSnackbar(`Are you sure you want to Delete ${courseTitle}`, {
-          variant: "info",
-          persist: true,
-          action: (key) => (
-            <>
-              <button
-                className="snackbar-btn"
-                onClick={() => {
-                  if (type === "PQ") {
-                    toast.dismiss("confirmation-toast");
-                    DeletePq();
-                  } else {
-                    toast.dismiss("confirmation-toast");
-                    deleteCourseMaterial();
-                  }
-                }}
-              >
-                Proceed
-              </button>
-              <button
-                className="snackbar-btn"
-                onClick={() => {
-                  closeSnackbar();
-                  handleViewDocument();
-                }}
-              >
-                No
-              </button>
-            </>
-          ),
-        });
+        toast((t) => (
+          <div>
+            <p>{`Are you sure you want to Delete ${courseTitle}`}</p>
+            <Button
+              onClick={() => {
+                if (type === "PQ") {
+                  toast.dismiss(t.id);
+                  DeletePq();
+                } else {
+                  toast.dismiss(t.id);
+                  deleteCourseMaterial();
+                }
+              }}
+              color="primary"
+            >
+              Proceed
+            </Button>
+            <Button
+              onClick={() => {
+                toast.dismiss(t.id);
+                handleViewDocument();
+              }}
+            >
+              View document
+            </Button>
+          </div>
+        ));
       } else {
         handleViewDocument();
       }
@@ -184,32 +180,27 @@ const StudyMaterialItem = ({
 
   useEffect(() => {
     if (detailsError) {
-      enqueueSnackbar(detailsError, { variant: "error" });
+      toast.error(detailsError);
       dispatch<any>(clearUserError());
     }
   }, [dispatch, detailsError]);
 
   const showAuthDialogue = () => {
-    enqueueSnackbar("Please signup to complete your action!", {
-      variant: "info",
-      persist: true,
-      action: (key) => (
-        <>
-          <button
-            className="snackbar-btn"
-            onClick={() => {
-              closeSnackbar();
-              navigate("/signup");
-            }}
-          >
-            Signup
-          </button>
-          <button className="snackbar-btn" onClick={() => closeSnackbar()}>
-            Cancel
-          </button>
-        </>
-      ),
-    });
+    toast((t) => (
+      <div>
+        <p>Please signup to complete your action!</p>
+        <Button
+          onClick={() => {
+            toast.dismiss(t.id);
+            navigate("/signup");
+          }}
+          color="primary"
+        >
+          Signup
+        </Button>
+        <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+      </div>
+    ));
   };
 
   useEffect(() => {
@@ -231,10 +222,12 @@ const StudyMaterialItem = ({
   };
   const handleDownload = async () => {
     try {
+      const authToken = await getToken();
       if (!isOnline()) {
-        enqueueSnackbar("Check your internet connection and try again!!", {
-          variant: "error",
-        });
+        toast.error("Check your internet connection and try again!!");
+        return;
+      } else if (!authToken) {
+        showAuthDialogue();
         return;
       }
       setDownloadLoading(true);
@@ -247,7 +240,7 @@ const StudyMaterialItem = ({
           ? `/api/v1/past-question/download/${_id}`
           : `/api/v1/course-material/download/${_id}`;
 
-      const response = await axiosInstance().get(endpoint, {
+      const response = await axiosInstance(authToken).get(endpoint, {
         responseType: "blob",
         onDownloadProgress: (progressEvent) => {
           const percentCompleted = Math.round(
@@ -266,7 +259,7 @@ const StudyMaterialItem = ({
       setDownloadLoading(false);
     } catch (err) {
       if (!axios.isCancel(err)) {
-        enqueueSnackbar(errorParser(err), { variant: "error" });
+        toast.error(errorParser(err));
         setDownloadStatus("Failed");
       }
       setDownloadLoading(false);
@@ -299,7 +292,14 @@ const StudyMaterialItem = ({
             className="pq-dowload-icon"
           >
             {downloadLoading ? (
-              <div className="circular-progress">
+              <div
+                className="circular-progress"
+                onDoubleClick={() => {
+                  if (downloadStatus === `Downloading`) {
+                    handleCancel();
+                  }
+                }}
+              >
                 <CircularProgressbar
                   value={downloadProgress}
                   text={`${downloadProgress}%`}

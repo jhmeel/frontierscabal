@@ -1,9 +1,9 @@
-import { User} from "../models/userModel.js";
-import { Article} from "../models/articleModel.js";
+import { User } from "../models/userModel.js";
+import { Article } from "../models/articleModel.js";
 import catchAsync from "../middlewares/catchAsync.js";
-import {ErrorHandler} from "../handlers/errorHandler.js";
+import { ErrorHandler } from "../handlers/errorHandler.js";
 import cloudinary from "cloudinary";
-import {generateNotification} from "../utils/notificationGen.js";
+import { generateNotification } from "../utils/notificationGen.js";
 import { notifyAll, notifyUser } from "./webpushHandler.js";
 import { marked } from "marked";
 import slugify from "slugify";
@@ -56,43 +56,38 @@ export const newArticle = catchAsync(async (req, res, next) => {
 });
 
 // Like or Unlike Article
-export const likeUnlikeArticle = catchAsync(async (req, res, next) => {
-  const article = await Article.findById(req.params.id).populate("postedBy");
+export const toggleLike = async (articleId, userId) => {
+  const article = await Article.findById(articleId)
+    .populate("postedBy")
+    .populate({ path: "comments.user", model: "User" })
+    .populate({ path: "comments.comment.replies.user", model: "User" })
+    .exec()
 
   if (!article) {
-    return next(new ErrorHandler("Article Not Found", 404));
+    throw new ErrorHandler("Article Not Found", 404);
   }
 
-  const userId = req.user?._id.toString();
+  const user = await User.findById(userId);
   const isLiked = article.likes.includes(userId);
 
   if (isLiked) {
     article.likes.pull(userId);
     await article.save();
-
-    res.status(200).json({
-      success: true,
-      message: "Article Unliked",
-    });
   } else {
     article.likes.push(userId);
     await article.save();
 
-    res.status(200).json({
-      success: true,
-      message: "Article Liked",
-    });
-
     const notPayload = generateNotification("ARTICLE:LIKE", {
       title: article?.title,
       image: article?.image,
-      avatar: req?.user?.avatar,
+      avatar: user?.avatar?.url,
       slug: article?.slug,
-      username: req?.user.username,
+      username: user.username,
     });
     notifyUser(article.postedBy?.username, notPayload);
   }
-});
+  return article;
+};
 
 // Delete Article
 export const deleteArticle = catchAsync(async (req, res, next) => {
@@ -180,22 +175,20 @@ export const updateArticle = catchAsync(async (req, res, next) => {
 });
 
 // Add Comment
-export const newComment = catchAsync(async (req, res, next) => {
-  const article = await Article.findById(req.params.articleId).populate(
-    "postedBy"
-  );
+export const newComment = async (articleId, userId, commentText) => {
+  const article = await Article.findById(articleId)
 
   if (!article) {
-    return next(new ErrorHandler("Article Not Found", 404));
+    throw new ErrorHandler("Article Not Found", 404);
   }
 
-  const userId = req.user._id;
+  const user = await User.findById(userId);
 
   const newComment = {
     user: userId,
     comment: [
       {
-        commentText: req.body.commentText,
+        commentText,
         date: new Date(),
         replies: [],
       },
@@ -206,64 +199,66 @@ export const newComment = catchAsync(async (req, res, next) => {
 
   await article.save();
 
-  res.status(200).json({
-    success: true,
-    message: "Comment Added",
-  });
+  const updatedArticle = await Article.findById(articleId)
+  .populate("postedBy")
+  .populate({ path: "comments.user", model: "User" })
+  .populate({ path: "comments.comment.replies.user", model: "User" })
+  .exec();
+
   const notPayload = generateNotification("ARTICLE:COMMENT", {
     title: article?.title,
     image: article?.image,
-    avatar: req?.user?.avatar,
+    avatar: user?.avatar?.url,
     slug: article?.slug,
-    username: req?.user.username,
+    username: user.username,
   });
   notifyUser(article.postedBy?.username, notPayload);
-});
+
+  return updatedArticle;
+};
 
 //Delete comment
-export const deleteComment = catchAsync(async (req, res, next) => {
-  const article = await Article.findById(req.params.articleId);
+export const deleteComment = async (articleId, userId, commentId) => {
+  const article = await Article.findById(articleId)
+    .populate("postedBy")
+    .populate({ path: "comments.user", model: "User" })
+    .populate({ path: "comments.comment.replies.user", model: "User" })
+    .exec();
 
   if (!article) {
-    return next(new ErrorHandler("Article Not Found", 404));
+    throw new ErrorHandler("Article Not Found", 404);
   }
   const superAdmin = await User.findOne({ role: "FC:SUPER:ADMIN" });
-  if (
-    article.postedBy.toString() !== req?.user._id.toString() &&
-    req.user._id.toString() !== superAdmin._id.toString()
-  ) {
-    return next(new ErrorHandler("Unauthorize"));
-  }
 
-  const commentId = req.params.commentId;
   const commentIndex = article.comments.findIndex(
     (comment) => comment._id.toString() === commentId
   );
 
   if (commentIndex === -1) {
-    return next(new ErrorHandler("Comment Not Found", 404));
+    throw new ErrorHandler("Comment Not Found", 404);
+  }
+
+  if (
+    article.comments[commentIndex]["user"]?._id.toString() !== userId &&
+    userId !== superAdmin._id.toString()
+  ) {
+    throw new ErrorHandler("Unauthorize");
   }
 
   // Delete the comment from the 'comments' array.
   article.comments.splice(commentIndex, 1);
 
   await article.save();
-
-  return res.status(200).json({
-    success: true,
-    message: "Comment Deleted",
-  });
-});
+  return article;
+};
 
 //Add reply
-export const addReply = catchAsync(async (req, res, next) => {
-  const article = await Article.findById(req.params.articleId);
+export const addReply = async (articleId, commentId, userId, replyText) => {
+  const article = await Article.findById(articleId)
 
   if (!article) {
-    return next(new ErrorHandler("Article Not Found", 404));
+    throw new ErrorHandler("Article Not Found", 404);
   }
-
-  const commentId = req.params.commentId;
 
   // Find the index of the comment to add a reply to in the 'comments' array.
   const commentIndex = article.comments.findIndex(
@@ -271,14 +266,12 @@ export const addReply = catchAsync(async (req, res, next) => {
   );
 
   if (commentIndex === -1) {
-    return next(new ErrorHandler("Comment Not Found", 404));
+    throw new ErrorHandler("Comment Not Found", 404);
   }
-
-  const userId = req.user._id.toString();
 
   const newReply = {
     user: userId,
-    replyText: req.body.replyText,
+    replyText,
   };
 
   // Push the new reply to the 'replies' array of the comment.
@@ -286,22 +279,26 @@ export const addReply = catchAsync(async (req, res, next) => {
 
   await article.save();
 
-  return res.status(200).json({
-    success: true,
-    message: "Reply Added",
-  });
-});
+  const updatedArticle = await Article.findById(articleId)
+  .populate("postedBy")
+  .populate({ path: "comments.user", model: "User" })
+  .populate({ path: "comments.comment.replies.user", model: "User" })
+  .exec();
+
+  return updatedArticle;
+};
 
 //Delte reply
-export const deleteReply = catchAsync(async (req, res, next) => {
-  const article = await Article.findById(req.params.articleId);
+export const deleteReply = async (articleId, commentId, replyId) => {
+  const article = await Article.findById(articleId)
+    .populate("postedBy")
+    .populate({ path: "comments.user", model: "User" })
+    .populate({ path: "comments.comment.replies.user", model: "User" })
+    .exec();
 
   if (!article) {
-    return next(new ErrorHandler("Article Not Found", 404));
+    throw new ErrorHandler("Article Not Found", 404);
   }
-
-  const commentId = req.params.commentId;
-  const replyId = req.params.replyId;
 
   // Find the index of the comment containing the reply in the 'comments' array.
   const commentIndex = article.comments.findIndex(
@@ -309,7 +306,7 @@ export const deleteReply = catchAsync(async (req, res, next) => {
   );
 
   if (commentIndex === -1) {
-    return next(new ErrorHandler("Comment Not Found", 404));
+    throw new ErrorHandler("Comment Not Found", 404);
   }
 
   // Find the index of the reply in the 'replies' array of the comment.
@@ -318,19 +315,16 @@ export const deleteReply = catchAsync(async (req, res, next) => {
   ].comment[0].replies.findIndex((reply) => reply._id.toString() === replyId);
 
   if (replyIndex === -1) {
-    return next(new ErrorHandler("Reply Not Found", 404));
+    throw new ErrorHandler("Reply Not Found", 404);
   }
-
+ 
   // Delete the reply from the 'replies' array of the comment.
   article.comments[commentIndex].comment[0].replies.splice(replyIndex, 1);
 
   await article.save();
 
-  return res.status(200).json({
-    success: true,
-    message: "Reply Deleted",
-  });
-});
+  return article;
+};
 
 // Get Article Details
 export const getArticleDetails = catchAsync(async (req, res, next) => {

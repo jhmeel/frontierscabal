@@ -16,6 +16,7 @@ CourseMaterial.route("/course-material/new").post(
 );
 
 CourseMaterial.route("/course-material/download/:id").get(
+  authenticator,
   downloadCourseMaterialById
 );
 

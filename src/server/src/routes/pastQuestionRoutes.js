@@ -21,6 +21,7 @@ PastQuestion.route("/past-question/new").post(
 );
 
 PastQuestion.route("/past-question/download/:id").get(
+  authenticator,
   downloadPastQuestionById
 );
 
@@ -30,6 +31,7 @@ PastQuestion.route("/past-question/:id").delete(
 );
 
 PastQuestion.route("/past-question/detail/:pastQuestionId").get(
+  authenticator,
   pastQuestionDetails
 );
 
@@ -49,4 +51,4 @@ PastQuestion.route("/past-question/search/CTAS").get(
 PastQuestion.route("/past-question/search/title").get(searchByCourseTitle);
 //GET /search?categories=anatomy,biochemistry,physics&page=1
 PastQuestion.route("/past-question/search/recent").get(getMostRecents);
-export { PastQuestion};
+export { PastQuestion };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Container,
   Typography,
@@ -11,80 +11,80 @@ import {
   IconButton,
   Chip,
   Grid,
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
 import {
   Search as SearchIcon,
   History as HistoryIcon,
   Refresh as RefreshIcon,
-} from '@mui/icons-material';
-import axiosInstance from '../../utils/axiosInstance';
-import toast from 'react-hot-toast';
-import SpinLoader from '../../components/loaders/SpinLoader';
-import UserItem from '../../components/userItem/UserItem';
-import HorizontalArticleItem from '../../components/horizontalArticleItem/HorizontalArticleItem';
-import StudyMaterialItem from '../../components/studyMaterialItem/StudyMaterialItem';
-import Footer from '../../components/footer/Footer';
-import { useParams } from 'react-router-dom';
+} from "@mui/icons-material";
+import axiosInstance from "../../utils/axiosInstance";
+import toast from "react-hot-toast";
+import SpinLoader from "../../components/loaders/SpinLoader";
+import UserItem from "../../components/userItem/UserItem";
+import HorizontalArticleItem from "../../components/horizontalArticleItem/HorizontalArticleItem";
+import StudyMaterialItem from "../../components/studyMaterialItem/StudyMaterialItem";
+import Footer from "../../components/footer/Footer";
+import { useParams } from "react-router-dom";
+import EventItem from "../../components/eventItem/EventItem";
 
 const SearchContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(8),
   marginBottom: theme.spacing(2),
-  
 }));
 
 const SearchBar = styled(TextField)(({ theme }) => ({
   marginBottom: theme.spacing(2),
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '30px',
-    '&.Mui-focused fieldset': {
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "30px",
+    "&.Mui-focused fieldset": {
       borderColor: theme.palette.primary.main,
-      borderWidth: '2px',
+      borderWidth: "2px",
     },
   },
 }));
 
 const HistoryPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
-  borderRadius: '16px',
-  border:'1px solid #ededed'
+  borderRadius: "16px",
+  border: "1px solid #ededed",
 }));
 
 const TrendingPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
-  borderRadius: '16px',
-  border:'1px solid #ededed',
+  borderRadius: "16px",
+  border: "1px solid #ededed",
   backgroundColor: theme.palette.primary.light,
 }));
 
 const StyledChip = styled(Chip)(({ theme }) => ({
   margin: theme.spacing(0.5),
   fontWeight: 500,
-  '&:hover': {
+  "&:hover": {
     backgroundColor: theme.palette.primary.main,
     color: theme.palette.common.white,
   },
 }));
 
 const Search = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [searchHistory, setSearchHistory] = useState([]);
   const [trendingTopics] = useState([
-    'AI Ethics',
-    'Quantum Computing',
-    'Climate Change',
-    'Space Tourism',
-    'Blockchain',
+    "AI Ethics",
+    "Quantum Computing",
+    "Climate Change",
+    "Space Tourism",
+    "Blockchain",
   ]);
   const [loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState<any>(null);
   const { query } = useParams();
 
   useEffect(() => {
-    const history = JSON.parse(localStorage.getItem('searchHistory')) || [];
+    const history = JSON.parse(localStorage.getItem("searchHistory")) || [];
     setSearchHistory(history);
 
-    setSearchTerm(query)
+    setSearchTerm(query);
   }, []);
 
   const handleSearch = async (event) => {
@@ -92,11 +92,13 @@ const Search = () => {
     if (searchTerm.trim()) {
       const updatedHistory = [searchTerm, ...searchHistory.slice(0, 4)]; // Show only top 5
       setSearchHistory(updatedHistory);
-      localStorage.setItem('searchHistory', JSON.stringify(updatedHistory));
+      localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
 
       try {
         setLoading(true);
-        const { data } = await axiosInstance().get(`/api/v1/search-cabal?q=${searchTerm}`);
+        const { data } = await axiosInstance().get(
+          `/api/v1/search-cabal?q=${searchTerm}`
+        );
         setLoading(false);
         setSearchResult(data);
       } catch (err: any) {
@@ -108,13 +110,18 @@ const Search = () => {
 
   const handleClearHistory = () => {
     setSearchHistory([]);
-    localStorage.removeItem('searchHistory');
+    localStorage.removeItem("searchHistory");
   };
 
   return (
     <>
       <SearchContainer maxWidth="lg">
-        <Typography variant="h6" gutterBottom align="center" sx={{ fontWeight: 700, mb: 4 }}>
+        <Typography
+          variant="h6"
+          gutterBottom
+          align="center"
+          sx={{ fontWeight: 700, mb: 4 }}
+        >
           Explore Frontierscabal
         </Typography>
 
@@ -122,7 +129,7 @@ const Search = () => {
           <SearchBar
             fullWidth
             variant="outlined"
-            size='small'
+            size="small"
             placeholder="What are you curious about today?"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -142,19 +149,30 @@ const Search = () => {
           <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
               <HistoryPaper elevation={3}>
-                <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{ display: "flex", alignItems: "center" }}
+                >
                   <HistoryIcon sx={{ mr: 1 }} /> Recent Searches
                   {searchHistory.length > 0 && (
-                    <IconButton onClick={handleClearHistory} size="small" sx={{ ml: 'auto' }}>
+                    <IconButton
+                      onClick={handleClearHistory}
+                      size="small"
+                      sx={{ ml: "auto" }}
+                    >
                       <RefreshIcon />
                     </IconButton>
                   )}
                 </Typography>
                 {searchHistory.length > 0 ? (
                   <List>
-                    {searchHistory.slice(0, 5).map((term, index) => ( 
-                      
-                      <ListItem button key={index} onClick={() => setSearchTerm(term)}>
+                    {searchHistory.slice(0, 5).map((term, index) => (
+                      <ListItem
+                        button
+                        key={index}
+                        onClick={() => setSearchTerm(term)}
+                      >
                         <ListItemText primary={term} />
                       </ListItem>
                     ))}
@@ -199,7 +217,11 @@ const Search = () => {
                 </Grid>
                 {searchResult?.users.map((usr: any, i: number) => (
                   <Grid item xs={12} sm={6} md={6} key={i}>
-                    <UserItem username={usr?.username} bio={usr?.bio} img={usr?.avatar?.url} />
+                    <UserItem
+                      username={usr?.username}
+                      bio={usr?.bio}
+                      img={usr?.avatar?.url}
+                    />
                   </Grid>
                 ))}
               </>
@@ -272,7 +294,31 @@ const Search = () => {
                       session={cm?.session}
                       downloads={cm?.downloads}
                       postedBy={cm?.postedBy}
-                      type='CM'
+                      type="CM"
+                    />
+                  </Grid>
+                ))}
+              </>
+            )}
+
+            {/* Render Events */}
+            {searchResult?.events?.length > 0 && (
+              <>
+                <Grid item xs={12}>
+                  <Typography variant="h5" gutterBottom>
+                    Events
+                  </Typography>
+                </Grid>
+                {searchResult?.events.map((eve: any, i: number) => (
+                  <Grid item xs={12} sm={6} md={6} key={i}>
+                    <EventItem
+                      key={i}
+                      id={eve?._id}
+                      slug={eve?.slug}
+                      title={eve?.title}
+                      avatar={eve?.avatar.url}
+                      category={eve?.category}
+                      createdBy={eve?.createdBy}
                     />
                   </Grid>
                 ))}

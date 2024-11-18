@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "react-hot-toast";
-import { enqueueSnackbar, closeSnackbar } from "notistack";
 import {
   FaBookmark,
   FaRegBookmark,
@@ -22,6 +21,7 @@ import { RootState } from "../../store";
 import defaultImage from "../../assets/images/group_study.svg";
 import emptyAvatar from "../../assets/images/empty_avatar.png";
 import { MoreVert } from "@mui/icons-material";
+import { Button } from "@mui/material";
 
 const HorizontalArticleItem = ({
   id,
@@ -43,7 +43,7 @@ const HorizontalArticleItem = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [bookmarkLoading, setBookmarkLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const { user } = useSelector((state) => state.user);
+  const { user } = useSelector((state:RootState) => state.user);
 
   const menuRef = useRef(null);
 
@@ -97,16 +97,21 @@ const HorizontalArticleItem = ({
   };
 
   const showAuthDialogue = () => {
-    enqueueSnackbar("Please signup to complete your action!", {
-      variant: "info",
-      persist: true,
-      action: (key) => (
-        <>
-          <Button onClick={() => navigate("/signup")}>Signup</Button>
-          <Button onClick={() => closeSnackbar(key)}>Cancel</Button>
-        </>
-      ),
-    });
+    toast((t) => (
+      <div>
+        <p>Please signup to complete your action!</p>
+        <Button
+          onClick={() => {
+            toast.dismiss(t.id);
+            navigate("/signup");
+          }}
+          color="primary"
+        >
+          Signup
+        </Button>
+        <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+      </div>
+    ));
   };
 
   const handlePinToggle = async () => {
@@ -143,16 +148,21 @@ const HorizontalArticleItem = ({
   };
 
   const showDeleteConfirmation = () => {
-    enqueueSnackbar(`Are you sure you want to delete ${title}?`, {
-      variant: "info",
-      persist: true,
-      action: (key) => (
-        <>
-          <Button onClick={handleDelete}>Proceed</Button>
-          <Button onClick={() => closeSnackbar(key)}>Cancel</Button>
-        </>
-      ),
-    });
+    toast((t) => (
+      <div>
+        <p>{`Are you sure you want to delete ${title}?`}</p>
+        <Button
+          onClick={() => {
+            toast.dismiss(t.id);
+            handleDelete();
+          }}
+          color="primary"
+        >
+          Proceed
+        </Button>
+        <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+      </div>
+    ));
   };
 
   return (
@@ -209,7 +219,9 @@ const HorizontalArticleItem = ({
           </Bookmark>
         )}
         <Link to={`/blog/article/${slug}`}>
-          <Title>{title?.length > 60 ? `${title.slice(0, 60)}...` : title}</Title>
+          <Title>
+            {title?.length > 60 ? `${title.slice(0, 60)}...` : title}
+          </Title>
         </Link>
         <Description
           dangerouslySetInnerHTML={{
@@ -227,7 +239,9 @@ const HorizontalArticleItem = ({
             </Username>
           </Author>
           <Duration>
-            {readDuration === "less than a minute read" ? "1 min read" : readDuration}
+            {readDuration === "less than a minute read"
+              ? "1 min read"
+              : readDuration}
           </Duration>
         </Metadata>
       </Content>

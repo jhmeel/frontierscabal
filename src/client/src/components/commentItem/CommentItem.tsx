@@ -1,5 +1,5 @@
-import React, { useEffect, useState, ChangeEvent } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useState, ChangeEvent, useEffect } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { styled } from "@mui/system";
 import {
@@ -18,24 +18,15 @@ import {
   ExpandMore as ExpandMoreIcon,
   Reply as ReplyIcon,
   MoreVert as MoreVertIcon,
+  CopyAllOutlined,
 } from "@mui/icons-material";
 import moment from "moment";
-import { RootState } from "../../store";
-import {
-  deleteComment,
-  addCommentReply,
-  clearErrors,
-} from "../../actions/article";
-import {
-  DELETE_COMMENT_RESET,
-  NEW_COMMENT_REPLY_RESET,
-} from "../../constants/article";
 import { FormattedCount } from "../../utils/formatter";
 import emptyImage from "../../assets/images/empty_avatar.png";
+import { useSocket } from "../../context/SocketProvider";
 import ReplyItem from "../replyItem/ReplyItem";
-import { closeSnackbar, enqueueSnackbar } from "notistack";
-import getToken from "../../utils/getToken";
 import toast from "react-hot-toast";
+import { RootState } from "../../store";
 
 interface Reply {
   _id: string;
@@ -71,48 +62,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
   replies,
 }) => {
   const { user } = useSelector((state: RootState) => state.user);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const [showReply, setShowReply] = useState(false);
   const [replyInputedText, setReplyInputedText] = useState("");
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-  const {
-    error: deleteCommentError,
-    loading: deleteCommentLoading,
-    success: deleteCommentSuccess,
-  } = useSelector((state: RootState) => state.deleteComment);
-
-  const {
-    error: replyError,
-    loading: replyLoading,
-    success: replySuccess,
-  } = useSelector((state: RootState) => state.newCommentReply);
-
-  useEffect(() => {
-    if (replyError) {
-      toast.error("Error, try again...");
-      dispatch<any>(clearErrors());
-    }
-    if (replySuccess) {
-      toast.success("Replied successfully!");
-      dispatch({ type: NEW_COMMENT_REPLY_RESET });
-      window.location.reload();
-    }
-  }, [dispatch, replyError, replySuccess]);
-
-  useEffect(() => {
-    if (deleteCommentError) {
-      toast.error("Error while deleting your comment... try again");
-      dispatch<any>(clearErrors());
-    }
-    if (deleteCommentSuccess) {
-      toast.success("Comment deleted!");
-      dispatch({ type: DELETE_COMMENT_RESET });
-      window.location.reload();
-    }
-  }, [dispatch, deleteCommentError, deleteCommentSuccess]);
+  const [deletingComment, setDeletingComment] = useState(false);
+  const [replyLoading, setReplyLoading] = useState(false);
+  const socket = useSocket();
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -123,47 +79,58 @@ const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   const showAuthDialogue = () => {
-    enqueueSnackbar("Please signup to complete your action!", {
-      variant: "info",
-      persist: true,
-      action: (key) => (
-        <>
-          <Button
-            onClick={() => {
-              closeSnackbar(key);
-              navigate("/signup");
-            }}
-            color="primary"
-          >
-            Signup
-          </Button>
-          <Button onClick={() => closeSnackbar(key)}>Cancel</Button>
-        </>
-      ),
-    });
+    toast((t) => (
+      <div>
+        <p>Please signup to complete your action!</p>
+        <Button
+          onClick={() => {
+            toast.dismiss(t.id);
+            navigate("/signup");
+          }}
+          color="primary"
+        >
+          Signup
+        </Button>
+        <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+      </div>
+    ));
   };
 
-  const removeComment = async () => {
+  const removeComment = () => {
     handleMenuClose();
-    const authToken = await getToken();
-    enqueueSnackbar("Are you sure you want to remove your comment?", {
-      variant: "warning",
-      persist: true,
-      action: (key) => (
-        <>
-          <Button
-            onClick={() => {
-              dispatch<any>(deleteComment(authToken, articleId, commentId));
-              closeSnackbar(key);
-            }}
-            color="primary"
-          >
-            Confirm
-          </Button>
-          <Button onClick={() => closeSnackbar(key)}>Cancel</Button>
-        </>
-      ),
-    });
+    toast((t) => (
+      <div>
+        <p>Are you sure you want to delete this comment?</p>
+        <Button
+          onClick={() => {
+            setDeletingComment(true);
+            if (socket) {
+              socket.emit(
+                "delete_comment",
+                { articleId, commentId, userId: user._id },
+                (response: any) => {
+                  setDeletingComment(false);
+                  if (response.success) {
+                    toast.success("Comment deleted successfully");
+                  } else {
+                    toast.error(
+                      response.error ||
+                        "Failed to delete comment, try again later"
+                    );
+                  }
+                }
+              );
+            }
+
+            toast.dismiss(t.id);
+          }}
+          color="primary"
+        >
+          Confirm
+        </Button>
+        <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+      </div>
+    ));
   };
 
   const handleShowReply = () => {
@@ -175,53 +142,74 @@ const CommentItem: React.FC<CommentItemProps> = ({
   };
 
   const handleReply = async () => {
-    const authToken = await getToken();
-    if (!authToken) {
+    if (!user?._id) {
       showAuthDialogue();
       return;
     }
-    dispatch<any>(
-      addCommentReply(authToken, articleId, commentId, replyInputedText)
-    );
+    setReplyLoading(true);
+
+    if (socket && commentId && replyInputedText) {
+      socket.emit(
+        "new_reply",
+        {
+          articleId,
+          commentId,
+          userId: user._id,
+          replyText: replyInputedText.trim(),
+        },
+        (response: any) => {
+          setReplyLoading(false);
+          if (response.success) {
+            toast.success("Reply added!");
+            setReplyInputedText("");
+          } else {
+            toast.error(
+              response?.error || "Failed to add reply, try again later."
+            );
+          }
+        }
+      );
+    }
+  };
+  const copyComment = async () => {
+    try {
+      await navigator.clipboard.writeText(comment);
+      toast.success("Copied!");
+    } catch (error) {
+      console.error("Error copying text to clipboard:", error);
+    }
   };
 
   return (
     <StyledCommentItem>
-      {deleteCommentLoading && (
+      {deletingComment && (
         <CircularProgress size={24} className="delete-loader" />
       )}
       <Box className="comment-container">
-        {(user?.username === commenterName ||
-          user?.role === "FC:SUPER:ADMIN") && (
-          <IconButton
-            aria-label="more"
-            className="comment-more-icon"
-            onClick={handleMenuOpen}
-            size="small"
-          >
-            <MoreVertIcon fontSize="small" />
-          </IconButton>
-        )}
+        <IconButton
+          aria-label="more"
+          className="comment-more-icon"
+          onClick={handleMenuOpen}
+          size="small"
+        >
+          <MoreVertIcon fontSize="small" />
+        </IconButton>
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={handleMenuClose}
-          disablePortal
-          PaperProps={{
-            style: { zIndex: 1500 },
-          }}
         >
-          <MenuItem onClick={removeComment}>
-            <DeleteIcon fontSize="small" style={{ marginRight: "8px" }} />
-            Delete
+          <MenuItem onClick={copyComment}>
+            <CopyAllOutlined fontSize="small" style={{ marginRight: "8px" }} />
+            Copy text
           </MenuItem>
+          {commenterName === user?.username && (
+            <MenuItem onClick={removeComment}>
+              <DeleteIcon fontSize="small" style={{ marginRight: "8px" }} />
+              Delete
+            </MenuItem>
+          )}
         </Menu>
-
-        {commenterName === ownersName && user?.username !== commenterName && (
-          <Typography variant="caption" className="comment-owner-tag">
-            Author
-          </Typography>
-        )}
 
         <Box display="flex" alignItems="center" className="user-info">
           <Avatar
@@ -231,14 +219,19 @@ const CommentItem: React.FC<CommentItemProps> = ({
           />
           <Box ml={1}>
             <Typography
+            mr={1}
               variant="subtitle2"
               component={Link}
               to={`/profile/${commenterName}`}
               className="commenter-name"
             >
-              @{commenterName}
+              {commenterName === ownersName ? `@Owner` : `@${commenterName}`}
             </Typography>
-            <Typography variant="caption" color="textSecondary">
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              className="comment-date"
+            >
               {moment(date).fromNow()}
             </Typography>
           </Box>
@@ -301,7 +294,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                 startIcon={
                   replyLoading ? <CircularProgress size={16} /> : <ReplyIcon />
                 }
-                disabled={replyLoading}
+                disabled={replyLoading || !replyInputedText.trim()}
               >
                 Reply
               </Button>

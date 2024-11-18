@@ -525,7 +525,9 @@ const Home: React.FC = () => {
                   value={currentEventSelection}
                   variant="scrollable"
                   scrollButtons="auto"
-                  onChange={(e, selectedCatg)=> setCurrentEventSelection(selectedCatg)}
+                  onChange={(e, selectedCatg) =>
+                    setCurrentEventSelection(selectedCatg)
+                  }
                 >
                   {["Ongoing Events", "Upcoming Events"].map((category) => (
                     <Tab key={category} label={category} value={category} />
@@ -533,7 +535,7 @@ const Home: React.FC = () => {
                 </Tabs>
               </Box>
               <ViewMoreButton
-              size={`small`}
+                size={`small`}
                 endIcon={<ChevronRightIcon />}
                 onClick={handleViewMore("/events")}
               >
@@ -794,7 +796,7 @@ const EventListWrapper = styled.div`
   display: flex;
   flex-wrap: nowrap;
 
-  overflow-x:scroll;
+  overflow-x: scroll;
   gap: 16px;
 `;
 

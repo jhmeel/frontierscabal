@@ -17,7 +17,6 @@ import {
   IconCalendarEventFill,
   IconBxEditAlt,
   IconSetting,
-  IconWhatsapp,
   PasswordIcon,
   IconSchool,
   IconBxsPin,
@@ -26,15 +25,7 @@ import {
 } from "../../assets/icons";
 
 import {
-  TrendingUp as TrendingUpIcon,
   Article as ArticleIcon,
-  VideoLibrary as VideoLibraryIcon,
-  ChevronRight as ChevronRightIcon,
-  Book as BookIcon,
-  Close as CloseIcon,
-  PlayArrow as PlayArrowIcon,
-  Pause as PauseIcon,
-  Search as SearchIcon,
   Code as CodeIcon,
   Science as ScienceIcon,
   Newspaper as NewspaperIcon,
@@ -45,14 +36,7 @@ import {
   Checkroom as FashionIcon,
   Museum as CultureIcon,
   Restaurant as FoodIcon,
-  Star as StarIcon,
-  VolumeUp as VolumeUpIcon,
-  VolumeOff as VolumeOffIcon,
-  Bookmark as BookmarkIcon,
-  Share as ShareIcon,
-  Download as DownloadIcon,
-  ZoomIn as ZoomInIcon,
-  ZoomOut as ZoomOutIcon,
+ 
 } from "@mui/icons-material";
 import {
   getBookmarkedArticle,
@@ -70,7 +54,8 @@ import LocalForageProvider from "../../utils/localforage";
 import { RootState } from "../../store";
 import { getUserDetails } from "../../actions/user.js";
 import { Message } from "@mui/icons-material";
-import { Chip } from "@mui/material";
+import { Button, Chip } from "@mui/material";
+import toast from "react-hot-toast";
 
 type ActiveList = "MY_ARTICLES" | "READING_LIST";
 
@@ -179,20 +164,21 @@ const Profile: React.FC = () => {
 
   const showConfirmation = () => {
     togglePTab();
-    enqueueSnackbar("Are you sure you want to log out?", {
-      variant: "info",
-      persist: true,
-      action: (key) => (
-        <>
-          <button className="snackbar-btn" onClick={() => logout()}>
-            Yes
-          </button>
-          <button className="snackbar-btn" onClick={() => closeSnackbar()}>
-            No
-          </button>
-        </>
-      ),
-    });
+    toast((t) => (
+      <div>
+        <p>Are you sure you want to log out?</p>
+        <Button
+          onClick={() => {
+            toast.dismiss(t.id);
+            logout();
+          }}
+          color="primary"
+        >
+          Proceed
+        </Button>
+        <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+      </div>
+    ));
   };
 
   const ptabRef = useRef<HTMLSpanElement>(null);
@@ -214,8 +200,6 @@ const Profile: React.FC = () => {
     dispatch<any>(logoutUser());
     navigate("/login");
   };
-
- 
 
   const mailUser = () => {
     const mail = `mailto:${user?.email}`;

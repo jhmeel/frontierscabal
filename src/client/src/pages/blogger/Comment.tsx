@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { styled } from '@mui/material/styles';
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { styled } from "@mui/material/styles";
 import {
   Box,
   Typography,
@@ -15,56 +15,55 @@ import {
   Slide,
   useMediaQuery,
   useTheme,
-} from '@mui/material';
+  CircularProgress,
+} from "@mui/material";
 import {
   Close as CloseIcon,
   Send as SendIcon,
   Comment as CommentIcon,
-} from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
-import { toast } from 'react-hot-toast';
-
-import { addComment, clearErrors } from '../../actions/article';
-import { NEW_COMMENT_RESET } from '../../constants/article';
-import CommentItem from '../../components/commentItem/CommentItem';
-import getToken from '../../utils/getToken';
-import { FormattedCount } from '../../utils';
-import { RootState } from '../../store';
+} from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "react-hot-toast";
+import CommentItem from "../../components/commentItem/CommentItem";
+import { FormattedCount } from "../../utils";
+import { RootState } from "../../store";
+import { useSocket } from "../../context/SocketProvider";
 
 const CommentContainer = styled(motion.div)(({ theme }) => ({
-  position: 'fixed',
+  position: "fixed",
   bottom: 0,
   left: 0,
   right: 0,
-  height: '80vh',
+  height: "80vh",
   backgroundColor: theme.palette.background.paper,
   borderTopLeftRadius: theme.shape.borderRadius,
   borderTopRightRadius: theme.shape.borderRadius,
   boxShadow: theme.shadows[10],
-  display: 'flex',
-  flexDirection: 'column',
+  display: "flex",
+  flexDirection: "column",
   zIndex: theme.zIndex.modal,
 }));
 
 const CommentHeader = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
   padding: theme.spacing(2),
   borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
 const CommentList = styled(List)(({ theme }) => ({
   flexGrow: 1,
-  width:'100%',
-  overflowY: 'auto',
+  width: "100%",
+  display:`flex`,
+  justifyContent:`center`,
+  overflowY: "auto",
   padding: theme.spacing(2),
-
 }));
 
 const CommentInputContainer = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
+  display: "flex",
+  alignItems: "center",
   padding: theme.spacing(2),
   borderTop: `1px solid ${theme.palette.divider}`,
 }));
@@ -76,36 +75,46 @@ interface CommentProps {
   onClose: () => void;
 }
 
-const Comment: React.FC<CommentProps> = ({ username, article, comments, onClose }) => {
-  const dispatch = useDispatch();
+const Comment: React.FC<CommentProps> = ({
+  username,
+  article,
+  comments,
+  onClose,
+}) => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const { loading, success, error } = useSelector((state: RootState) => state.newComment);
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const { user } = useSelector((state: RootState) => state.user);
-  const [comment, setComment] = useState('');
-
-  useEffect(() => {
-    if (error) {
-      toast.error(error);
-      dispatch(clearErrors() as any);
-    }
-    if (success) {
-      toast.success('Comment added');
-      dispatch({ type: NEW_COMMENT_RESET });
-      setComment('');
-    }
-  }, [dispatch, success, error]);
+  const [comment, setComment] = useState("");
+  const socket = useSocket();
+  const [commentLoading, setCommentLoading] = useState(false);
 
   const handleCommentSubmit = async () => {
-    const authToken = await getToken();
-    if (!authToken) {
-      navigate('/login');
+    setCommentLoading(true);
+    if (!user?._id) {
+      navigate("/login");
       return;
     }
-    if (comment.trim()) {
-      dispatch(addComment(authToken, article?._id, comment) as any);
+    if (socket && article?._id && user?._id && comment?.trim()) {
+      socket.emit(
+        "new_comment",
+        {
+          articleId: article._id,
+          userId: user._id,
+          commentText: comment.trim(),
+        },
+        (response:any) => {
+          setCommentLoading(false);
+          if (response.success) {
+            toast.success("Comment added!");
+            setComment("");
+          } else {
+            toast.error(
+              response?.error || "Failed to add comment, try again later."
+            );
+          }
+        }
+      );
     }
   };
 
@@ -118,14 +127,13 @@ const Comment: React.FC<CommentProps> = ({ username, article, comments, onClose 
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1 },
   };
-
   return (
     <Slide direction="up" in={true} mountOnEnter unmountOnExit>
       <CommentContainer
-        initial={{ y: '100%' }}
+        initial={{ y: "100%" }}
         animate={{ y: 0 }}
-        exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
       >
         <CommentHeader>
           <Typography variant="h6">
@@ -138,8 +146,12 @@ const Comment: React.FC<CommentProps> = ({ username, article, comments, onClose 
 
         <CommentList>
           <AnimatePresence>
-            <motion.div variants={commentListVariants} initial="hidden" animate="visible">
-              {comments?.map((comment, index) => (   
+            <motion.div
+              variants={commentListVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {comments?.map((comment, index) => (
                 <motion.div key={comment._id} variants={commentItemVariants}>
                   <ListItem disablePadding>
                     <CommentItem
@@ -153,7 +165,7 @@ const Comment: React.FC<CommentProps> = ({ username, article, comments, onClose 
                       replies={comment.comment[0]?.replies}
                     />
                   </ListItem>
-                  {index < comments.length - 1 && <Divider variant="inset" component="li" />}
+                  
                 </motion.div>
               ))}
             </motion.div>
@@ -161,7 +173,11 @@ const Comment: React.FC<CommentProps> = ({ username, article, comments, onClose 
         </CommentList>
 
         <CommentInputContainer>
-          <Avatar src={user?.avatar?.url} alt={user?.username} sx={{ marginRight: 2 }} />
+          <Avatar
+            src={user?.avatar?.url}
+            alt={user?.username}
+            sx={{ marginRight: 2 }}
+          />
           <TextField
             fullWidth
             variant="outlined"
@@ -175,11 +191,13 @@ const Comment: React.FC<CommentProps> = ({ username, article, comments, onClose 
           <Button
             variant="contained"
             color="primary"
-            endIcon={<SendIcon />}
+            endIcon={
+              commentLoading ? <CircularProgress size={16} /> : <SendIcon />
+            }
             onClick={handleCommentSubmit}
-            disabled={loading || !comment.trim()}
+            disabled={commentLoading || !comment.trim()}
           >
-            {isMobile ? '' : 'Post'}
+            {isMobile ? "" : "Post"}
           </Button>
         </CommentInputContainer>
       </CommentContainer>
@@ -187,4 +205,4 @@ const Comment: React.FC<CommentProps> = ({ username, article, comments, onClose 
   );
 };
 
-export default Comment; 
+export default Comment;

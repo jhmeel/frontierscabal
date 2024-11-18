@@ -105,15 +105,7 @@ const CreateDiscussion: React.FC<CreateDiscussionProps> = ({ currentUser }) => {
           rows={4}
           fullWidth
         />
-        <FormControlLabel
-          control={
-            <Switch
-              checked={isPrivate}
-              onChange={(e) => setIsPrivate(e.target.checked)}
-            />
-          }
-          label="Private"
-        />
+  
         <Box display="flex" alignItems="center">
           <TagInput
             label="Add Tags"

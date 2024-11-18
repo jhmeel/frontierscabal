@@ -6,6 +6,7 @@ import { CloudinaryProvider } from "./src/providers/cloudinaryProvider.js";
 import { DbProvider } from "./src/providers/dbProvider.js";
 import { MiddlewaresProvider } from "./src/providers/middlewaresProvider.js";
 import { RouteProvider } from "./src/providers/routeProvider.js";
+import { SocketProvider } from "./src/providers/socketProvider.js";
 //import "./src/utils/subscription.js";
 
 
@@ -13,6 +14,7 @@ dotenv.config();
 const app = express();
 const dependencies = [
   DbProvider.getInstance(Config),
+  SocketProvider.getInstance(Config),
   new CloudinaryProvider(Config),
   new MiddlewaresProvider(app),
   new RouteProvider(app),
