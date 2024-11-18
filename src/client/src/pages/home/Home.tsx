@@ -466,7 +466,7 @@ const Home: React.FC = () => {
         </Section>
       )}
 
-      <Section>
+      {/*<Section>
         <SectionTitle>
           <Box display="flex" alignItems="center">
             <AcUnitIcon />
@@ -476,7 +476,7 @@ const Home: React.FC = () => {
           </Box>
         </SectionTitle>
         <NASA />
-      </Section>
+      </Section>*/}
       <Section>
         <SectionTitle>
           <Box display="flex" alignItems="center">
@@ -556,6 +556,7 @@ const Home: React.FC = () => {
                       avatar={eve?.avatar.url}
                       category={eve?.category}
                       createdBy={eve?.createdBy}
+                      startDate={eve?.startDate}
                     />
                   ))}
             </EventListWrapper>

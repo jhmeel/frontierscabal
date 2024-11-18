@@ -443,12 +443,12 @@ const BlogPage: React.FC = () => {
                     color="primary"
                   />
                   <Typography
-                    variant={isMobile ? "h5" : "h3"}
+                    variant={"h1"}
                     gutterBottom
                     sx={{
                       fontWeight: 800,
-                      textShadow: "2px 2px 4px rgba(0,0,0,0.3)",
                       mb: 3,
+                      fontSize: isMobile ? 26 : 44,
                     }}
                   >
                     {trendingArticles[currentBannerIndex]?.Article.title}
@@ -472,7 +472,7 @@ const BlogPage: React.FC = () => {
                     </Typography>
                     <Button
                       variant="contained"
-                      size={isMobile ? "small" : "large"}
+                      size={"medium"}
                       onClick={() =>
                         navigate(
                           `/blog/article/${trendingArticles[currentBannerIndex]?.Article.slug}`
@@ -482,14 +482,6 @@ const BlogPage: React.FC = () => {
                       sx={{
                         borderRadius: 2,
                         px: 4,
-                        background:
-                          "linear-gradient(45deg, #6d6bfe 30%, #538cff 90%)",
-                        boxShadow: "0 3px 5px 2px rgba(96, 27, 136, 0.3)",
-                        "&:hover": {
-                          background:
-                            "linear-gradient(45deg, #513b80 30%, #8f53ff 90%)",
-                          transform: "translateY(-2px)",
-                        },
                       }}
                     >
                       Read More
@@ -511,27 +503,19 @@ const BlogPage: React.FC = () => {
           }}
         >
           {categories.map((category) => (
-            <CategoryButton
+            <Chip
               key={category}
-              size="small"
-              variant={selectedCategory === category ? "contained" : "outlined"}
-              color="primary"
+              label={category}
+              variant={selectedCategory === category ? "filled" : "outlined"}
+              color="secondary"
               onClick={() => handleCategorySelect(category)}
               sx={{
                 background:
                   selectedCategory === category
-                    ? "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)"
+                    ? "linear-gradient(45deg, #8d6bfe 30%, #53ffe5 90%)"
                     : "transparent",
-                "&:hover": {
-                  background:
-                    selectedCategory === category
-                      ? "linear-gradient(45deg, #FE6B8B 30%, #FF8E53 90%)"
-                      : "rgba(255, 105, 135, 0.1)",
-                },
               }}
-            >
-              {category}
-            </CategoryButton>
+            />
           ))}
         </Box>
 

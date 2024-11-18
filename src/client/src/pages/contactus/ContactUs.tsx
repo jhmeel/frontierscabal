@@ -1,28 +1,35 @@
 import React, { useState } from "react";
-import Footer from "../../components/footer/Footer";
-import MetaData from "../../MetaData";
-import { IconWhatsapp } from "../../assets/icons";
-import { useSnackbar } from "notistack";
-import { TextField, Button, Typography, Divider, Box } from "@mui/material";
-import { styled } from "@mui/system";
-import Div100vh from 'react-div-100vh'
+import { 
+  Box, 
+  Typography, 
+  TextField, 
+  Button, 
+  Container, 
+  Grid, 
+  Paper, 
+  Divider 
+} from "@mui/material";
+import { 
+  Send as SendIcon, 
+  WhatsApp as WhatsAppIcon, 
+  ContactSupport as ContactSupportIcon 
+} from '@mui/icons-material';
+import { styled } from "@mui/material/styles";
+import toast from "react-hot-toast";
 
 const ContactUs = () => {
   const [enquiry, setEnquiry] = useState("");
   const [subject, setSubject] = useState("");
-  const { enqueueSnackbar } = useSnackbar();
+  const [email, setEmail] = useState("");
 
-  const messageUs = () => {
-    const url = `https://wa.me/${"+2348081434636"}`;
-    window.open(url, "_blank");
-  };
 
-  const handleSubmission = () => {
+  
+  const handleSubmit = () => {
     if (!subject) {
-      enqueueSnackbar("Subject is required!", { variant: "error" });
+      toast.error("Subject is required!");
       return;
     } else if (!enquiry || enquiry.length < 5) {
-      enqueueSnackbar("Please provide a valid enquiry!", { variant: "error" });
+      toast.error("Please provide a valid enquiry!");
       return;
     }
     const url = `mailto:frontierscabal@gmail.com?subject=${subject}&body=${enquiry}`;
@@ -32,111 +39,132 @@ const ContactUs = () => {
     setEnquiry("");
   };
 
+
+  const handleWhatsApp = () => {
+    const url = `https://wa.me/${"+2348081434636"}`;
+    window.open(url, "_blank");
+  };
+
   return (
-    <>
-      <MetaData title="Contact Us" />
-      <Div100vh>
-      <StyledContactUs>
-        <Box className="contact-holder">
-          <Box className="contact-header">
-            <Typography variant="h2">Contact Us!</Typography>
-            <Typography variant="body1" className="contact-description">
-              If you have any questions, feedback, or inquiries, feel free to get in touch with us.
-            </Typography>
-          </Box>
-          <Box className="contact-us-enq-cont">
-            <TextField
-            size="small"
-              id="subject"
-              label="Subject*"
-              variant="outlined"
-              fullWidth
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              margin="normal"
-            />
-            <TextField
-            size="small"
-              id="enquiry"
-              label="Enquiry*"
-              variant="outlined"
-              fullWidth
-              multiline
-              rows={4}
-              value={enquiry}
-              onChange={(e) => setEnquiry(e.target.value)}
-              margin="normal"
-            />
-            <Button variant="contained" color="primary" onClick={handleSubmission}>
-              Submit
-            </Button>
-          </Box>
-          <Divider className="l-separator">
-            <Typography style={{ fontWeight: 700, color: "#176984" }}>Or</Typography>
-          </Divider>
-          <Button variant="outlined" color="success" onClick={messageUs} startIcon={<IconWhatsapp />}>
-            Message us on WhatsApp
-          </Button>
-          <Typography className="cnt-spt-txt" variant="body2">
-            Our support team is available during business hours and will respond to your inquiries as soon as possible.
-          </Typography>
-        </Box>
-      </StyledContactUs>
-      </Div100vh>
-      <Footer />
-    </>
+    <StyledContainer maxWidth="lg">
+        <Grid container spacing={4} justifyContent="center" alignItems="center" sx={{ height: '100%', }}>
+          <Grid item xs={12} md={6}>
+            <Paper elevation={1} sx={{ 
+              p: { xs: 3, md: 5 }, 
+              borderRadius: 4,
+              background: 'linear-gradient(135deg, #f6f8f9 0%, #e5ebee 100%)'
+            }}>
+              <Box textAlign="center" mb={4}>
+                <ContactSupportIcon 
+                  sx={{ 
+                    fontSize: { xs: 60, md: 80 }, 
+                    color: 'primary.main', 
+                    mb: 2 
+                  }} 
+                />
+                <Typography variant="h4" fontWeight={700} color="primary">
+                  Get In Touch
+                </Typography>
+                <Typography variant="subtitle1" color="text.secondary">
+                  We'd love to hear from you. Send us a message!
+                </Typography>
+              </Box>
+
+              <form onSubmit={handleSubmit}>
+                <Grid container spacing={2}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Your Email"
+                      variant="outlined"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      type="email"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Subject"
+                      variant="outlined"
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Your Message"
+                      variant="outlined"
+                      multiline
+                      rows={4}
+                      value={enquiry}
+                      onChange={(e) => setEnquiry(e.target.value)}
+                      required
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                      fullWidth
+                      startIcon={<SendIcon />}
+                      sx={{ 
+                        py: 1.5, 
+                        borderRadius: 2,
+                        boxShadow: 3,
+                        '&:hover': {
+                          transform: 'translateY(-3px)',
+                          boxShadow: 6
+                        }
+                      }}
+                    >
+                      Send Message
+                    </Button>
+                  </Grid>
+                </Grid>
+              </form>
+
+              <Divider sx={{ my: 3 }}>
+                <Typography color="text.secondary">OR</Typography>
+              </Divider>
+
+              <Button
+                variant="outlined"
+                color="success"
+                fullWidth
+                startIcon={<WhatsAppIcon />}
+                onClick={handleWhatsApp}
+                sx={{ 
+                  py: 1.5, 
+                  borderRadius: 2,
+                  borderWidth: 2,
+                  '&:hover': {
+                    borderWidth: 2,
+                    backgroundColor: 'rgba(76, 175, 80, 0.08)'
+                  }
+                }}
+              >
+                Message on WhatsApp
+              </Button>
+            </Paper>
+          </Grid>
+        </Grid>
+    </StyledContainer>
   );
 };
 
+const StyledContainer = styled(Container)(({ theme }) => ({
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  [theme.breakpoints.down('md')]: {
+    padding: theme.spacing(1),
+  },
+}));
+
 export default ContactUs;
-
-const StyledContactUs = styled(Box)`
-  width: 100%;
-  height: 100vh;
-  padding: 10px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items:center;
-  font-family: "Roboto", sans-serif;
-
-  .contact-holder {
-    width: 100%;
-    max-width: 600px;
-    background-color: #fff;
-    border: 1px solid #ededed;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  .contact-header {
-    margin-bottom: 20px;
-    text-align: center;
-  }
-
-  .contact-description {
-    color: #8b8e98;
-    margin-top: 8px;
-  }
-
-  .contact-us-enq-cont {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .l-separator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    margin: 20px 0;
-  }
-
-  .cnt-spt-txt {
-    text-align: center;
-    color: #8b8e98;
-    margin-top: 20px;
-  }
-`;

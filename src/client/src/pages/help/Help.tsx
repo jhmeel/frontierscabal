@@ -43,7 +43,12 @@ const Help = () => {
       <MetaData title="Help" />
 
       <HelpRenderer>
-        <div className="help-main">
+        <div
+          className="help-main"
+          style={{
+            background: "linear-gradient(135deg, #f6f8f9 0%, #e5ebee 100%)",
+          }}
+        >
           <h1 className="help-h-txt">
             Help
             <IconHelp height="26" width="26" />

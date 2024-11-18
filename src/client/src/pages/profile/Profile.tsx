@@ -254,13 +254,7 @@ const Profile: React.FC = () => {
                     {isPTabOpen && (
                       <div className="u-nav-tab">
                         <ul id="u-ul">
-                          <li
-                            title="Create Module"
-                            onClick={() => handleClick("/module/new")}
-                          >
-                            <IconPlayCircle className="u-ul-icon" />
-                            Create Module
-                          </li>
+                          
                           <li
                             title="Edit profile"
                             onClick={() => handleClick("/profile/edit")}

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { useSnackbar } from "notistack";
 import {
   Card,
   IconButton,
@@ -21,6 +20,7 @@ import getToken from "../../utils/getToken";
 import { errorParser } from "../../utils/formatter";
 import axiosInstance from "../../utils/axiosInstance";
 import { RootState } from "../../store";
+import toast from "react-hot-toast";
 
 
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -113,10 +113,9 @@ const EventItem = ({
   category,
   avatar,
   createdBy,
-  eventDate = "2024-11-13",
+  startDate,
 }) => {
   const navigate = useNavigate();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const [anchorEl, setAnchorEl] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { user } = useSelector((state: RootState) => state.user);
@@ -133,35 +132,35 @@ const EventItem = ({
     try {
       setDeleteLoading(true);
       const authToken = await getToken();
-      closeSnackbar();
       const { data } = await axiosInstance(authToken).delete(`/api/v1/event/${id}`);
       setDeleteLoading(false);
       if (data.success) {
-        enqueueSnackbar("Event Deleted", { variant: "success" });
-        window.location.reload();
+        toast.success("Event Deleted");
+  
       }
     } catch (error) {
       setDeleteLoading(false);
-      enqueueSnackbar(errorParser(error), { variant: "error" });
+      toast.error(errorParser(error));
     }
   };
 
   const showConfirmation = () => {
     handleMenuClose();
-    enqueueSnackbar("Are you sure you want to delete the event?", {
-      variant: "info",
-      persist: true,
-      action: (key) => (
-        <Box>
-          <Button color="primary" size="small" onClick={handleEventDelete}>
-            Proceed
-          </Button>
-          <Button color="secondary" size="small" onClick={() => closeSnackbar()}>
-            No
-          </Button>
-        </Box>
-      ),
-    });
+    toast((t) => (
+      <div>
+        <p>{`Are you sure you want to delete ${title}?`}</p>
+        <Button
+          onClick={() => {
+            toast.dismiss(t.id);
+            handleEventDelete()
+          }}
+          color="primary"
+        >
+          Proceed
+        </Button>
+        <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+      </div>
+    ));
   };
 
   const handleShare = async () => {
@@ -183,9 +182,9 @@ const EventItem = ({
     });
   };
 
-  const date = new Date(eventDate);
-  const month = date.toLocaleString("default", { month: "short" }).toUpperCase();
-  const day = date.getDate();
+const date = new Date(startDate);
+const month = date.toLocaleString("default", { month: "short" }).toUpperCase();
+const day = date.getDate();
 
   return (
     <StyledCard>

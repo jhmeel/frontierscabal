@@ -368,7 +368,7 @@ const OCREngine: React.FC = () => {
     <StyledPaper elevation={1}>
       <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }} display={`flex`} flexDirection={`column`} alignItems={`center`} justifyContent={`center`}>
         <Box sx={{ display: 'flex',justifyContent: 'space-between', mb: 2 }}  width={`100%`}>
-          <Typography variant="h1">{activeOption}</Typography>
+          <Typography variant={"h5"} fontWeight={700}>{activeOption}</Typography>
           <Button
           size='small'
             aria-controls="simple-menu"

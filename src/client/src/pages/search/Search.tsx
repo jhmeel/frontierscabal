@@ -319,6 +319,7 @@ const Search = () => {
                       avatar={eve?.avatar.url}
                       category={eve?.category}
                       createdBy={eve?.createdBy}
+                      startDate={eve?.startDate}
                     />
                   </Grid>
                 ))}

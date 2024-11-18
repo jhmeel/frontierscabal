@@ -13,7 +13,7 @@ import {
   Chip,
   Divider,
   Avatar,
-  Button
+  Button,
 } from "@mui/material";
 import { styled } from "@mui/system";
 import {
@@ -21,7 +21,7 @@ import {
   IconCalendarEventFill,
   IconDeleteForeverOutline,
   IconShare,
-  IconPin
+  IconPin,
 } from "../../assets/icons";
 import { getEventDetails, clearErrors } from "../../actions/event";
 import MetaData from "../../MetaData";
@@ -32,12 +32,13 @@ import axiosInstance from "../../utils/axiosInstance";
 import getToken from "../../utils/getToken";
 import { RootState } from "../../store";
 import toast from "react-hot-toast";
+import Footer from "../../components/footer/Footer";
 
 const EventWrapper = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(4),
   marginBottom: theme.spacing(4),
   position: "relative",
-  minHeight: "90vh"
+  minHeight: "90vh",
 }));
 
 const HeaderSection = styled(Paper)(({ theme }) => ({
@@ -45,7 +46,7 @@ const HeaderSection = styled(Paper)(({ theme }) => ({
   height: "60vh",
   borderRadius: theme.spacing(3),
   overflow: "hidden",
-  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)"
+  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
 }));
 
 const HeaderImage = styled("div")`
@@ -60,13 +61,17 @@ const HeaderImage = styled("div")`
     object-fit: cover;
   }
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.8));
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.2),
+      rgba(0, 0, 0, 0.8)
+    );
   }
 `;
 
@@ -80,27 +85,27 @@ const EventContent = styled(Paper)(({ theme }) => ({
   borderRadius: theme.spacing(3),
   backgroundColor: "rgba(255, 255, 255, 0.98)",
   backdropFilter: "blur(20px)",
-  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)"
+  boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
 }));
 
 const DateBadge = styled(Paper)(({ theme }) => ({
   position: "absolute",
   top: theme.spacing(-3),
   right: theme.spacing(4),
-  padding: theme.spacing(2,3),
+  padding: theme.spacing(2, 3),
   borderRadius: theme.spacing(2),
   background: theme.palette.primary.main,
   color: "white",
-  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
 }));
 
 const LocationChip = styled(Chip)(({ theme }) => ({
   background: theme.palette.background.paper,
   borderRadius: theme.spacing(2),
   padding: theme.spacing(2, 1),
-  '& .MuiChip-icon': {
-    color: theme.palette.primary.main
-  }
+  "& .MuiChip-icon": {
+    color: theme.palette.primary.main,
+  },
 }));
 
 const ActionBar = styled(motion.div)(({ theme }) => ({
@@ -115,27 +120,29 @@ const ActionBar = styled(motion.div)(({ theme }) => ({
   backdropFilter: "blur(12px)",
   borderRadius: theme.spacing(3),
   border: "1px solid #ededed",
-  zIndex: 1000
+  zIndex: 1000,
 }));
 
 const ActionButton = styled(IconButton)(({ theme }) => ({
   background: theme.palette.background.paper,
   color: theme.palette.text.primary,
   padding: theme.spacing(1.5),
-  '&:hover': {
+  "&:hover": {
     background: theme.palette.primary.main,
     color: "white",
     transform: "translateY(-2px)",
-    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)"
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
   },
-  transition: "all 0.3s ease"
+  transition: "all 0.3s ease",
 }));
 
 const EventViewer = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { slug } = useParams();
-  const { loading, error, event } = useSelector((state: RootState) => state.eventDetails);
+  const { loading, error, event } = useSelector(
+    (state: RootState) => state.eventDetails
+  );
   const { user } = useSelector((state: RootState) => state.user);
 
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -166,39 +173,41 @@ const EventViewer = () => {
   }, [dispatch, error, slug]);
 
   const handleEventDelete = async () => {
-    const proceed = ()=>{
-    setDeleteLoading(true);
-    try {
-      const authToken = await getToken();
-      const { data } = await axiosInstance(authToken).delete(`/api/v1/event/${event?._id}`);
-      setDeleteLoading(false);
-      if (data.success) {
-        setSnackbarMessage("Event deleted successfully.");
+    const proceed = async () => {
+      setDeleteLoading(true);
+      try {
+        const authToken = await getToken();
+        const { data } = await axiosInstance(authToken).delete(
+          `/api/v1/event/${event?._id}`
+        );
+        setDeleteLoading(false);
+        if (data.success) {
+          setSnackbarMessage("Event deleted successfully.");
+          setSnackbarOpen(true);
+          navigate("/");
+        }
+      } catch (err) {
+        setDeleteLoading(false);
+        setSnackbarMessage("Failed to delete event.");
         setSnackbarOpen(true);
-        navigate("/");
       }
-    } catch (err) {
-      setDeleteLoading(false);
-      setSnackbarMessage("Failed to delete event.");
-      setSnackbarOpen(true);
-    }
-  }
+    };
 
-  toast((t) => (
-    <div>
-      <p>{`Are you sure you want to delete ${event?.title}?`}</p>
-      <Button
-        onClick={() => {
-          toast.dismiss(t.id);
-          proceed();
-        }}
-        color="primary"
-      >
-        Proceed
-      </Button>
-      <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
-    </div>
-  ));
+    toast((t) => (
+      <div>
+        <p>{`Are you sure you want to delete ${event?.title}?`}</p>
+        <Button
+          onClick={() => {
+            toast.dismiss(t.id);
+            proceed();
+          }}
+          color="primary"
+        >
+          Proceed
+        </Button>
+        <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+      </div>
+    ));
   };
 
   const handleEventShare = async () => {
@@ -209,7 +218,7 @@ const EventViewer = () => {
           title: event?.title,
           text: `${event?.description?.substring(0, 15)}...`,
           url: `https://${window.location.host}/#/event/${event?.slug}`,
-          files: [new File([imgBlob], "image.png", { type: imgBlob.type })]
+          files: [new File([imgBlob], "image.png", { type: imgBlob.type })],
         });
       }
     } catch (error) {
@@ -231,42 +240,46 @@ const EventViewer = () => {
         </HeaderSection>
 
         <EventContent elevation={0}>
-          <DateBadge elevation={2} style={{display:"flex", gap:"5px", justifyContent:"center", alignItems:"center"}}>
-          <IconCalendarEventFill fontSize={26}/>
+          <DateBadge
+            elevation={2}
+            style={{
+              display: "flex",
+              gap: "5px",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <IconCalendarEventFill fontSize={26} />
             <div>
-            <Typography variant="subtitle2" fontWeight="bold">
-              {moment(event?.startDate).format("MMM DD")} - {moment(event?.endDate).format("MMM DD, YYYY")}
-            </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.8 }}>
-              {moment(event?.startDate).format("HH:mm A")} - {moment(event?.endDate).format("HH:mm A")}
-            </Typography>
+              <Typography variant="subtitle2" fontWeight="bold">
+                {moment(event?.startDate).format("MMM DD")} -{" "}
+                {moment(event?.endDate).format("MMM DD, YYYY")}
+              </Typography>
+              <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                {moment(event?.startDate).format("HH:mm A")} -{" "}
+                {moment(event?.endDate).format("HH:mm A")}
+              </Typography>
             </div>
-        
-            
           </DateBadge>
 
           <Box sx={{ mt: 3 }}>
-            <Typography 
-              variant={isMobile ? "h2" : "h1"} 
+            <Typography
+              variant={isMobile ? "h2" : "h1"}
               fontWeight="bold"
               color="text.primary"
               gutterBottom
             >
               {event?.title}
             </Typography>
-            
-            <Chip 
-              label={event?.category}
-              color="primary"
-              sx={{ mb: 3 }}
-            />
+
+            <Chip label={event?.category} color="primary" sx={{ mb: 3 }} />
 
             <Divider sx={{ my: 3 }} />
 
-            <Typography 
-              variant="body1" 
+            <Typography
+              variant="body1"
               color="text.primary"
-              sx={{ 
+              sx={{
                 mb: 4,
                 lineHeight: 1.8,
               }}
@@ -277,16 +290,24 @@ const EventViewer = () => {
             <LocationChip
               icon={<IconPin />}
               label={event?.avenue}
-              onClick={() => window.open(
-                `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event?.avenue)}`,
-                "_blank"
-              )}
+              onClick={() =>
+                window.open(
+                  `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                    event?.avenue
+                  )}`,
+                  "_blank"
+                )
+              }
             />
-            
+
             <Box sx={{ mt: 4, display: "flex", alignItems: "center", gap: 2 }}>
               <Avatar src={event?.createdBy?.avatar?.url} />
               <Box>
-                <Typography variant="subtitle2" color="text.primary" fontWeight="bold">
+                <Typography
+                  variant="subtitle2"
+                  color="text.primary"
+                  fontWeight="bold"
+                >
                   {event?.createdBy?.username}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
@@ -314,7 +335,7 @@ const EventViewer = () => {
                   </Link>
                 </Tooltip>
               )}
-              
+
               <Tooltip title="Share">
                 <ActionButton onClick={handleEventShare}>
                   <IconShare />
@@ -324,7 +345,11 @@ const EventViewer = () => {
               {event?.createdBy?.username === user?.username && (
                 <Tooltip title="Delete">
                   <ActionButton onClick={handleEventDelete} color="error">
-                    {deleteLoading ? <SpinLoader size={20} /> : <IconDeleteForeverOutline />}
+                    {deleteLoading ? (
+                      <SpinLoader size={20} />
+                    ) : (
+                      <IconDeleteForeverOutline />
+                    )}
                   </ActionButton>
                 </Tooltip>
               )}
@@ -339,6 +364,7 @@ const EventViewer = () => {
           autoHideDuration={3000}
         />
       </EventWrapper>
+      <Footer />
     </>
   );
 };

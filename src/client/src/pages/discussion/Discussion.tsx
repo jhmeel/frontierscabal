@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../firebase";
+import { FaEllipsisVertical } from "react-icons/fa6";
 import { DiscussionMessage, USER, Discussion } from "../../types";
 import {
   TextField,
@@ -211,6 +212,9 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
     useState<DiscussionMessage | null>(null);
   const [participantDrawerOpen, setParticipantDrawerOpen] = useState(false);
   const [participantSearch, setParticipantSearch] = useState("");
+  const [selectedParticipant, setSelectedParticipant] = useState<USER | null>(
+    null
+  );
 
   const fetchDiscussion = useCallback(async () => {
     try {
@@ -398,10 +402,18 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
 
   const handleOpenMenu = (
     event: React.MouseEvent<HTMLElement>,
-    message: DiscussionMessage
+    item: DiscussionMessage | USER
   ) => {
     setAnchorEl(event.currentTarget);
-    setSelectedMessage(message);
+
+    // Check if the item is a message or a participant
+    if ("senderId" in item) {
+      setSelectedMessage(item);
+      setSelectedParticipant(null);
+    } else {
+      setSelectedParticipant(item);
+      setSelectedMessage(null);
+    }
   };
 
   const handleCloseMenu = () => {
@@ -428,6 +440,41 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
     handleCloseMenu();
   };
 
+  const handleParticipantMenuAction = (action: string) => {
+    if (selectedParticipant) {
+      switch (action) {
+        case "removeParticipant":
+          removeParticipant(selectedParticipant._id);
+          break;
+        default:
+          break;
+      }
+    }
+    handleCloseMenu();
+  };
+  const removeParticipant = async (participantId: string) => {
+    try {
+      if (!discussion?.id) {
+        toast.error("Discussion not found");
+        return;
+      }
+
+      const updatedParticipants = discussion.participants.filter(
+        (id) => id !== participantId
+      );
+
+      await updateDoc(doc(db, "discussions", discussion.id), {
+        participants: updatedParticipants,
+      });
+
+      toast.success("Participant removed");
+
+      getParticipants();
+    } catch (error) {
+      console.error("Error removing participant:", error);
+      toast.error("Failed to remove participant");
+    }
+  };
   const handleParticipantDrawerToggle = () => {
     setParticipantDrawerOpen((prev) => !prev);
   };
@@ -453,6 +500,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
       }
 
       const participants = await Promise.all(participantPromises);
+
       setDiscussionParticipants(participants);
     } catch (err) {
       console.error(err);
@@ -461,7 +509,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
 
   useEffect(() => {
     getParticipants();
-  }, []);
+  }, [discussionParticipants]);
 
   if (loading) {
     return <SpinLoader />;
@@ -485,7 +533,8 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
       </div>
     );
   }
-
+const rCl1 = `#456`
+const rCl2 = `#978500`
   return (
     <Div100vh>
       <StyledDiscussionRoom>
@@ -517,13 +566,13 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
 
             <Typography variant="caption" color="#ededed">
               ●
-              {discussion?.participants.length > 1
+              {discussion?.participants?.length > 1
                 ? ` ${discussion?.participants.length} participants`
                 : ` ${discussion?.participants.length} participant`}
             </Typography>
           </Box>
-          <IconButton color="#fff" onClick={handleParticipantDrawerToggle}>
-            <MoreVert />
+          <IconButton onClick={handleParticipantDrawerToggle}>
+          <FaEllipsisVertical  color="#fff"/>
           </IconButton>
         </TopBar>
         <MessageList>
@@ -561,7 +610,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                         isCurrentUser={message.senderId === currentUser?._id}
                         isDeleted={message.isDeleted}
                       >
-                        <Username variant="caption" color={genRandomColor()}>
+                        <Username variant="caption" color={rCl1}>
                           {message.senderName}
                         </Username>
                       </UserInfo>
@@ -643,7 +692,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                         src={message.senderAvatar}
                         sx={{
                           width: 28,
-                          backgroundColor: genRandomColor(),
+                          backgroundColor:rCl2,
                           height: 28,
                           fontSize: 12,
                           marginRight: 4,
@@ -675,11 +724,11 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                 marginBottom: 8,
                 backgroundColor: "#f0f4f8",
                 borderRadius: 4,
-                borderLeft: `4px solid ${genRandomColor()}`,
+                borderLeft: `4px solid ${rCl1}`,
               }}
             >
               <Typography variant="caption">
-                <h5 style={{ color: genRandomColor() }}>
+                <h5 style={{ color: rCl1 }}>
                   {replyTo.senderName}
                 </h5>
                 {replyTo?.fileType?.startsWith("image/") ? (
@@ -866,9 +915,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                   <ListItemIcon>
                     <IconButton
                       size="small"
-                      onClick={(event) =>
-                        handleOpenMenu(event, participant?._id)
-                      }
+                      onClick={(event) => handleOpenMenu(event, participant)}
                     >
                       <MoreVert />
                     </IconButton>
@@ -879,30 +926,54 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
           </ParticipantList>
         </ParticipantDrawer>
 
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleCloseMenu}
-          PaperProps={{
-            style: {
-              borderRadius: "8px",
-            },
-          }}
-        >
-          <MenuItem onClick={() => handleMenuAction("reply")} divider>
-            Reply
-          </MenuItem>
-          {selectedMessage?.fileUrl && (
-            <MenuItem onClick={() => handleMenuAction("download")} divider>
-              Download File
+        <>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl) && selectedMessage !== null}
+            onClose={handleCloseMenu}
+            PaperProps={{
+              style: {
+                borderRadius: "8px",
+              },
+            }}
+          >
+            <MenuItem onClick={() => handleMenuAction("reply")} divider>
+              Reply
             </MenuItem>
-          )}
-          {selectedMessage?.senderId === currentUser._id && (
-            <MenuItem onClick={() => handleMenuAction("delete")}>
-              Delete
-            </MenuItem>
-          )}
-        </Menu>
+            {selectedMessage?.fileUrl && (
+              <MenuItem onClick={() => handleMenuAction("download")} divider>
+                Download File
+              </MenuItem>
+            )}
+            {selectedMessage?.senderId === currentUser._id && (
+              <MenuItem onClick={() => handleMenuAction("delete")}>
+                Delete
+              </MenuItem>
+            )}
+          </Menu>
+
+          {/* Participant Menu */}
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl) && selectedParticipant !== null}
+            onClose={handleCloseMenu}
+            PaperProps={{
+              style: {
+                borderRadius: "8px",
+              },
+            }}
+          >
+            {/* Only show remove if the current user is the discussion owner or an admin */}
+            {discussion?.creatorId === currentUser._id && (
+              <MenuItem
+                onClick={() => handleParticipantMenuAction("removeParticipant")}
+                style={{ color: "red" }}
+              >
+                Remove Participant
+              </MenuItem>
+            )}
+          </Menu>
+        </>
       </StyledDiscussionRoom>
     </Div100vh>
   );

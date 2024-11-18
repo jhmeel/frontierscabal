@@ -146,8 +146,8 @@ const NewEvent = ({
 
   return (
     <EventContainer component="form" onSubmit={handleSubmit}>
-      <Typography variant="h5" component="h1" gutterBottom>
-        Create Event
+      <Typography variant={"h5"} fontWeight={700} gutterBottom>
+        {action === `Update` ? `Update Event` : `Create Event`}
       </Typography>
 
       {avatar && <StyledImg src={avatar} loading="lazy" />}
@@ -203,6 +203,7 @@ const NewEvent = ({
       <Box>
         <TextField
           label="Category"
+          size="small"
           value={category}
           InputProps={{
             endAdornment: (
@@ -223,10 +224,13 @@ const NewEvent = ({
           {[
             "Fashion Shows",
             "Film Festivals",
-            "Workshops",
-            "Conferences",
             "Religious Gatherings",
             "Comedy Shows",
+            "Conference",
+            "Workshop",
+            "Meetup",
+            "Webinar",
+            "Hackathon",
           ].map((opt) => (
             <MenuItem key={opt} onClick={() => handleCategorySelect(opt)}>
               {opt}
