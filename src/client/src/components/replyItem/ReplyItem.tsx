@@ -125,6 +125,7 @@ const ReplyItem: React.FC<ReplyItemProps> = ({
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
+          elevation={1}
           onClose={handleMenuClose}
           disablePortal
           PaperProps={{

@@ -197,6 +197,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
+          elevation={1}
           onClose={handleMenuClose}
         >
           <MenuItem onClick={copyComment}>

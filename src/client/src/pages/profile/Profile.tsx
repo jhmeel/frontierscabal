@@ -19,11 +19,10 @@ import {
   IconSetting,
   PasswordIcon,
   IconSchool,
-  IconBxsPin,
-  IconMinutemailer,
-  IconPlayCircle,
-} from "../../assets/icons";
 
+} from "../../assets/icons";
+import { IoIosCall } from "react-icons/io";
+import { SiMinutemailer } from "react-icons/si";
 import {
   Article as ArticleIcon,
   Code as CodeIcon,
@@ -36,7 +35,7 @@ import {
   Checkroom as FashionIcon,
   Museum as CultureIcon,
   Restaurant as FoodIcon,
- 
+  Call,
 } from "@mui/icons-material";
 import {
   getBookmarkedArticle,
@@ -53,8 +52,7 @@ import styled from "styled-components";
 import LocalForageProvider from "../../utils/localforage";
 import { RootState } from "../../store";
 import { getUserDetails } from "../../actions/user.js";
-import { Message } from "@mui/icons-material";
-import { Button, Chip } from "@mui/material";
+import { Button, Chip, Tooltip } from "@mui/material";
 import toast from "react-hot-toast";
 
 type ActiveList = "MY_ARTICLES" | "READING_LIST";
@@ -205,6 +203,17 @@ const Profile: React.FC = () => {
     const mail = `mailto:${user?.email}`;
     window.open(mail, "_blank");
   };
+
+  const handleCall = async () => {
+    try {
+      const url = `tel:${user?.phonenumber}`;
+      window.location.href = url;
+    } catch (error) {
+      enqueueSnackbar("Failed to initiate call. Please try again later.", {
+        variant: `error`,
+      });
+    }
+  };
   const isCurrentUser = currentUser?.username === user?.username;
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -254,7 +263,6 @@ const Profile: React.FC = () => {
                     {isPTabOpen && (
                       <div className="u-nav-tab">
                         <ul id="u-ul">
-                          
                           <li
                             title="Edit profile"
                             onClick={() => handleClick("/profile/edit")}
@@ -324,10 +332,20 @@ const Profile: React.FC = () => {
 
                 {!isCurrentUser && (
                   <div className="p-cnt-cont">
+                    <Tooltip title="Call">
+                      <div className="usr-call" onClick={handleCall}>
+               
+                          Call &nbsp;<IoIosCall size={24}/>
+                     
+                      </div>
+                    </Tooltip>
+                    <Tooltip title="Mail">
                     <div title="Mail" className="usr-mail" onClick={mailUser}>
                       Mail&nbsp;
-                      <IconMinutemailer fill="#fff" />
+                      <SiMinutemailer fill="#fff" size={24} />
                     </div>
+                    </Tooltip>
+                   
                   </div>
                 )}
 
@@ -385,7 +403,7 @@ const Profile: React.FC = () => {
                 </div>
               )}
 
-              {pinnedArticles?.length > 0 && (
+              {/*pinnedArticles?.length > 0 && (
                 <div className="pinned-article-segment">
                   <div className="pinned-article-header">
                     <IconBxsPin /> Pinned
@@ -416,9 +434,9 @@ const Profile: React.FC = () => {
                       ))}
                   </div>
                 </div>
-              )}
+              )*/}
 
-              {<div className="u-curriculum-segment"></div>}
+        
 
               <div className="u-articles-segment">
                 <div className="u-art-head">
@@ -583,7 +601,7 @@ const ProfileRenderer = styled.div`
     justify-content: center;
     gap: 10px;
   }
-  .usr-msg {
+  .usr-call {
     background-color: #b7c7c9;
     color: #fff;
   }
@@ -591,7 +609,7 @@ const ProfileRenderer = styled.div`
     background-color: #0b4457;
     color: #fff;
   }
-  .usr-msg,
+  .usr-call,
   .usr-mail {
     display: flex;
     align-items: center;

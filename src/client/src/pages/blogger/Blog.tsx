@@ -213,10 +213,10 @@ const BlogPage: React.FC = () => {
         }
       }
     } catch (err) {
-      console.error(err);
+    
       setSnackbar({
         open: true,
-        message: "Failed to fetch articles.",
+        message: err.message,
         severity: "error",
       });
     }
@@ -310,12 +310,7 @@ const BlogPage: React.FC = () => {
           <ListItemText primary="Home" />
         </ListItem>
 
-        <ListItem button onClick={handleTrendingClick} sx={{ mb: 1 }}>
-          <ListItemIcon>
-            <TrendingIcon />
-          </ListItemIcon>
-          <ListItemText primary="Trending" />
-        </ListItem>
+       
 
         <ListItem button onClick={() => navigate("/bookmarks")} sx={{ mb: 3 }}>
           <ListItemIcon>

@@ -338,13 +338,13 @@ const Avatar = styled.img`
 `;
 
 const Username = styled(Link)`
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #333;
   font-weight: 600;
 `;
 
 const Duration = styled.span`
-  font-size: 0.8rem;
+  font-size: 0.6rem;
   color: #999;
 `;
 

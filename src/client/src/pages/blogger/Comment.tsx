@@ -35,6 +35,7 @@ const CommentContainer = styled(motion.div)(({ theme }) => ({
   left: 0,
   right: 0,
   height: "80vh",
+  width:"100%",
   backgroundColor: theme.palette.background.paper,
   borderTopLeftRadius: theme.shape.borderRadius,
   borderTopRightRadius: theme.shape.borderRadius,
@@ -150,10 +151,12 @@ const Comment: React.FC<CommentProps> = ({
               variants={commentListVariants}
               initial="hidden"
               animate="visible"
+              style={{ width: "100%",display:`flex`,flexDirection:`column`,justifyContent:`flex-start`,alignItems:`center` }}
+              
             >
               {comments?.map((comment, index) => (
-                <motion.div key={comment._id} variants={commentItemVariants}>
-                  <ListItem disablePadding>
+               
+                  <ListItem disablePadding style={{ width: "100%",display:`flex`,flexDirection:`column`,justifyContent:`flex-start` }}>
                     <CommentItem
                       articleId={article._id}
                       commentId={comment._id}
@@ -166,7 +169,7 @@ const Comment: React.FC<CommentProps> = ({
                     />
                   </ListItem>
                   
-                </motion.div>
+                
               ))}
             </motion.div>
           </AnimatePresence>

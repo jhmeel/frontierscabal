@@ -12,6 +12,8 @@ import toast from "react-hot-toast";
 import styled from "styled-components";
 import { ARTICLE } from "../../types";
 import { RootState } from "../../store";
+import { Button } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 
 
 const BookmarksPage = () => {
@@ -33,13 +35,38 @@ const BookmarksPage = () => {
     loading: boolean;
   } = useSelector((state:RootState) => state.articleSearch);
 
+  const navigate = useNavigate()
+
   useEffect(() => {
     if (articleError) {
       toast.error(articleError);
       dispatch<any>(clearErrors());
     }
+
+    const showAuthDialogue = () => {
+      toast((t) => (
+        <div>
+          <p>Please signup to complete your action!</p>
+          <Button
+            onClick={() => {
+              toast.dismiss(t.id);
+              navigate("/signup");
+            }}
+            color="primary"
+          >
+            Signup
+          </Button>
+          <Button onClick={() => toast.dismiss(t.id)}>Cancel</Button>
+        </div>
+      ));
+    };
     const getBookmarks = async () => {
       const authToken = await getToken();
+
+      if (!authToken) {
+        showAuthDialogue();
+        return;
+      }
       dispatch<any>(getBookmarkedArticle(authToken, page));
     };
     isOnline() && getBookmarks();

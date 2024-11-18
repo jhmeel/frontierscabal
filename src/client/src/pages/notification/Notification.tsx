@@ -218,7 +218,7 @@ const NotificationPage: React.FC = () => {
         </Box>
 
         <AnimatePresence>
-          {filteredNotifications.length > 0 ? (
+          {filteredNotifications?.length > 0 ? (
             <Stack spacing={2}>
               {filteredNotifications.map((notification, index) => (
                 <NotificationCard key={index} notification={notification} />

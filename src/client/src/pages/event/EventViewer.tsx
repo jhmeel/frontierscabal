@@ -111,7 +111,7 @@ const LocationChip = styled(Chip)(({ theme }) => ({
 const ActionBar = styled(motion.div)(({ theme }) => ({
   position: "fixed",
   bottom: theme.spacing(4),
-  left: "40%",
+  left: "30%",
   transform: "translateX(-50%)",
   display: "flex",
   gap: theme.spacing(2),
