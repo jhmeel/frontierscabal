@@ -12,6 +12,7 @@ import { JSDOM } from "jsdom";
 
 const dompurify = createDomPurify(new JSDOM().window);
 import { readingTime } from "reading-time-estimator";
+import { notifyAllUser, sendNotification } from "../utils/sendNotification.js";
 
 const options = {
   mangle: false,
@@ -52,16 +53,12 @@ export const newArticle = catchAsync(async (req, res, next) => {
     article,
   });
   const notPayload = generateNotification("NEW:ARTICLE", populatedArticle);
-  notifyAll(notPayload);
+  await notifyAllUser(notPayload);
 });
 
 // Like or Unlike Article
 export const toggleLike = async (articleId, userId) => {
-  const article = await Article.findById(articleId)
-    .populate("postedBy")
-    .populate({ path: "comments.user", model: "User" })
-    .populate({ path: "comments.comment.replies.user", model: "User" })
-    .exec()
+  const article = await Article.findById(articleId);
 
   if (!article) {
     throw new ErrorHandler("Article Not Found", 404);
@@ -76,17 +73,28 @@ export const toggleLike = async (articleId, userId) => {
   } else {
     article.likes.push(userId);
     await article.save();
-
-    const notPayload = generateNotification("ARTICLE:LIKE", {
-      title: article?.title,
-      image: article?.image,
-      avatar: user?.avatar?.url,
-      slug: article?.slug,
-      username: user.username,
-    });
-    notifyUser(article.postedBy?.username, notPayload);
   }
-  return article;
+  const updatedArticle = await Article.findById(articleId)
+    .populate("postedBy")
+    .populate({ path: "comments.user", model: "User" })
+    .populate({ path: "comments.comment.replies.user", model: "User" })
+    .exec();
+
+  const notPayload = generateNotification("ARTICLE:LIKE", {
+    title: article?.title,
+    image: article?.image,
+    avatar: user?.avatar?.url,
+    slug: article?.slug,
+    username: user.username,
+  });
+
+  try {
+    await sendNotification(article.postedBy, notPayload, [`email`, `push`]);
+  } catch (err) {
+    logger.error(err);
+  } finally {
+    return updatedArticle;
+  }
 };
 
 // Delete Article
@@ -176,7 +184,7 @@ export const updateArticle = catchAsync(async (req, res, next) => {
 
 // Add Comment
 export const newComment = async (articleId, userId, commentText) => {
-  const article = await Article.findById(articleId)
+  const article = await Article.findById(articleId);
 
   if (!article) {
     throw new ErrorHandler("Article Not Found", 404);
@@ -200,10 +208,10 @@ export const newComment = async (articleId, userId, commentText) => {
   await article.save();
 
   const updatedArticle = await Article.findById(articleId)
-  .populate("postedBy")
-  .populate({ path: "comments.user", model: "User" })
-  .populate({ path: "comments.comment.replies.user", model: "User" })
-  .exec();
+    .populate("postedBy")
+    .populate({ path: "comments.user", model: "User" })
+    .populate({ path: "comments.comment.replies.user", model: "User" })
+    .exec();
 
   const notPayload = generateNotification("ARTICLE:COMMENT", {
     title: article?.title,
@@ -212,9 +220,14 @@ export const newComment = async (articleId, userId, commentText) => {
     slug: article?.slug,
     username: user.username,
   });
-  notifyUser(article.postedBy?.username, notPayload);
 
-  return updatedArticle;
+  try {
+    await sendNotification(article.postedBy, notPayload, [`email`, `push`]);
+  } catch (err) {
+    logger.error(err);
+  } finally {
+    return updatedArticle;
+  }
 };
 
 //Delete comment
@@ -254,7 +267,7 @@ export const deleteComment = async (articleId, userId, commentId) => {
 
 //Add reply
 export const addReply = async (articleId, commentId, userId, replyText) => {
-  const article = await Article.findById(articleId)
+  const article = await Article.findById(articleId);
 
   if (!article) {
     throw new ErrorHandler("Article Not Found", 404);
@@ -280,10 +293,10 @@ export const addReply = async (articleId, commentId, userId, replyText) => {
   await article.save();
 
   const updatedArticle = await Article.findById(articleId)
-  .populate("postedBy")
-  .populate({ path: "comments.user", model: "User" })
-  .populate({ path: "comments.comment.replies.user", model: "User" })
-  .exec();
+    .populate("postedBy")
+    .populate({ path: "comments.user", model: "User" })
+    .populate({ path: "comments.comment.replies.user", model: "User" })
+    .exec();
 
   return updatedArticle;
 };
@@ -317,7 +330,7 @@ export const deleteReply = async (articleId, commentId, replyId) => {
   if (replyIndex === -1) {
     throw new ErrorHandler("Reply Not Found", 404);
   }
- 
+
   // Delete the reply from the 'replies' array of the comment.
   article.comments[commentIndex].comment[0].replies.splice(replyIndex, 1);
 

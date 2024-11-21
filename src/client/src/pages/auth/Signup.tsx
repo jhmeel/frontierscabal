@@ -227,14 +227,14 @@ const Signup: React.FC = () => {
               By clicking sign up, you agree to our{" "}
               <a
                 style={{ color: "crimson", fontWeight: 600 }}
-                href="/terms-of-service"
+                href="/#/terms-of-service"
               >
                 Terms of Service
               </a>{" "}
               and{" "}
               <a
                 style={{ color: "crimson", fontWeight: 600 }}
-                href="/privacy-policy"
+                href="/#/privacy-policy"
               >
                 Privacy Policy
               </a>

@@ -1,12 +1,10 @@
 import webPush from "web-push";
 import { Config } from "../config/config.js";
 import catchAsync  from "../middlewares/catchAsync.js";
-import cron from "node-cron";
 import { User} from "../models/userModel.js";
-import { Event} from "../models/eventModel.js";
 import { PushSubscription } from "../models/pushSubscriptionModel.js";
 import { logger} from "../utils/logger.js";
-import { generateNotification } from "../utils/notificationGen.js";
+
 
 webPush.setVapidDetails(
   Config.WEBPUSH.VAPID_SUBJECT,
@@ -32,6 +30,7 @@ export const newPushSubscription = catchAsync(async (req, res, next) => {
   } else {
     const subPayload = {
       username: user.username,
+      email:user.email,
       subscription: JSON.stringify(req.body),
     };
     await PushSubscription.create(subPayload);
@@ -104,57 +103,6 @@ export const notifyAll = async (payload) => {
   } catch (err) {
     logger.error(err);
   }
-};
-
-export const notifyforOngoingEvent = () => {
-  cron.schedule(
-    "0 0 * * *",
-    async () => {
-      try {
-        const currentDate = new Date();
-        const events = await Event.find({
-          startDate: { $gte: currentDate },
-          endDate: { $gt: currentDate },
-        })
-          .populate("createdBy")
-          .sort({ startDate: -1 });
-        events &&
-          events.map((event) => {
-            const notPayload = generateNotification("ONGOING:EVENT", event);
-            notifyAll(notPayload);
-          });
-        logger.info(
-          `Done notifying frontiers for ${events?.length} ongoing events`
-        );
-      } catch (err) {
-        logger.error(err);
-      }
-    },
-    {
-      scheduled: true,
-      timezone: "Africa/Lagos",
-    }
-  );
-};
-
-export const parseNotificationPayload = (payload) => {
-  return {
-    title: payload.username,
-    options: {
-      body: payload.body,
-      icon: payload.userAvatar,
-      image: payload?.image,
-      timestamp: payload.date || Date.now(),
-      actions: [
-        {
-          action: payload.action || "view",
-          type: payload.actionType || "button",
-          title: payload.actionTitle || "View",
-          icon: payload?.actionIcon,
-        },
-      ],
-    },
-  };
 };
 
 

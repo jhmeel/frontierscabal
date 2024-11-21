@@ -1,23 +1,27 @@
-import mongoose, { Schema } from 'mongoose'
-  
-const pushSubscription = new Schema({ 
+import mongoose, { Schema } from "mongoose";
+
+const pushSubscription = new Schema({
   username: {
     type: String,
     required: true,
     unique: true,
-    trim: true
+    trim: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
   },
   subscription: {
     type: String,
     trim: true,
-    required: true
+    required: true,
   },
   createdAt: {
     type: Date,
     default: Date.now,
-  }
-})
+  },
+});
 
-const PushSubscription = mongoose.model('PushSubscription', pushSubscription);
-export {PushSubscription};
-
+const PushSubscription = mongoose.model("PushSubscription", pushSubscription);
+export { PushSubscription };

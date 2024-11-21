@@ -14,6 +14,9 @@ import ScrollReveal from "scrollreveal";
 import { IconCloudOffline16 } from "./assets/icons";
 import MultiTextLoader from "./components/loaders/multiTextLoader";
 import MainLoader from "./components/loaders/MainLoader";
+import { messaging } from "./firebase";
+import { onMessage } from "firebase/messaging";
+import { NOTIFICATION } from "./types";
 
 const CreateModulePage = lazy(() => import("./pages/module/CreateModule"));
 const HomePage = lazy(() => import("./pages/home/Home"));
@@ -76,7 +79,6 @@ const Pricing = lazy(() => import("./pages/billing/Billing"));
 function App() {
   const { pathname } = useLocation();
   const { user } = useSelector((state: any) => state.user);
-  const state = useSelector((state: any) => state);
 
   const theme = useMemo(() => getTheme("light"), ["light"]);
 
@@ -122,14 +124,109 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const bc = new BroadcastChannel("push-channel");
-    bc.addEventListener("message", (event) => {
+    // Foreground notifications
+    const unsubscribe = onMessage(messaging, (payload: any) => {
+      const { title, body, avatar, image } = payload.notification;
+
+      dispatch<any>(addNotification(payload?.notification as NOTIFICATION));
+
+      toast.custom((t) => (
+        <div
+          style={{
+            animation: t.visible
+              ? "enter 0.3s ease-in-out"
+              : "leave 0.3s ease-in-out",
+            maxWidth: "320px",
+            width: "100%",
+            backgroundColor: "white",
+            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+            borderRadius: "8px",
+            pointerEvents: "auto",
+            display: "flex",
+            border: "1px solid rgba(0, 0, 0, 0.05)",
+          }}
+        >
+          <div style={{ flex: "1", padding: "16px", width: "0" }}>
+            <div style={{ display: "flex", alignItems: "flex-start" }}>
+              <div style={{ flexShrink: "0", paddingTop: "2px" }}>
+                <img
+                  style={{
+                    height: "40px",
+                    width: "40px",
+                    borderRadius: "9999px",
+                  }}
+                  src={avatar || image}
+                  alt=""
+                />
+              </div>
+              <div style={{ marginLeft: "12px", flex: "1" }}>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    color: "rgb(17, 24, 39)",
+                    margin: "0",
+                  }}
+                >
+                  {title}
+                </p>
+                <p
+                  style={{
+                    marginTop: "4px",
+                    fontSize: "14px",
+                    color: "rgb(107, 114, 128)",
+                  }}
+                >
+                  {body}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              borderLeft: "1px solid rgb(229, 231, 235)",
+            }}
+          >
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              style={{
+                width: "100%",
+                border: "none",
+                borderRadius: "0 8px 8px 0",
+                padding: "16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "14px",
+                fontWeight: "500",
+                color: "teal",
+                backgroundColor: "transparent",
+                cursor: "pointer",
+                outline: "none",
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      ));
+    });
+    // Cleanup
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const notificationChannel = new BroadcastChannel("FC:NOTIFICATION:CHANNEL");
+    notificationChannel.addEventListener("message", (event) => {
       if (event.data && event.data?.type === "push-notification") {
         dispatch<any>(addNotification(event.data.message));
       }
     });
     return () => {
-      bc.removeEventListener("message", () => {});
+      notificationChannel.close();
     };
   }, []);
 
@@ -191,7 +288,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
 
             <Route path="/" element={<HomePage />} />
-            { /*<Route
+            {/*<Route
               path="/module/:moduleId"
               element={
                 <PrivateRoute>

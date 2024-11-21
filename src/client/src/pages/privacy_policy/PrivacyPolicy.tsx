@@ -10,7 +10,7 @@ const PrivacyPolicyPage = () => {
       <MetaData title="Privacy/Policy" />
 
       <PolicyRenderer>
-        <Typography variant="h5" component="h5" gutterBottom>
+      <Typography variant="h4" fontWeight={800} gutterBottom>
           Privacy Policy
         </Typography>
         <Typography className="privacy-policy-text" variant="body1">

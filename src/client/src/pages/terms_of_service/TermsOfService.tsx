@@ -10,7 +10,7 @@ const TermsOfService = () => {
       <MetaData title="Terms-of-service" />
 
       <TermsRenderer>
-        <Typography variant="h5" component="h5" gutterBottom>
+      <Typography variant="h4" fontWeight={800} gutterBottom>
           Terms of Service
         </Typography>
 

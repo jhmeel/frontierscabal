@@ -19,7 +19,6 @@ import {
   IconSetting,
   PasswordIcon,
   IconSchool,
-
 } from "../../assets/icons";
 import { IoIosCall } from "react-icons/io";
 import { SiMinutemailer } from "react-icons/si";
@@ -104,7 +103,7 @@ const Profile: React.FC = () => {
     const authToken = await getToken();
     let username: string =
       params?.username || (await LocalForageProvider.getItem("FC:USERNAME"));
-    username && dispatch<any>(await getUserDetails(username, authToken));
+    username && dispatch<any>(getUserDetails(username, authToken));
   }, []);
   useEffect(() => {
     if (isOnline()) {
@@ -315,7 +314,14 @@ const Profile: React.FC = () => {
               </div>
 
               <div className="user-card-img">
-                <img loading="lazy" src={user?.avatar?.url || EmptyAvatar} />
+                <img
+                  loading="lazy"
+                  src={
+                    user?.username !== currentUser?.username
+                      ? user?.avatar?.url || EmptyAvatar
+                      : currentUser?.avatar?.url || EmptyAvatar
+                  }
+                />
                 {isCurrentUser && (
                   <span className="u-edit-prof" title="Edit">
                     <IconAccountEdit
@@ -328,33 +334,41 @@ const Profile: React.FC = () => {
                 )}
               </div>
               <div className="user-card-info">
-                <h3 className="modal-username">{user?.username}</h3>
+                <h3 className="modal-username">
+                  {user?.username !== currentUser?.username
+                    ? user?.username
+                    : currentUser.username}
+                </h3>
 
                 {!isCurrentUser && (
                   <div className="p-cnt-cont">
                     <Tooltip title="Call">
                       <div className="usr-call" onClick={handleCall}>
-               
-                          Call &nbsp;<IoIosCall size={24}/>
-                     
+                        Call &nbsp;
+                        <IoIosCall size={24} />
                       </div>
                     </Tooltip>
                     <Tooltip title="Mail">
-                    <div title="Mail" className="usr-mail" onClick={mailUser}>
-                      Mail&nbsp;
-                      <SiMinutemailer fill="#fff" size={24} />
-                    </div>
+                      <div title="Mail" className="usr-mail" onClick={mailUser}>
+                        Mail&nbsp;
+                        <SiMinutemailer fill="#fff" size={24} />
+                      </div>
                     </Tooltip>
-                   
                   </div>
                 )}
 
                 <div className="user-bio-segment">
-                  <p className="user-bio">{user?.bio}</p>
+                  <p className="user-bio">
+                    {user?.username !== currentUser?.username
+                      ? user?.bio
+                      : currentUser?.bio}
+                  </p>
                   {(currentUser?.school || user?.school) && (
                     <p className="user-sch">
                       <IconSchool height="16" width="16" fill="black" />{" "}
-                      {currentUser?.school || user?.school}
+                      {user?.username !== currentUser?.username
+                        ? user.school
+                        : currentUser.school}
                     </p>
                   )}
                   <p className="user-joined-date">
@@ -363,7 +377,10 @@ const Profile: React.FC = () => {
                       width="16"
                       fill="black"
                     />{" "}
-                    Joined {moment(user?.createdAt).format("MMMM YYYY")}
+                    Joined{" "}
+                    {user?.username !== currentUser?.username
+                      ? moment(user?.createdAt).format("MMMM YYYY")
+                      : moment(currentUser?.createdAt).format("MMMM YYYY")}
                   </p>
                 </div>
               </div>
@@ -435,8 +452,6 @@ const Profile: React.FC = () => {
                   </div>
                 </div>
               )*/}
-
-        
 
               <div className="u-articles-segment">
                 <div className="u-art-head">

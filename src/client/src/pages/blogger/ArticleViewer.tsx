@@ -108,19 +108,35 @@ const ArticleTags = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(2),
 }));
 
-const ReactionBar = styled(Paper)(({ theme }) => ({
+const ReactionBarContainer = styled(Box)(({ theme }) => ({
   position: "fixed",
-  bottom: theme.spacing(4),
-  right: "30%",
-  transform: "translateX(-50%)",
+  bottom: 0,
+  left: 0,
+  right: 0,
   display: "flex",
+  justifyContent: "center",
+  padding: theme.spacing(2),
+  zIndex: 1000,
+  pointerEvents: "none",
+}));
+
+const ReactionBar = styled(Paper)(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
   gap: theme.spacing(2),
   padding: theme.spacing(1),
   background: "rgba(255, 255, 255, 0.95)",
-  backdropFilter: "blur(12px)",
   borderRadius: theme.spacing(3),
   border: "1px solid #ededed",
-  zIndex: 1000
+  pointerEvents: "auto",
+  width: "auto",
+  maxWidth: "300px",
+  [theme.breakpoints.down("sm")]: {
+    padding: theme.spacing(1),
+    gap: theme.spacing(1),
+    width: "calc(100% - 32px)", 
+    justifyContent: "space-around"
+  }
 }));
 
 const RelatedArticles = styled(Box)(({ theme }) => ({
@@ -376,7 +392,8 @@ const ArticleViewer: React.FC = () => {
       </ArticleContent>
 
       <AnimatePresence>
-        {showReactionBar && (
+      {showReactionBar && (
+        <ReactionBarContainer>
           <ReactionBar
             component={motion.div}
             initial={{ opacity: 0, y: 20 }}
@@ -388,7 +405,6 @@ const ArticleViewer: React.FC = () => {
             <IconButton
               onClick={handleLike}
               color={liked ? "secondary" : "default"}
-              sx={{ marginRight: 2 }}
             >
               <Badge
                 badgeContent={FormattedCount(updatedArticle?.likes?.length)}
@@ -406,27 +422,29 @@ const ArticleViewer: React.FC = () => {
                 <CommentIcon />
               </Badge>
             </IconButton>
-            <IconButton onClick={handleShare} sx={{ marginLeft: 2 }}>
+
+            <IconButton onClick={handleShare}>
               <Share />
             </IconButton>
+
             {updatedArticle?.postedBy?.username === user?.username && (
               <>
                 <IconButton
                   onClick={() =>
                     navigate(`/blog/article/update/${updatedArticle?.slug}`)
                   }
-                  sx={{ marginLeft: 2 }}
                 >
                   <Edit />
                 </IconButton>
-                <IconButton onClick={handleDelete} sx={{ marginLeft: 2 }}>
+                <IconButton onClick={handleDelete}>
                   <Delete />
                 </IconButton>
               </>
             )}
           </ReactionBar>
-        )}
-      </AnimatePresence>
+        </ReactionBarContainer>
+      )}
+    </AnimatePresence>
 
       {relatedArticles?.length > 1 && (
         <RelatedArticles>

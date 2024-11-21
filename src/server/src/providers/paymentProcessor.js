@@ -2,6 +2,7 @@ import { User } from "../models/userModel.js";
 import catchAsync from "../middlewares/catchAsync.js";
 import { generateNotification } from "../utils/notificationGen.js";
 import { sendNotification } from "../utils/sendNotification.js";
+import { logger } from "../utils/logger.js";
 
 export const onPaymentSuccess = catchAsync(async (req, res, next) => {
   const { amount, ref, plan } = req.body;
@@ -27,9 +28,13 @@ export const onPaymentSuccess = catchAsync(async (req, res, next) => {
   const notPayload = generateNotification("NEW:SUBSCRIPTION", {
     username: user.username,
   });
-  sendNotification(user, notPayload, ["push"]);
-
-  res.status(200).json({
-    success: true,
-  });
+  try {
+    await sendNotification(user, notPayload, ["push"]);
+  } catch (err) {
+    logger.error(err);
+  } finally {
+    return res.status(200).json({
+      success: true,
+    });
+  }
 });

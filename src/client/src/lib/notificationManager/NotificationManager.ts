@@ -7,14 +7,15 @@ import {
   deleteAllNotification,
   getAllNotification,
 } from "../../actions/notification";
-import { NOTIFICATION, NOTIFICATIONS } from "../../types";
+import { NOTIFICATION} from "../../types";
+import { RootState } from "../../store";
 
 export class NotificationManager {
   private notifications: NOTIFICATION[];
   private dispatch: ReturnType<typeof useDispatch>;
 
   constructor() {
-    const {notifications} = useSelector((state) => state.notification);
+    const { notifications } = useSelector((state:RootState) => state.notification);
     this.notifications = [...notifications];
     this.dispatch = useDispatch();
   }
@@ -22,7 +23,7 @@ export class NotificationManager {
   getNotifications(): NOTIFICATION[] {
     // const not: NOTIFICATIONS = this.dispatch(getAllNotification());
     // console.log(not)
-    return this.notifications
+    return this.notifications;
   }
   getUnreadNotificationsCount(): number {
     return this.notifications.length > 0
@@ -37,23 +38,23 @@ export class NotificationManager {
   }
 
   markNotificationAsRead(id: string): void {
-    this.dispatch(markNotificationRead(id));
+    this.dispatch<any>(markNotificationRead(id));
   }
 
   markNotificationUnRead(id: string): void {
-    this.dispatch(markNotificationUnRead(id));
+    this.dispatch<any>(markNotificationUnRead(id));
   }
 
   markAllNotificationsAsRead(): void {
-    this.dispatch(markAllNotificationRead());
+    this.dispatch<any>(markAllNotificationRead());
   }
 
   deleteNotification(id: string): void {
-    this.dispatch(deleteNotification(id));
+    this.dispatch<any>(deleteNotification(id));
   }
 
   deleteAllNotifications(): void {
-    this.dispatch(deleteAllNotification());
+    this.dispatch<any>(deleteAllNotification());
   }
 
   private static instance: NotificationManager;

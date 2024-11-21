@@ -82,9 +82,14 @@ class SubscriptionQueue {
         "SUBSCRIPTION:DOWNGRADE",
         { username: user.username }
       );
-      await sendNotification(user, downgradeNotification, ["email", "push"]);
-      user.lastSubscriptionNotificationSentAt = dayjs().toDate();
-      await user.save();
+      try {
+        await sendNotification(user, downgradeNotification, ["email", "push"]);
+      } catch (err) {
+        logger.error(err);
+      } finally {
+        user.lastSubscriptionNotificationSentAt = dayjs().toDate();
+        await user.save();
+      }
     }
   }
 
@@ -107,9 +112,14 @@ class SubscriptionQueue {
           "SUBSCRIPTION:DUE_REMINDER",
           { username: user.username }
         );
-        await sendNotification(user, reminderNotification, ["email", "push"]);
-        user.lastSubscriptionNotificationSentAt = dayjs().toDate();
-        await user.save();
+        try {
+          await sendNotification(user, reminderNotification, ["email", "push"]);
+        } catch (err) {
+          logger.error(err);
+        } finally {
+          user.lastSubscriptionNotificationSentAt = dayjs().toDate();
+          await user.save();
+        }
       }
     }
   }
@@ -124,9 +134,15 @@ class SubscriptionQueue {
       const inviteNotification = generateNotification("SUBSCRIPTION:INVITE", {
         username: user.username,
       });
-      await sendNotification(user, inviteNotification, ["email", "push"]);
-      user.lastSubscriptionNotificationSentAt = dayjs().toDate();
-      await user.save();
+
+      try {
+        await sendNotification(user, inviteNotification, ["email", "push"]);
+      } catch (err) {
+        logger.error(err);
+      } finally {
+        user.lastSubscriptionNotificationSentAt = dayjs().toDate();
+        await user.save();
+      }
     }
   }
 }

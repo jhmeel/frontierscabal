@@ -8,14 +8,14 @@
       href="/src/client/src/assets/logos/icon-152x152.png"
     />
     <link
-      rel="apple-touch-icon"  
+      rel="apple-touch-icon"
       type="image/png"
-      href="/src/client/src/assets/logos/icon-128x128.png" 
+      href="/src/client/src/assets/logos/icon-128x128.png"
     />
     <link
       rel="mask-icon"
       type="image/png"
-      href="/src/client/src/assets/logos/icon-384x384.png" 
+      href="/src/client/src/assets/logos/icon-384x384.png"
     />
     <link rel="manifest" href="/src/client/manifest.json" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -80,7 +80,7 @@
         height: fit-content;
         width: fit-content;
         color: white;
-        border-radius: 4px; 
+        border-radius: 4px;
         border: none;
         background-color: #176984;
         cursor: pointer;
@@ -89,7 +89,7 @@
         padding: 5px;
         font-size: 12px;
         text-align: left;
-      } 
+      }
     </style>
   </head>
 
@@ -107,6 +107,7 @@
     <script type="module">
       import getToken from "./src/client/src/utils/getToken.ts";
       import axiosInstance from "./src/client/src/utils/axiosInstance.ts";
+  
       // Function to send the subscription to the server
       const sendSubscriptionToServer = async (subscription) => {
         try {
@@ -124,7 +125,7 @@
       };
 
       window.addEventListener("load", () => {
-        navigator.serviceWorker && navigator.serviceWorker.register("");
+        navigator.serviceWorker && navigator.serviceWorker.register("/firebase-messaging-sw.js");
 
         navigator.serviceWorker.ready
           .then(async (registration) => {
@@ -133,14 +134,14 @@
                 await registration.pushManager.getSubscription();
 
               if (!subscription) {
-                // If there's no existing subscription, create one
+            
                 subscription = await registration.pushManager.subscribe({
                   userVisibleOnly: true,
                   applicationServerKey:
-                    "BP_zBx8Se411U33MhcPWFMPwurhn9mP7YLnQI8CRUJXp35hk3lnYM6ZPfAZ0L4g7Ws7EhBSdqGlcE_nreH7YZNw",
+                    "BOxh7Wy4nDeWLSGi9BWUzzvfJw0EFDub2iDU0HoWLQ9PAX6DwwAx8yKtXBL3P5XkwaSMgXXye-odg69N_ui_2QM",
                 });
 
-                // Send the initial subscription to your server
+                // Send subscription to server
                 await sendSubscriptionToServer(subscription);
               }
 

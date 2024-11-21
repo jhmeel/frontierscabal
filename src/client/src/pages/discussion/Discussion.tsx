@@ -533,8 +533,8 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
       </div>
     );
   }
-const rCl1 = `#456`
-const rCl2 = `#978500`
+  const rCl1 = `#456`;
+  const rCl2 = `#978500`;
   return (
     <Div100vh>
       <StyledDiscussionRoom>
@@ -572,7 +572,7 @@ const rCl2 = `#978500`
             </Typography>
           </Box>
           <IconButton onClick={handleParticipantDrawerToggle}>
-          <FaEllipsisVertical  color="#fff"/>
+            <FaEllipsisVertical color="#fff" />
           </IconButton>
         </TopBar>
         <MessageList>
@@ -692,7 +692,7 @@ const rCl2 = `#978500`
                         src={message.senderAvatar}
                         sx={{
                           width: 28,
-                          backgroundColor:rCl2,
+                          backgroundColor: rCl2,
                           height: 28,
                           fontSize: 12,
                           marginRight: 4,
@@ -728,9 +728,7 @@ const rCl2 = `#978500`
               }}
             >
               <Typography variant="caption">
-                <h5 style={{ color: rCl1 }}>
-                  {replyTo.senderName}
-                </h5>
+                <h5 style={{ color: rCl1 }}>{replyTo.senderName}</h5>
                 {replyTo?.fileType?.startsWith("image/") ? (
                   <img
                     src={replyTo?.fileUrl}
@@ -942,7 +940,7 @@ const rCl2 = `#978500`
             </MenuItem>
             {selectedMessage?.fileUrl && (
               <MenuItem onClick={() => handleMenuAction("download")} divider>
-                Download File
+                Download
               </MenuItem>
             )}
             {selectedMessage?.senderId === currentUser._id && (
@@ -963,7 +961,7 @@ const rCl2 = `#978500`
               },
             }}
           >
-            {/* Only show remove if the current user is the discussion owner or an admin */}
+            {/* Only show remove if the current user is the discussion creator */}
             {discussion?.creatorId === currentUser._id && (
               <MenuItem
                 onClick={() => handleParticipantMenuAction("removeParticipant")}

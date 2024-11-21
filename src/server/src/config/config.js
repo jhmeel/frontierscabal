@@ -107,9 +107,9 @@ const Config = {
       process.env.VAPID_SUBJECT || "mailto:frontierscabal@gmail.com",
   },
 
-  // REDIS CONFIGURATION
-  REDIS: {
-    TTL: parseInt(process.env.REDIS_TTL, 10) || 60,
+  //CACHE
+  CACHE: {
+    TTL: 5 * 60 * 1000,
   },
 
   // TELEGRAM BOT SETTINGS

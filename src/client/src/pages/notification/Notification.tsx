@@ -27,9 +27,10 @@ import { format, formatDistance } from "date-fns";
 import MetaData from "../../MetaData";
 import Footer from "../../components/footer/Footer";
 import { NotificationManager } from "../../lib/notificationManager/NotificationManager";
+import { NOTIFICATION, NOTIFICATIONS } from "../../types";
 
 const NotificationPage: React.FC = () => {
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<NOTIFICATION[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [activeFilter, setActiveFilter] = useState('all');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);

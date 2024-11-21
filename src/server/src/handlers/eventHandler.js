@@ -1,10 +1,12 @@
-import { User} from "../models/userModel.js";
-import { Event} from "../models/eventModel.js";
+import { User } from "../models/userModel.js";
+import { Event } from "../models/eventModel.js";
 import catchAsync from "../middlewares/catchAsync.js";
 import cloudinary from "cloudinary";
-import {ErrorHandler} from "./errorHandler.js";
-import {generateNotification} from "../utils/notificationGen.js";
-import { notifyAll } from "./webpushHandler.js";
+import { ErrorHandler } from "./errorHandler.js";
+import { generateNotification } from "../utils/notificationGen.js";
+import { notifyAllUser } from "../utils/sendNotification.js";
+import cron from "node-cron";
+import { logger } from "../utils/logger.js";
 
 export const newEvent = catchAsync(async (req, res, next) => {
   const { title, description, category, startDate, endDate, avenue } = req.body;
@@ -41,7 +43,8 @@ export const newEvent = catchAsync(async (req, res, next) => {
   });
 
   const notPayload = generateNotification("NEW:EVENT", populatedEvent);
-  notifyAll(notPayload);
+
+  await notifyAllUser(notPayload, [`email`, `push`]);
 });
 
 export const getUpcomingEvents = catchAsync(async (req, res, next) => {
@@ -158,3 +161,43 @@ export const deleteEventById = catchAsync(async (req, res, next) => {
 
   res.status(200).json({ success: true });
 });
+
+export const initOngoingEventNotificationJob = () => {
+  logger.debug(
+    `Initialzed ongoing events notification job at ${new Date().toLocaleString(
+      "en-US",
+      {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }
+    )}`
+  );
+  cron.schedule(
+    "0 0 * * *",
+    async () => {
+      try {
+        const currentDate = new Date();
+        const events = await Event.find({
+          startDate: { $gte: currentDate },
+          endDate: { $gt: currentDate },
+        })
+          .populate("createdBy")
+          .sort({ startDate: -1 });
+        events &&
+          events.map(async (event) => {
+            const notPayload = generateNotification("ONGOING:EVENT", event);
+            await notifyAllUser(notPayload, [`email`, `push`]);
+          });
+        logger.info(
+          `Done notifying frontiers for ${events?.length} ongoing events`
+        );
+      } catch (err) {
+        logger.error(err);
+      }
+    },
+    {
+      scheduled: true,
+      timezone: "Africa/Lagos",
+    }
+  );
+};

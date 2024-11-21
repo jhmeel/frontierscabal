@@ -3,7 +3,10 @@ import { logger } from "./utils/logger.js";
 import { Emitter } from "./utils/emitter.js";
 import { ErrorHandler } from "./handlers/errorHandler.js";
 import ViteExpress from "vite-express";
-import http from 'http';
+import http from "http";
+import {
+ initOngoingEventNotificationJob
+} from "./handlers/eventHandler.js";
 
 class Worker {
   constructor(app, config) {
@@ -19,13 +22,17 @@ class Worker {
   }
 
   initServer() {
-    ViteExpress.bind(this.app, this.server,  () => {
-     logger.debug("vite server initialized")
+    ViteExpress.bind(this.app, this.server, () => {
+      logger.debug("vite server initialized");
     });
-    this.server.listen(this.port, ()=>{
+    this.server.listen(this.port, () => {
+
       this.emitter.emit("SYSTEM:READY:STATE", "100");
+
       logger.info(`server running on port ${this.port}`);
-    })
+
+     initOngoingEventNotificationJob();
+    });
   }
 
   addDependency(dependencies) {
@@ -42,7 +49,7 @@ class Worker {
       logger.info(`${name} is ready`);
       this.updateReadyPercentage();
     });
-  } 
+  }
 
   startPolling() {
     const intervalId = setInterval(() => {
@@ -82,13 +89,11 @@ class Worker {
 
     try {
       for (const [name, dependency] of Object.entries(this.dependencies)) {
-        if(name == "<SOCKET_PROVIDER>" ){
+        if (name == "<SOCKET_PROVIDER>") {
           await asyncRetry(this.retries)(dependency.init(this.server));
-        }
-        else{
+        } else {
           await asyncRetry(this.retries)(dependency.init());
         }
-   
       }
       return this;
     } catch (error) {

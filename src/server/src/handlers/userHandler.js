@@ -1,11 +1,11 @@
 import { User } from "../models/userModel.js";
-import  catchAsync from "../middlewares/catchAsync.js";
+import catchAsync from "../middlewares/catchAsync.js";
 import { ErrorHandler } from "../handlers/errorHandler.js";
 import { createSession } from "../providers/sessionProvider.js";
 import cloudinary from "cloudinary";
 import { resetPasswordMessage } from "../utils/templates.js";
-import { SendMail } from "../utils/mailer.js";
 import crypto from "crypto";
+import { sendNotification } from "../utils/sendNotification.js";
 
 // Connect with a user
 export const connectWithUser = catchAsync(async (req, res, next) => {
@@ -164,13 +164,15 @@ export const forgotPassword = catchAsync(async (req, res, next) => {
   const resetPasswordUrl = `https://frontierscabal.com/#/password/reset/${resetPasswordToken}`;
 
   try {
-    await SendMail(user, resetPasswordMessage(resetPasswordUrl));
+    await sendNotification(user, resetPasswordMessage(resetPasswordUrl), [
+      `email`,
+    ]);
 
     res.status(200).json({
       success: true,
       message: `Mail sent to ${user.email}`,
     });
-  } catch (error) { 
+  } catch (error) {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpiry = undefined;
 

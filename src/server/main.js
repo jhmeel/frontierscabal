@@ -7,7 +7,7 @@ import { DbProvider } from "./src/providers/dbProvider.js";
 import { MiddlewaresProvider } from "./src/providers/middlewaresProvider.js";
 import { RouteProvider } from "./src/providers/routeProvider.js";
 import { SocketProvider } from "./src/providers/socketProvider.js";
-//import "./src/utils/subscription.js";
+import "./src/utils/subscription.js";
 
 
 dotenv.config();

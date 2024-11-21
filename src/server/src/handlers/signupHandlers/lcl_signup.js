@@ -1,12 +1,9 @@
-
-import {User} from "../../models/userModel.js";
+import { User } from "../../models/userModel.js";
 import catchAsync from "../../middlewares/catchAsync.js";
-import {ErrorHandler} from "../errorHandler.js";
-import {
-  createSession,
-} from "../../providers/sessionProvider.js";
-import {SendMail} from "../../utils/mailer.js";
+import { ErrorHandler } from "../errorHandler.js";
+import { createSession } from "../../providers/sessionProvider.js";
 import { welcomeMsg } from "../../utils/templates.js";
+import { sendNotification } from "../../utils/sendNotification.js";
 
 const lcl_signup = catchAsync(async (req, res, next) => {
   const { username, email, phonenumber, password } = req.body;
@@ -31,9 +28,14 @@ const lcl_signup = catchAsync(async (req, res, next) => {
 
   // Create new user
   const user = await User.create(newUser);
-    
-  return createSession(user, 200, res, next);
-  //notify newuser for successful signup!
+
+  try {
+    await sendNotification(user, welcomeMsg(user.username), [`email`]);
+  } catch (err) {
+    logger.error(err);
+  } finally {
+    return createSession(user, 200, res, next);
+  }
 });
 
-export {lcl_signup};
+export { lcl_signup };
