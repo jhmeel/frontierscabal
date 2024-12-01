@@ -111,9 +111,9 @@ const MessageBubble = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
   marginBottom: "50px",
   cursor: "pointer",
   transition: "all 0.3s ease",
-  border: isDeleted ? "none" : "1px solid #ededed",
+  border: "1px solid #ededed",
   fontStyle: isDeleted ? "italic" : "normal",
-  fontSize: "16px",
+  fontSize: isDeleted ? `10px` : "14px",
   marginLeft: isCurrentUser ? "auto" : "0",
 }));
 
@@ -589,7 +589,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
             const isNewDay = messageDate && messageDate !== previousMessageDate;
             return (
               <>
-                {isNewDay && !message.isDeleted && (
+                {isNewDay && (
                   <Typography
                     variant="subtitle2"
                     style={{
@@ -604,7 +604,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                   </Typography>
                 )}
                 <div key={message.id}>
-                  {!message.isDeleted && (
+                  {
                     <MessageBubble
                       isCurrentUser={message.senderId === currentUser?._id}
                       isDeleted={message.isDeleted}
@@ -619,7 +619,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                         </Username>
                       </UserInfo>
 
-                      {message.replyTo && (
+                      {message.replyTo && !message.isDeleted && (
                         <Typography
                           variant="caption"
                           style={{
@@ -638,7 +638,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                             ?.content.substring(0, 30)}
                         </Typography>
                       )}
-                      {!message.isDeleted && (
+                      {
                         <Typography variant="body1" color="#fff" fontSize={16}>
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
@@ -647,7 +647,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                             {message.content}
                           </ReactMarkdown>
                         </Typography>
-                      )}
+                      }
                       {message.fileUrl && !message.isDeleted && (
                         <div>
                           {message?.fileType?.startsWith("image/") ? (
@@ -711,7 +711,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                           : "U"}
                       </Avatar>
                     </MessageBubble>
-                  )}
+                  }
                 </div>
               </>
             );

@@ -61,11 +61,12 @@ const Login = () => {
     if (error) {
       enqueueSnackbar(error, { variant: "error" });
       dispatch<any>(clearErrors());
-    } else if (isAuthenticated && Config.IS_BILLER_ACTIVE && user?.subscriptionDue) {
+    } 
+    else if (isAuthenticated && Config.IS_BILLER_ACTIVE && user?.subscriptionDue) {
       enqueueSnackbar(`Logged in successfully!`, { variant: "success" });
       navigate(`/biller`);
     }
-    else{
+    else if(isAuthenticated){
       enqueueSnackbar(`Logged in successfully!`, { variant: "success" });
       navigate(`/profile`);
     }
