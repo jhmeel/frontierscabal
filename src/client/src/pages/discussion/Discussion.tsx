@@ -589,7 +589,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
             const isNewDay = messageDate && messageDate !== previousMessageDate;
             return (
               <>
-                {isNewDay && (
+                {isNewDay && !message.isDeleted && (
                   <Typography
                     variant="subtitle2"
                     style={{
