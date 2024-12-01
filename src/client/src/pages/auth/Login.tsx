@@ -22,6 +22,7 @@ import fcabal from "../../assets/logos/fcabal.png";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import Div100vh from 'react-div-100vh'
+import Config from "../../config/Config";
 
 const Login = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -60,10 +61,15 @@ const Login = () => {
     if (error) {
       enqueueSnackbar(error, { variant: "error" });
       dispatch<any>(clearErrors());
-    } else if (isAuthenticated) {
+    } else if (isAuthenticated && Config.IS_BILLER_ACTIVE && user?.subscriptionDue) {
       enqueueSnackbar(`Logged in successfully!`, { variant: "success" });
       navigate(`/biller`);
     }
+    else{
+      enqueueSnackbar(`Logged in successfully!`, { variant: "success" });
+      navigate(`/profile`);
+    }
+
   }, [dispatch, error, isAuthenticated, navigate]);
 
   return (

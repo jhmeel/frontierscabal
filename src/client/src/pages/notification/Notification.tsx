@@ -72,7 +72,7 @@ const NotificationPage: React.FC = () => {
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.3 }}
     >
-      <StyledNotificationPaper elevation={3}>
+      <StyledNotificationPaper elevation={1}>
         <Box sx={{ 
           display: 'flex', 
           alignItems: 'center', 

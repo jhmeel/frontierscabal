@@ -13,7 +13,7 @@ import "./src/utils/subscription.js";
 dotenv.config();
 const app = express();
 const dependencies = [
-  DbProvider.getInstance(Config),
+  //DbProvider.getInstance(Config),
   SocketProvider.getInstance(Config),
   new CloudinaryProvider(Config),
   new MiddlewaresProvider(app),

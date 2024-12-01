@@ -577,14 +577,16 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
         </TopBar>
         <MessageList>
           {messages.map((message, index) => {
-            const messageDate = message.createdAt.toLocaleDateString();
+            const messageDate = message.createdAt
+              ? new Date(message.createdAt).toLocaleDateString()
+              : null;
+
             const previousMessageDate =
-              index > 0
-                ? messages[index - 1].createdAt.toLocaleDateString()
+              index > 0 && messages[index - 1].createdAt
+                ? new Date(messages[index - 1].createdAt).toLocaleDateString()
                 : null;
 
-            const isNewDay = messageDate !== previousMessageDate;
-
+            const isNewDay = messageDate && messageDate !== previousMessageDate;
             return (
               <>
                 {isNewDay && (
@@ -596,7 +598,9 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                       textAlign: "center",
                     }}
                   >
-                    {new Date(messageDate).toDateString()}
+                    {messageDate
+                      ? new Date(message.createdAt).toDateString()
+                      : new Date().toDateString()}
                   </Typography>
                 )}
                 <div key={message.id}>

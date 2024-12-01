@@ -6,6 +6,7 @@ import styled from "styled-components";
 import { Button, Checkbox, Typography, Box, Grid } from "@mui/material";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
+import Config from "../../config/Config";
 
 const Personalize = () => {
   const navigate = useNavigate();
@@ -37,15 +38,19 @@ const Personalize = () => {
       [catg]: !prevCatg[catg],
     }));
   };
-  
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     LocalForageProvider.setItem(
-     `FC:${user?.username}:INTERESTS`,
+      `FC:${user?.username}:INTERESTS`,
       JSON.stringify(categories)
     );
-    navigate("/biller");
+
+    if (Config.IS_BILLER_ACTIVE && user?.subscriptionDue) {
+      navigate(`/biller`);
+    } else {
+      navigate(`/profile`);
+    }
   };
 
   return (
@@ -65,8 +70,10 @@ const Personalize = () => {
           <Grid container spacing={2}>
             {Object.keys(categories).map((category) => (
               <Grid item xs={6} sm={4} key={category}>
-                <CategoryLabel className={categories[category] ? "checked" : ""}>
-                  {category.replace('_', ' ')}
+                <CategoryLabel
+                  className={categories[category] ? "checked" : ""}
+                >
+                  {category.replace("_", " ")}
                   <Checkbox
                     checked={categories[category]}
                     onChange={() => handleCategoryChange(category)}
@@ -140,74 +147,74 @@ const CategoryLabel = styled.label`
   text-transform: capitalize;
 
   &.checked {
-  border: 1.5px solid #176984;
-  background: #176984;
-  color:#fff;
-  animation: 0.6s ease-out splash-12;
-}
-@-moz-keyframes splash-12 {
-  40% {
+    border: 1.5px solid #176984;
     background: #176984;
-    box-shadow: 0 -18px 0 -8px #176984, 16px -8px 0 -8px #176984,
-      16px 8px 0 -8px #176984, 0 18px 0 -8px #176984, -16px 8px 0 -8px #176984,
-      -16px -8px 0 -8px #176984;
+    color: #fff;
+    animation: 0.6s ease-out splash-12;
+  }
+  @-moz-keyframes splash-12 {
+    40% {
+      background: #176984;
+      box-shadow: 0 -18px 0 -8px #176984, 16px -8px 0 -8px #176984,
+        16px 8px 0 -8px #176984, 0 18px 0 -8px #176984, -16px 8px 0 -8px #176984,
+        -16px -8px 0 -8px #176984;
+    }
+
+    100% {
+      background: #176984;
+      box-shadow: 0 -36px 0 -10px transparent, 32px -16px 0 -10px transparent,
+        32px 16px 0 -10px transparent, 0 36px 0 -10px transparent,
+        -32px 16px 0 -10px transparent, -32px -16px 0 -10px transparent;
+    }
   }
 
-  100% {
-    background: #176984;
-    box-shadow: 0 -36px 0 -10px transparent, 32px -16px 0 -10px transparent,
-      32px 16px 0 -10px transparent, 0 36px 0 -10px transparent,
-      -32px 16px 0 -10px transparent, -32px -16px 0 -10px transparent;
-  }
-}
+  @-webkit-keyframes splash-12 {
+    40% {
+      background: #176984;
+      box-shadow: 0 -18px 0 -8px #176984, 16px -8px 0 -8px #176984,
+        16px 8px 0 -8px #176984, 0 18px 0 -8px #176984, -16px 8px 0 -8px #176984,
+        -16px -8px 0 -8px #176984;
+    }
 
-@-webkit-keyframes splash-12 {
-  40% {
-    background: #176984;
-    box-shadow: 0 -18px 0 -8px #176984, 16px -8px 0 -8px #176984,
-      16px 8px 0 -8px #176984, 0 18px 0 -8px #176984, -16px 8px 0 -8px #176984,
-      -16px -8px 0 -8px #176984;
-  }
-
-  100% {
-    background: #176984;
-    box-shadow: 0 -36px 0 -10px transparent, 32px -16px 0 -10px transparent,
-      32px 16px 0 -10px transparent, 0 36px 0 -10px transparent,
-      -32px 16px 0 -10px transparent, -32px -16px 0 -10px transparent;
-  }
-}
-
-@-o-keyframes splash-12 {
-  40% {
-    background: #176984;
-    box-shadow: 0 -18px 0 -8px #176984, 16px -8px 0 -8px #176984,
-      16px 8px 0 -8px #176984, 0 18px 0 -8px #176984, -16px 8px 0 -8px #176984,
-      -16px -8px 0 -8px #176984;
+    100% {
+      background: #176984;
+      box-shadow: 0 -36px 0 -10px transparent, 32px -16px 0 -10px transparent,
+        32px 16px 0 -10px transparent, 0 36px 0 -10px transparent,
+        -32px 16px 0 -10px transparent, -32px -16px 0 -10px transparent;
+    }
   }
 
-  100% {
-    background: #176984;
-    box-shadow: 0 -36px 0 -10px transparent, 32px -16px 0 -10px transparent,
-      32px 16px 0 -10px transparent, 0 36px 0 -10px transparent,
-      -32px 16px 0 -10px transparent, -32px -16px 0 -10px transparent;
-  }
-}
+  @-o-keyframes splash-12 {
+    40% {
+      background: #176984;
+      box-shadow: 0 -18px 0 -8px #176984, 16px -8px 0 -8px #176984,
+        16px 8px 0 -8px #176984, 0 18px 0 -8px #176984, -16px 8px 0 -8px #176984,
+        -16px -8px 0 -8px #176984;
+    }
 
-@keyframes splash-12 {
-  40% {
-    background: #176984;
-    box-shadow: 0 -18px 0 -8px #176984, 16px -8px 0 -8px #176984,
-      16px 8px 0 -8px #176984, 0 18px 0 -8px #176984, -16px 8px 0 -8px #176984,
-      -16px -8px 0 -8px #176984;
+    100% {
+      background: #176984;
+      box-shadow: 0 -36px 0 -10px transparent, 32px -16px 0 -10px transparent,
+        32px 16px 0 -10px transparent, 0 36px 0 -10px transparent,
+        -32px 16px 0 -10px transparent, -32px -16px 0 -10px transparent;
+    }
   }
 
-  100% {
-    background: #176984;
-    box-shadow: 0 -36px 0 -10px transparent, 32px -16px 0 -10px transparent,
-      32px 16px 0 -10px transparent, 0 36px 0 -10px transparent,
-      -32px 16px 0 -10px transparent, -32px -16px 0 -10px transparent;
+  @keyframes splash-12 {
+    40% {
+      background: #176984;
+      box-shadow: 0 -18px 0 -8px #176984, 16px -8px 0 -8px #176984,
+        16px 8px 0 -8px #176984, 0 18px 0 -8px #176984, -16px 8px 0 -8px #176984,
+        -16px -8px 0 -8px #176984;
+    }
+
+    100% {
+      background: #176984;
+      box-shadow: 0 -36px 0 -10px transparent, 32px -16px 0 -10px transparent,
+        32px 16px 0 -10px transparent, 0 36px 0 -10px transparent,
+        -32px 16px 0 -10px transparent, -32px -16px 0 -10px transparent;
+    }
   }
-}
 
   &:hover {
     background-color: #f0f0f0;

@@ -17,6 +17,8 @@ import MainLoader from "./components/loaders/MainLoader";
 import { messaging } from "./firebase";
 import { onMessage } from "firebase/messaging";
 import { NOTIFICATION } from "./types";
+import getToken from "./utils/getToken";
+import axiosInstance from "./utils/axiosInstance";
 
 const CreateModulePage = lazy(() => import("./pages/module/CreateModule"));
 const HomePage = lazy(() => import("./pages/home/Home"));
@@ -93,6 +95,81 @@ function App() {
       .filter((_, i) => i >= TOAST_LIMIT)
       .forEach((t) => toast.dismiss(t.id));
   }, [toasts]);
+
+  // Function to send the subscription to the server
+  const subscribe = async (subscription:any) => {
+    try {
+      const authToken = await getToken();
+      if (authToken) {
+        await axiosInstance(authToken).post(
+          "/api/v1/push-subscription",
+          JSON.stringify(subscription)
+        );
+        console.log("Subscription to webpush done successfully!");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    navigator.serviceWorker &&
+      navigator.serviceWorker.register("/firebase-messaging-sw.js");
+
+    navigator.serviceWorker.ready
+      .then(async (registration) => {
+        try {
+          let subscription = await registration.pushManager.getSubscription();
+          if (!subscription) {
+            subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey:
+                "BOxh7Wy4nDeWLSGi9BWUzzvfJw0EFDub2iDU0HoWLQ9PAX6DwwAx8yKtXBL3P5XkwaSMgXXye-odg69N_ui_2QM",
+            });
+
+            // Send subscription to server
+            await subscribe(subscription);
+          }
+
+          // Listen for push subscription change
+          navigator.serviceWorker.addEventListener(
+            "pushsubscriptionchange",
+            async (event) => {
+              console.log("Push subscription has changed.");
+              const newSubscription = event?.newSubscription;
+              await subscribe(newSubscription);
+            }
+          );
+        } catch (err) {
+          console.log(err);
+        }
+
+        registration.onupdatefound = () => {
+          const installingWorker = registration.installing;
+          if (installingWorker) {
+            installingWorker.onstatechange = () => {
+              if (installingWorker.state === "installed") {
+                // A new service worker is installed but not yet active.
+                // You can notify the user or take some action here.
+                console.log(
+                  "New content is available and will be used when all " +
+                    "tabs for this page are closed. See https://bit.ly/CRA-PWA."
+                );
+
+                // Optionally, you can force the new service worker to become active
+                // by calling registration.waiting.postMessage({ action: "skipWaiting" });
+                // This will skip the "waiting" state and activate the new service worker immediately.
+
+                // You might want to show a UI message to the user, asking them to reload the page.
+              }
+            };
+          }
+        };
+      })
+      .catch((error) => {
+        console.error("Error during service worker registration:", error);
+      });
+  }, []);
 
   useEffect(() => {
     const sr: any = ScrollReveal({

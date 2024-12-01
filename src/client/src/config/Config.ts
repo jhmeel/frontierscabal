@@ -1,4 +1,5 @@
 const Config = {
+  IS_BILLER_ACTIVE: false,
   HOST: "https://frontierscabal.onrender.com",
   SOCIALS: {
     instagram: {
