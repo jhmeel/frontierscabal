@@ -10,6 +10,8 @@ import {
   arrayUnion,
   arrayRemove,
   updateDoc,
+  getDocs,
+  where,
 } from "firebase/firestore";
 import {
   Card,
@@ -113,6 +115,7 @@ interface DiscussionListProps {
   currentUser: USER;
 }
 
+
 const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
   const [filteredDiscussions, setFilteredDiscussions] = useState<Discussion[]>(
@@ -129,25 +132,58 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
 
+  const [unreadTotalCount, setUnreadTotalCount] = useState(0);
+
+  const fetchUnreadMessagesForDiscussion = async (
+    discussionId: string
+  ): Promise<number> => {
+    const messagesRef = collection(db, "messages");
+    const q = query(
+      messagesRef,
+      where("discussionId", "==", discussionId),
+      where("unreadBy", "array-contains", currentUser._id)
+    );
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.size;
+  };
+
   useEffect(() => {
     const q = query(
       collection(db, "discussions"),
       orderBy("lastActivityAt", "desc")
     );
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
       const discussionsData: Discussion[] = [];
-      let unreadCount = 0;
-      querySnapshot.forEach((doc) => {
-        const discussion = { id: doc.id, ...doc.data() } as Discussion;
-        if (!discussion.participants.includes(currentUser?._id)) {
-          unreadCount++;
+      let totalUnreadCount = 0;
+
+      // Use Promise.all to fetch unread counts concurrently
+      const discussionPromises = querySnapshot.docs.map(async (docSnapshot) => {
+        const discussion = {
+          id: docSnapshot.id,
+          ...docSnapshot.data(),
+          unreadCount: 0,
+        } as Discussion;
+
+        // Only fetch unread count for discussions the user is part of
+        if (discussion.participants.includes(currentUser._id)) {
+          discussion.unreadCount = await fetchUnreadMessagesForDiscussion(
+            discussion.id
+          );
+          totalUnreadCount += discussion.unreadCount;
         }
-        discussionsData.push(discussion);
+
+        return discussion;
       });
-      setDiscussions(discussionsData);
-      setFilteredDiscussions(discussionsData);
-      setUnreadCount(unreadCount);
+
+      const resolvedDiscussions = await Promise.all(discussionPromises);
+
+      setDiscussions(resolvedDiscussions);
+      setFilteredDiscussions(resolvedDiscussions);
+      setUnreadTotalCount(totalUnreadCount);
     });
+
     return () => unsubscribe();
   }, [currentUser]);
 
@@ -251,7 +287,7 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
   return (
     <Container maxWidth="md" sx={{ paddingTop: 2 }}>
       <Typography variant="h5" fontWeight={600}>
-        Discuss {unreadCount > 0 && `(${unreadCount} new)`}
+        Discuss {unreadTotalCount > 0 && `(${unreadTotalCount} new)`}
       </Typography>
       <DiscussionListWrapper>
         <TopBar>
@@ -317,11 +353,21 @@ const DiscussionList: React.FC<DiscussionListProps> = ({ currentUser }) => {
                     <ActivityIcon
                       sx={{ fontSize: "1rem", verticalAlign: "middle" }}
                     />
-                    {` ${format(discussion.lastActivityAt.toDate(), "MMM d, yyyy h:mm a")}`}
+                    {` ${format(
+                      discussion.lastActivityAt.toDate(),
+                      "MMM d, yyyy h:mm a"
+                    )}`}
                   </Typography>
                 }
               />
-
+              {discussion?.unreadCount > 0 && (
+                <Chip
+                  label={`${discussion.unreadCount} unread`}
+                  color="error"
+                  size="small"
+                  style={{ position: "absolute", top: 10, right: 10 }}
+                />
+              )}
               <CardContent>
                 <TagContainer>
                   {discussion.tags.map((tag) => (

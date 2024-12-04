@@ -8,12 +8,11 @@ export interface ACTION {
   payload?: any;
 }
 
-  
 export interface JoinRequest {
   id: string;
   discussionId: string;
   userId: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   createdAt: any;
 }
 export interface Discussion {
@@ -27,7 +26,23 @@ export interface Discussion {
   createdAt: any;
   lastActivityAt: any;
   tags: string[];
+  pinnedMessages?: string[];
+  unreadCount?: number;
 }
+export const EMOJI_REACTIONS = [
+  "❤️",
+  "👍",
+  "😂",
+  "😮",
+  "🙌",
+  "🤡",
+  "👀",
+  "💩"
+];
+export type EmojiReaction = {
+  emoji: string;
+  users: string[];
+};
 
 export interface DiscussionMessage {
   id?: string;
@@ -38,10 +53,12 @@ export interface DiscussionMessage {
   content: string;
   fileUrl?: string;
   createdAt?: any;
-  isDeleted?:boolean;
+  isDeleted?: boolean;
   updatedAt?: any;
   replyTo?: string;
-  reactions?: { [key: string]: string[] };
+  reactions?: EmojiReaction[];
+  isPinned?: boolean;
+  unreadBy?: string[];
 }
 
 export type ARTICLE = {
@@ -297,7 +314,7 @@ export interface EVENT_ROOT_STATE {
   };
 }
 export type USER = {
-  _id?:string;
+  _id?: string;
   username?: string;
   shortname?: string;
   email?: string;

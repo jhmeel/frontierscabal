@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   collection,
@@ -12,23 +18,29 @@ import {
   getDoc,
   serverTimestamp,
   Timestamp,
+  arrayUnion,
+  arrayRemove,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../firebase";
-import { FaEllipsisVertical } from "react-icons/fa6";
-import { DiscussionMessage, USER, Discussion } from "../../types";
 import {
+  DiscussionMessage,
+  USER,
+  Discussion,
+  EmojiReaction,
+  EMOJI_REACTIONS,
+} from "../../types";
+import {
+  ClickAwayListener,
   TextField,
   Button,
   IconButton,
   Typography,
   Avatar,
-  CircularProgress,
   Menu,
   MenuItem,
   Box,
   Tooltip,
-  Divider,
   Drawer,
   List,
   ListItem,
@@ -38,8 +50,8 @@ import {
   ListItemIcon,
   InputAdornment,
 } from "@mui/material";
+
 import {
-  Delete,
   AttachFile,
   Send,
   FormatBold,
@@ -48,7 +60,6 @@ import {
   InsertLink,
   Code,
   RemoveCircle,
-  Download,
   MoreVert,
   Search,
 } from "@mui/icons-material";
@@ -57,14 +68,17 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Div100vh from "react-div-100vh";
-import { IconArrowLeftfunction } from "../../assets/icons";
+import {
+  IconArrowLeftfunction,
+  IconDotsVertical,
+  IconPin,
+} from "../../assets/icons";
 import getToken from "../../utils/getToken";
 import axiosInstance from "../../utils/axiosInstance";
 import toast from "react-hot-toast";
-import { genRandomColor } from "../../utils";
 import SpinLoader from "../../components/loaders/SpinLoader";
 
-const StyledDiscussionRoom = styled.div`
+const StyledDiscussionRoom = styled(motion.div)`
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -72,6 +86,88 @@ const StyledDiscussionRoom = styled.div`
   background-color: #ffffff;
   font-size: 14px;
   overflow-x: hidden;
+  position: relative;
+`;
+
+const EmojiSelector = styled.div<{
+  isCurrentUser: boolean;
+  contextMenuPosition?: { x: number; y: number };
+}>`
+  position: relative;
+  top: 20px;
+  right: ${(props) => (props.isCurrentUser ? "-10px" : "auto")};
+  left: ${(props) => (props.isCurrentUser ? "auto" : "-10px")};
+  background-color: transparent;
+  width: 100%;
+  flex-wrap: wrap;
+  padding: 16px;
+  border-left: ${(props) =>
+    props.isCurrentUser ? "none" : "4px solid #031e2e"};
+  border-right: ${(props) =>
+    props.isCurrentUser ? "4px solid #031e2e" : "none"};
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  z-index: 1000;
+`;
+
+const ReactionBar = styled.div<{
+  isCurrentUser: boolean;
+  contextMenuPosition?: { x: number; y: number };
+}>`
+  display: flex;
+  gap: 4px;
+  position: ${(props) => (props.contextMenuPosition ? "fixed" : "absolute")};
+  top: ${(props) =>
+    props.contextMenuPosition ? `${props.contextMenuPosition.y}px` : "-30px"};
+  right: ${(props) =>
+    props.isCurrentUser && !props.contextMenuPosition ? "0" : "auto"};
+  left: ${(props) =>
+    props.isCurrentUser || props.contextMenuPosition ? "auto" : "0"};
+  background-color: #f0f0f0;
+  border-radius: 12px;
+  padding: 2px 6px;
+  z-index: 1000;
+`;
+
+const ReactionButton = styled.button<{
+  isCurrentUserReaction?: boolean;
+  index?: number;
+}>`
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: ${(props) => (props.isCurrentUserReaction ? 1 : 0.7)};
+  animation: ${(props) =>
+    props.index !== undefined ? `scaleEffect 1s infinite ease-in-out` : "none"};
+  animation-delay: ${(props) =>
+    props.index !== undefined ? `${props.index * 0.3}s` : "0s"};
+  transform-origin: center;
+  transition: opacity 0.2s;
+  cursor:pointer;
+
+  &:hover {
+    opacity: 1;
+  }
+
+  @keyframes scaleEffect {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.3);
+    }
+  }
+`;
+const ReactionCount = styled.span`
+  font-size: 10px;
+  color: #888;
+  margin-left: 4px;
 `;
 
 const MessageList = styled.div`
@@ -105,13 +201,13 @@ const MessageBubble = styled(motion.div)(({ isCurrentUser, isDeleted }) => ({
   borderTopLeftRadius: "20px",
   borderBottomRightRadius: isCurrentUser ? "0" : "20px",
   borderBottomLeftRadius: isCurrentUser ? "20px" : "0",
-  backgroundColor: isDeleted ? "transparent" : "#82bfc4",
+  backgroundColor: isDeleted ? "transparent" : "#77a7b7",
   color: isDeleted ? "#888" : `#fff`,
   alignSelf: isCurrentUser ? "flex-end" : "flex-start",
   marginBottom: "50px",
   cursor: "pointer",
   transition: "all 0.3s ease",
-  border: "1px solid #ededed",
+
   fontStyle: isDeleted ? "italic" : "normal",
   fontSize: isDeleted ? `10px` : "14px",
   marginLeft: isCurrentUser ? "auto" : "0",
@@ -142,13 +238,6 @@ const Time = styled(Typography)(({ isCurrentUser }) => ({
   bottom: "5",
   color: "#888888",
 }));
-
-const StyledLoader = styled(CircularProgress)`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-`;
 
 const TopBar = styled.div`
   display: flex;
@@ -183,7 +272,7 @@ const FileIcon = styled.div`
 const ParticipantDrawer = styled(Drawer)`
   .MuiDrawer-paper {
     width: 100%;
-    maxwidth: 400px;
+    max-width: 400px;
     padding: 16px;
   }
 `;
@@ -194,6 +283,191 @@ const ParticipantList = styled(List)`
     padding-right: 0;
   }
 `;
+
+const PinnedMessagesContainer = styled.div`
+  background-color:transparent;
+  border-radius: 8px;
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  margin-top:4px;
+`;
+
+const PinnedMessage = styled.div<{ expanded: boolean }>`
+  display: flex;
+  width:100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  border: 1px solid #dfe3e6;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  background-color: ${({ expanded }) => (expanded ? "#e3f2fd" : "#ffffff")};
+`;
+
+const MessageContent = styled.div<{ expanded: boolean }>`
+  max-height: ${({ expanded }) => (expanded ? "500px" : "0px")};
+  overflow: auto;
+  transition: max-height 0.5s ease, opacity 0.3s ease-in-out;
+  opacity: ${({ expanded }) => (expanded ? 1 : 0)};
+  margin-top: ${({ expanded }) => (expanded ? "8px" : "0")};
+`;
+
+const MessageReactions: React.FC<{
+  message: DiscussionMessage;
+  currentUser: USER;
+  contextMenuPosition?: { x: number; y: number };
+  isEmojiActive: boolean;
+}> = ({ message, currentUser, isEmojiActive }) => {
+  const [reactions, setReactions] = useState<EmojiReaction[]>(
+    message.reactions || []
+  );
+
+  const [showEmojiSelector, setShowEmojiSelector] = useState(isEmojiActive);
+
+  useEffect(() => {
+    setShowEmojiSelector(isEmojiActive);
+  }, [isEmojiActive]);
+
+  const userCurrentReaction = useMemo(() => {
+    return reactions.find((r) => r.users.includes(currentUser._id));
+  }, [reactions, currentUser._id]);
+
+  const handleReactionClick = async (emoji: string) => {
+    try {
+      const messageRef = doc(db, "messages", message.id);
+
+      // If user already has a reaction, remove it
+      if (userCurrentReaction) {
+        await updateDoc(messageRef, {
+          reactions: arrayRemove({
+            emoji: userCurrentReaction.emoji,
+            users: [currentUser._id],
+          }),
+        });
+
+        setReactions((prev) =>
+          prev
+            .map((r) =>
+              r.emoji === userCurrentReaction.emoji
+                ? {
+                    ...r,
+                    users: r.users.filter((id) => id !== currentUser._id),
+                  }
+                : r
+            )
+            .filter((r) => r.users.length > 0)
+        );
+
+        if (userCurrentReaction.emoji === emoji) {
+          setShowEmojiSelector(false);
+          return;
+        }
+      }
+
+      await updateDoc(messageRef, {
+        reactions: arrayUnion({
+          emoji,
+          users: [currentUser._id],
+        }),
+      });
+
+      setReactions((prev) => {
+        const filteredReactions = prev
+          .map((r) => ({
+            ...r,
+            users: r.users.filter((id) => id !== currentUser._id),
+          }))
+          .filter((r) => r.users.length > 0);
+
+        const existingIndex = filteredReactions.findIndex(
+          (r) => r.emoji === emoji
+        );
+        if (existingIndex !== -1) {
+          filteredReactions[existingIndex].users.push(currentUser._id);
+          return filteredReactions;
+        }
+        return [...filteredReactions, { emoji, users: [currentUser._id] }];
+      });
+
+      setShowEmojiSelector(false);
+    } catch (error) {
+      console.error("Error updating reactions:", error);
+    }
+  };
+
+  const renderReactionTooltip = (reaction: EmojiReaction) => {
+    return (
+      <Box>
+        <Typography variant="subtitle2" gutterBottom>
+          Reacted with {reaction.emoji}
+        </Typography>
+        {reaction.users.map((userId) => {
+          const user = message.participants?.find((p) => p._id === userId);
+          return (
+            <Typography key={userId} variant="body2">
+              {user?._id === currentUser._id ? "You" : user?.username}
+            </Typography>
+          );
+        })}
+      </Box>
+    );
+  };
+
+  const toggleEmojiSelector = () => {
+    if (!message.isDeleted) {
+      setShowEmojiSelector((prev) => !prev);
+    }
+  };
+
+  return (
+    <ClickAwayListener onClickAway={() => setShowEmojiSelector(false)}>
+      <div>
+        {reactions.length > 0 && (
+          <ReactionBar isCurrentUser={message.senderId === currentUser._id}>
+            {reactions.map((reaction) => (
+              <Tooltip
+                key={reaction.emoji}
+                title={renderReactionTooltip(reaction)}
+                placement="top"
+              >
+                <ReactionButton
+                  onClick={toggleEmojiSelector}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    toggleEmojiSelector();
+                  }}
+                  isCurrentUserReaction={reaction.users.includes(
+                    currentUser._id
+                  )}
+                >
+                  {reaction.emoji}
+                  <ReactionCount>{reaction.users.length}</ReactionCount>
+                </ReactionButton>
+              </Tooltip>
+            ))}
+          </ReactionBar>
+        )}
+
+        {showEmojiSelector && (
+          <EmojiSelector isCurrentUser={message.senderId === currentUser._id}>
+            {EMOJI_REACTIONS.map((emoji, index) => (
+              <ReactionButton
+                index={index}
+                key={emoji}
+                onClick={() => handleReactionClick(emoji)}
+              >
+                {emoji}
+              </ReactionButton>
+            ))}
+          </EmojiSelector>
+        )}
+      </div>
+    </ClickAwayListener>
+  );
+};
 
 const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   const { discussionId } = useParams<{ discussionId: string }>();
@@ -215,6 +489,12 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   const [selectedParticipant, setSelectedParticipant] = useState<USER | null>(
     null
   );
+  const [isEmojiActive, setIsEmojiActive] = useState(false);
+  const [discussionParticipants, setDiscussionParticipants] = useState<USER[]>(
+    []
+  );
+  const [pinnedMessages, setPinnedMessages] = useState<string[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState<string[]>([]);
 
   const fetchDiscussion = useCallback(async () => {
     try {
@@ -241,53 +521,75 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
 
   useEffect(() => {
     fetchDiscussion();
-
-    const q = query(
-      collection(db, "messages"),
-      where("discussionId", "==", discussionId),
-      orderBy("createdAt", "asc")
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (querySnapshot) => {
-        const messagesData: DiscussionMessage[] = [];
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          messagesData.push({
-            id: doc.id,
-            ...data,
-            createdAt:
-              data.createdAt instanceof Timestamp
-                ? data.createdAt.toDate()
-                : new Date(),
-            updatedAt:
-              data.updatedAt instanceof Timestamp
-                ? data.updatedAt.toDate()
-                : new Date(),
-          } as DiscussionMessage);
-        });
-
-        setMessages(messagesData);
-        setLoading(false);
-      },
-      (error) => {
-        console.log(error);
-        setError("Error fetching messages. Please try again later.");
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
   }, [discussionId, fetchDiscussion]);
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      const q = query(
+        collection(db, "messages"),
+        where("discussionId", "==", discussionId),
+        orderBy("createdAt", "asc")
+      );
+
+      const unsubscribe = onSnapshot(
+        q,
+        async (querySnapshot) => {
+          const messagesData: DiscussionMessage[] = [];
+
+          querySnapshot.forEach((doc) => {
+            const data = doc.data() as DiscussionMessage;
+            const messageWithId = {
+              id: doc.id,
+              ...data,
+              createdAt:
+                data.createdAt instanceof Timestamp
+                  ? data.createdAt.toDate()
+                  : new Date(),
+              updatedAt:
+                data.updatedAt instanceof Timestamp
+                  ? data.updatedAt.toDate()
+                  : new Date(),
+              unreadBy: data.unreadBy || [],
+            };
+            messagesData.push(messageWithId);
+          });
+
+          // Track unread messages for current user
+          const currentUserUnreadMessages = messagesData
+            .filter((msg) => msg.unreadBy?.includes(currentUser._id))
+            .map((msg) => msg.id);
+
+          setUnreadMessages(currentUserUnreadMessages);
+          setMessages(messagesData);
+
+          // Mark messages as read when entering the discussion
+          await Promise.all(
+            currentUserUnreadMessages.map((messageId) =>
+              markMessageAsRead(discussionId, messageId, currentUser._id)
+            )
+          );
+
+          setLoading(false);
+        },
+        (error) => {
+          console.log(error);
+          setError("Error fetching messages. Please try again later.");
+          setLoading(false);
+        }
+      );
+
+      return () => unsubscribe();
+    };
+
+    fetchMessages();
+  }, [discussionId, currentUser._id]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!currentUser || !currentUser._id) {
+    if (!currentUser || !currentUser?._id) {
       setError(
         "User information is not available. Please try logging in again."
       );
@@ -308,7 +610,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
         }
 
         const messageData: DiscussionMessage = {
-          discussionId,
+          discussionId: discussionId,
           senderId: currentUser._id,
           senderAvatar: currentUser.avatar?.url,
           senderName: currentUser.username,
@@ -319,6 +621,9 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
           replyTo: replyTo ? replyTo.id : "",
+          unreadBy:
+            discussion?.participants.filter((id) => id !== currentUser._id) ||
+            [],
         };
 
         await addDoc(collection(db, "messages"), messageData);
@@ -402,16 +707,16 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
 
   const handleOpenMenu = (
     event: React.MouseEvent<HTMLElement>,
-    item: DiscussionMessage | USER
+    message: DiscussionMessage | USER | any
   ) => {
+    if (message?.isDeleted) return;
     setAnchorEl(event.currentTarget);
 
-    // Check if the item is a message or a participant
-    if ("senderId" in item) {
-      setSelectedMessage(item);
+    if ("senderId" in message) {
+      setSelectedMessage(message);
       setSelectedParticipant(null);
     } else {
-      setSelectedParticipant(item);
+      setSelectedParticipant(message);
       setSelectedMessage(null);
     }
   };
@@ -475,13 +780,12 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
       toast.error("Failed to remove participant");
     }
   };
+  
   const handleParticipantDrawerToggle = () => {
     setParticipantDrawerOpen((prev) => !prev);
   };
 
-  const [discussionParticipants, setDiscussionParticipants] = useState<USER[]>(
-    []
-  );
+ 
 
   const getParticipants = async () => {
     try {
@@ -507,9 +811,66 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
     }
   };
 
+  const [contextMenuPosition, setContextMenuPosition] = useState<
+    { x: number; y: number } | undefined
+  >();
+
+  const handleContextMenu = (
+    event: React.MouseEvent,
+    message: DiscussionMessage
+  ) => {
+    event.preventDefault();
+
+    const contextMenuPosition = {
+      x: event.clientX,
+      y: event.clientY,
+    };
+
+    setSelectedMessage(message);
+    setIsEmojiActive(!isEmojiActive);
+    setContextMenuPosition(contextMenuPosition);
+  };
+
   useEffect(() => {
     getParticipants();
   }, [discussionParticipants]);
+
+ // Define the state outside of renderPinnedMessages
+const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
+
+const toggleExpand = (id: string) => {
+  setExpandedMessageId((prev) => (prev === id ? null : id));
+};
+
+const renderPinnedMessages = () => {
+  const pinnedMsgs = messages.filter((msg) => msg.isPinned);
+
+  return pinnedMsgs.length > 0 ? (
+    <PinnedMessagesContainer>
+      {pinnedMsgs.map((pinnedMsg) => {
+        const isExpanded = expandedMessageId === pinnedMsg.id;
+
+        return (
+          <PinnedMessage
+            key={pinnedMsg.id}
+            expanded={isExpanded}
+            onClick={() => toggleExpand(pinnedMsg.id)}
+            onDoubleClick={()=>toggleMessagePin(pinnedMsg.id)}
+          >
+            <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+              {pinnedMsg.content.slice(0, 20)}... 
+            </Typography>
+           
+            <MessageContent expanded={isExpanded}>
+              <Typography variant="body2">{pinnedMsg.content}</Typography>
+            </MessageContent>
+          </PinnedMessage>
+        );
+      })}
+    </PinnedMessagesContainer>
+  ) : null;
+};
+
 
   if (loading) {
     return <SpinLoader />;
@@ -533,6 +894,54 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
       </div>
     );
   }
+  const markMessageAsRead = async (
+    messageId: string,
+    userId: string
+  ) => {
+    try {
+      const messageRef = doc(db, "messages", messageId);
+      await updateDoc(messageRef, {
+        unreadBy: arrayRemove(userId),
+      });
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+    }
+  };
+  const toggleMessagePin = async (messageId: string) => {
+    try {
+      const discussionRef = doc(db, "discussions", discussionId);
+
+      if (discussion.creatorId !== currentUser._id) {
+        return;
+      }
+
+      const messageRef = doc(db, "messages", messageId);
+
+      const messageSnap = await getDoc(messageRef);
+      const messageData = messageSnap.data() as DiscussionMessage;
+
+      if (messageData.isPinned) {
+        await updateDoc(discussionRef, {
+          pinnedMessages: arrayRemove(messageId),
+        });
+        await updateDoc(messageRef, {
+          isPinned: false,
+        });
+        handleCloseMenu()
+      } else {
+        await updateDoc(discussionRef, {
+          pinnedMessages: arrayUnion(messageId),
+        });
+        await updateDoc(messageRef, {
+          isPinned: true,
+        });
+        handleCloseMenu()
+      }
+    } catch (error) {
+      console.error("Error toggling message pin:", error);
+    }
+    
+  };
   const rCl1 = `#456`;
   const rCl2 = `#978500`;
   return (
@@ -546,6 +955,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
             sx={{
               display: "flex",
               alignItems: "center",
+              flexDirection: `column`,
               flexGrow: 1,
               overflow: "hidden",
               cursor: "pointer",
@@ -565,17 +975,17 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
             </Typography>
 
             <Typography variant="caption" color="#ededed">
-              ●
               {discussion?.participants?.length > 1
                 ? ` ${discussion?.participants.length} participants`
                 : ` ${discussion?.participants.length} participant`}
             </Typography>
           </Box>
           <IconButton onClick={handleParticipantDrawerToggle}>
-            <FaEllipsisVertical color="#fff" />
+            <IconDotsVertical color="#fff" />
           </IconButton>
         </TopBar>
         <MessageList>
+        {renderPinnedMessages()}
           {messages.map((message, index) => {
             const messageDate = message.createdAt
               ? new Date(message.createdAt).toLocaleDateString()
@@ -608,7 +1018,16 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                     <MessageBubble
                       isCurrentUser={message.senderId === currentUser?._id}
                       isDeleted={message.isDeleted}
-                      onDoubleClick={(event) => handleOpenMenu(event, message)}
+                      onDoubleClick={(event) => {
+                        if (!message.isDeleted) {
+                          handleOpenMenu(event, message);
+
+                          handleContextMenu(event, message);
+                        }
+                      }}
+                      onContextMenu={(event) =>
+                        handleContextMenu(event, message)
+                      }
                     >
                       <UserInfo
                         isCurrentUser={message.senderId === currentUser?._id}
@@ -639,7 +1058,11 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                         </Typography>
                       )}
                       {
-                        <Typography variant="body1" color="#fff" fontSize={16}>
+                        <Typography
+                          variant="body1"
+                          color="#fff"
+                          fontSize={message.isDeleted ? 10 : 14}
+                        >
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             style={{ color: "white !important" }}
@@ -710,6 +1133,17 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
                           ? message.senderName[0].toUpperCase()
                           : "U"}
                       </Avatar>
+
+                      {!message.isDeleted && (
+                        <MessageReactions
+                          message={message}
+                          isEmojiActive={
+                            message.id == selectedMessage?.id && isEmojiActive
+                          }
+                          currentUser={currentUser}
+                          contextMenuPosition={contextMenuPosition}
+                        />
+                      )}
                     </MessageBubble>
                   }
                 </div>
@@ -933,13 +1367,33 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
             anchorEl={anchorEl}
             open={Boolean(anchorEl) && selectedMessage !== null}
             onClose={handleCloseMenu}
+            elevation={1}
             PaperProps={{
               style: {
                 borderRadius: "8px",
               },
             }}
           >
-            <MenuItem onClick={() => handleMenuAction("reply")} divider>
+            {selectedMessage?.senderId === discussion?.creatorId && (
+              <MenuItem
+                onClick={() => toggleMessagePin(selectedMessage.id)}
+                divider={
+                  selectedMessage?.fileUrl ||
+                  selectedMessage?.senderId === currentUser._id
+                }
+              >
+                {discussion?.pinnedMessages?.includes(selectedMessage?.id)
+                  ? `Unpin`
+                  : `Pin`}
+              </MenuItem>
+            )}
+            <MenuItem
+              onClick={() => handleMenuAction("reply")}
+              divider={
+                selectedMessage?.fileUrl ||
+                selectedMessage?.senderId === currentUser._id
+              }
+            >
               Reply
             </MenuItem>
             {selectedMessage?.fileUrl && (

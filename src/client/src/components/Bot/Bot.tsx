@@ -10,6 +10,10 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import toast from "react-hot-toast";
 import { jelly } from "ldrs";
+import Config from "../../config/Config.js";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store.js";
 
 const BotWrapper = styled.div`
   position: fixed;
@@ -98,7 +102,7 @@ const BotTitle = styled.h2`
   margin: 0;
   font-size: 12px;
   font-weight: 600;
-  color:#ccc;
+  color: #ccc;
 `;
 
 const CloseButton = styled.button`
@@ -205,7 +209,6 @@ const ErrorMessage = styled(animated.div)`
   margin-top: 10px;
 `;
 
-
 const CopyButton = styled.button`
   background-color: transparent;
   color: #3498db;
@@ -285,17 +288,17 @@ const Bot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const chatAreaRef = useRef(null);
+  const navigate = useNavigate();
+  const { user } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
-   
-      setMessages([
-        {
-          type: "bot",
-          content:
-            "Hi! I'm here to assist you in providing answers to past questions, generating quizzes from questions, and answering your climatic and academic  questions.",
-        },
-      ]);
-     
+    setMessages([
+      {
+        type: "bot",
+        content:
+          "Hi! I'm here to assist you in providing answers to past questions, generating quizzes from questions, and answering your climatic and academic  questions.",
+      },
+    ]);
   }, []);
 
   const handleToggle = () => setIsOpen(!isOpen);
@@ -318,6 +321,11 @@ const Bot = () => {
   });
 
   const handleSend = async () => {
+    if (Config.IS_BILLER_ACTIVE && user?.subscriptionDue) {
+      navigate(`/biller`);
+      return;
+    }
+
     if (!query.trim()) return;
 
     setMessages((prev) => [...prev, { type: "user", content: query }]);
@@ -348,6 +356,10 @@ const Bot = () => {
     setError("");
 
     try {
+      if (Config.IS_BILLER_ACTIVE && user?.subscriptionDue) {
+        navigate(`/biller`);
+        return;
+      }
       const base64Image = await convertToBase64(file);
       setImagePreview(base64Image);
       setMessages((prev) => [
@@ -404,16 +416,34 @@ const Bot = () => {
     <BotWrapper>
       <animated.div style={buttonSpring}>
         <BotButton onClick={handleToggle}>
-          <VscRobot size={18} /> 
+          <VscRobot size={18} />
         </BotButton>
       </animated.div>
       <animated.div style={botSpring}>
         <BotContainer>
           <BotHeader>
-            <div style={{display:'flex',flexDirection:'column', alignItems:'center'}}> <span style={{display:"flex", alignItems:"center",justifyContent:"center"}}><VscRobot fill="#fff" size={20} />&nbsp;<span style={{fontSize:"13px",color:"#fff"}}>Dex</span></span> 
-            <BotTitle>Online</BotTitle></div>
-            
-        
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+              }}
+            >
+              {" "}
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <VscRobot fill="#fff" size={20} />
+                &nbsp;
+                <span style={{ fontSize: "13px", color: "#fff" }}>Dex</span>
+              </span>
+              <BotTitle>Online</BotTitle>
+            </div>
+
             <CloseButton onClick={handleToggle}>
               <FaTimes fill="#fff" />
             </CloseButton>
@@ -431,11 +461,9 @@ const Bot = () => {
                 <BotMessage key={index}>
                   <BotIcon />
                   <MarkdownContent>
-                  
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {message.content}
-                      </ReactMarkdown>
-                    
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {message.content}
+                    </ReactMarkdown>
                   </MarkdownContent>
                   <CopyButton onClick={() => handleCopy(message.content)}>
                     <FaRegCopy />

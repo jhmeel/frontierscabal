@@ -22,7 +22,6 @@ const BookmarksPage = () => {
   const handlePageChange = () => {
     setPage((prev) => prev + 1);
   };
-  const { user } = useSelector((state:RootState) => state.user);
   const {
     error: articleError,
     totalPages,

@@ -1,14 +1,23 @@
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
-import { CircleLoaderIcon } from "../../assets/icons";
+import { ring } from "ldrs";
 
-const SpinLoader:React.FC = () => {
+const SpinLoader: React.FC = () => {
+  useEffect(() => {
+    ring.register();
+  }, []);
   return (
-   <Loader>
-     <CircleLoaderIcon className='custom-loader'/> 
-   </Loader>
+    <Loader>
+      <l-ring
+        size="40"
+        stroke="5"
+        bg-opacity="0"
+        speed="2"
+        color="#4285f4"
+      ></l-ring>
+    </Loader>
   );
-}; 
+};
 
 export default SpinLoader;
 const Loader = styled.div`
@@ -27,33 +36,4 @@ const Loader = styled.div`
   -moz-backdrop-filter: blur(8px);
   -o-backdrop-filter: blur(8px);
   cursor: progress;
-
-.custom-loader {
-  width: 4em;
-  transform-origin: center;
-  animation: rotate4 2s linear infinite;
-}
-
-@keyframes rotate4 {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes dash4 {
-  0% {
-    stroke-dasharray: 1, 200;
-    stroke-dashoffset: 0;
-  }
-
-  50% {
-    stroke-dasharray: 90, 200;
-    stroke-dashoffset: -35px;
-  }
-
-  100% {
-    stroke-dashoffset: -125px;
-  }
-}
-
-`
+`;
