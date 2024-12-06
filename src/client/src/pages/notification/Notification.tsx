@@ -27,7 +27,7 @@ import { format, formatDistance } from "date-fns";
 import MetaData from "../../MetaData";
 import Footer from "../../components/footer/Footer";
 import { NotificationManager } from "../../lib/notificationManager/NotificationManager";
-import { NOTIFICATION, NOTIFICATIONS } from "../../types";
+import { NOTIFICATION } from "../../types";
 
 const NotificationPage: React.FC = () => {
   const [notifications, setNotifications] = useState<NOTIFICATION[]>([]);
@@ -83,7 +83,7 @@ const NotificationPage: React.FC = () => {
           <Avatar 
             src={notification?.avatar || notification?.image} 
             sx={{ 
-              bgcolor: notification.type === 'important' ? 'error.main' : 'primary.main',
+              bgcolor: notification?.type === 'important' ? 'error.main' : 'primary.main',
               width: isMobile ? 40 : 56, 
               height: isMobile ? 40 : 56,
               mb: isMobile ? 1 : 0

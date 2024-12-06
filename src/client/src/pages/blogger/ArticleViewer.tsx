@@ -235,6 +235,7 @@ const ArticleViewer: React.FC = () => {
     }
   }, [dispatch, slug, article?.category]);
 
+  
   useEffect(() => {
     setLiked(article?.likes?.includes(user?._id));
   }, [article?.likes, user?._id]);

@@ -196,7 +196,7 @@ const Home: React.FC = () => {
         const r =
           cachedIndex !== null
             ? parseInt(cachedIndex)
-            : Math.floor(Math.random() * (response.data.items?.length || 1));
+            : Math.floor(Math.random() * (response?.data?.items?.length || 1));
         setLibraryPickOfTheDay(response.data.items[r]);
         localStorage.setItem("LPIndex", r);
         setLibraryPickLoading(false);
@@ -313,7 +313,7 @@ const Home: React.FC = () => {
       const response = await axios.get(
         `https://www.googleapis.com/books/v1/volumes?q=${searchTerm}&maxResults=10`
       );
-      setCategoryBooks(response.data.items);
+      setCategoryBooks(response?.data?.items || []);
       setBooksLoading(false);
     } catch (error) {
       console.error("Error searching books:", error);
@@ -325,7 +325,8 @@ const Home: React.FC = () => {
     enqueueSnackbar("Book bookmarked successfully!", { variant: "success" });
   };
 
-  const handleShare = () => {
+  const handleShare = (link: string) => {
+    navigator.clipboard.writeText(link);
     enqueueSnackbar("Share link copied to clipboard!", { variant: "success" });
   };
 
@@ -608,7 +609,7 @@ const Home: React.FC = () => {
           ))}
         </Tabs>
         <Grid container spacing={2} mt={2}>
-          {booksLoading || !categoryBooks.length
+          {booksLoading || !categoryBooks?.length
             ? Array(8)
                 .fill(null)
                 .map((_, index) => (
@@ -621,19 +622,19 @@ const Home: React.FC = () => {
                   <BookCard onClick={() => handleBookSelect(book)}>
                     <BookCover
                       src={
-                        book.volumeInfo.imageLinks?.thumbnail ||
+                        book?.volumeInfo?.imageLinks?.thumbnail ||
                         "https://via.placeholder.com/128x192"
                       }
-                      alt={book.volumeInfo.title}
+                      alt={book?.volumeInfo.title}
                     />
                     <Typography variant="subtitle1">
-                      {book.volumeInfo.title}
+                      {book?.volumeInfo.title}
                     </Typography>
                     <Typography variant="body2">
-                      {book.volumeInfo.authors?.join(", ")}
+                      {book?.volumeInfo.authors?.join(", ")}
                     </Typography>
                     <Typography variant="caption">
-                      {book.volumeInfo.publishedDate}
+                      {book?.volumeInfo.publishedDate}
                     </Typography>
                   </BookCard>
                 </Grid>
@@ -715,7 +716,9 @@ const Home: React.FC = () => {
                   </IconButton>
                 </Tooltip>
                 <Tooltip title="Share">
-                  <IconButton onClick={handleShare}>
+                  <IconButton
+                    onClick={() => handleShare(JSON.stringify(selectedBook))}
+                  >
                     <ShareIcon />
                   </IconButton>
                 </Tooltip>

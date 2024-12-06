@@ -27,7 +27,7 @@ export class NotificationManager {
   }
   getUnreadNotificationsCount(): number {
     return this.notifications?.length > 0
-      ? this.notifications.filter((n: NOTIFICATION) => !n.read).length
+      ? this.notifications.filter((n: NOTIFICATION) => !n.read)?.length
       : 0;
   }
 

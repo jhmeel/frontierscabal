@@ -107,7 +107,7 @@ const EmojiSelector = styled.div<{
     props.isCurrentUser ? "4px solid #031e2e" : "none"};
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   z-index: 1000;
 `;
 
@@ -148,7 +148,7 @@ const ReactionButton = styled.button<{
     props.index !== undefined ? `${props.index * 0.3}s` : "0s"};
   transform-origin: center;
   transition: opacity 0.2s;
-  cursor:pointer;
+  cursor: pointer;
 
   &:hover {
     opacity: 1;
@@ -285,17 +285,17 @@ const ParticipantList = styled(List)`
 `;
 
 const PinnedMessagesContainer = styled.div`
-  background-color:transparent;
+  background-color: transparent;
   border-radius: 8px;
-  display:flex;
-  flex-direction:column;
-  width:100%;
-  margin-top:4px;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 4px;
 `;
 
 const PinnedMessage = styled.div<{ expanded: boolean }>`
   display: flex;
-  width:100%;
+  width: 100%;
   align-items: center;
   justify-content: space-between;
   padding: 8px;
@@ -405,7 +405,7 @@ const MessageReactions: React.FC<{
           Reacted with {reaction.emoji}
         </Typography>
         {reaction.users.map((userId) => {
-          const user = message.participants?.find((p) => p._id === userId);
+          const user = message?.participants?.find((p) => p._id === userId);
           return (
             <Typography key={userId} variant="body2">
               {user?._id === currentUser._id ? "You" : user?.username}
@@ -495,6 +495,13 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
   );
   const [pinnedMessages, setPinnedMessages] = useState<string[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<string[]>([]);
+  const [contextMenuPosition, setContextMenuPosition] = useState<
+    { x: number; y: number } | undefined
+  >();
+
+  const [expandedMessageId, setExpandedMessageId] = useState<string | null>(
+    null
+  );
 
   const fetchDiscussion = useCallback(async () => {
     try {
@@ -612,7 +619,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
         const messageData: DiscussionMessage = {
           discussionId: discussionId,
           senderId: currentUser._id,
-          senderAvatar: currentUser.avatar?.url,
+          senderAvatar: currentUser.avatar?.url || "" ,
           senderName: currentUser.username,
           content: newMessage.trim(),
           fileUrl,
@@ -780,12 +787,10 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
       toast.error("Failed to remove participant");
     }
   };
-  
+
   const handleParticipantDrawerToggle = () => {
     setParticipantDrawerOpen((prev) => !prev);
   };
-
- 
 
   const getParticipants = async () => {
     try {
@@ -811,10 +816,7 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
     }
   };
 
-  const [contextMenuPosition, setContextMenuPosition] = useState<
-    { x: number; y: number } | undefined
-  >();
-
+  
   const handleContextMenu = (
     event: React.MouseEvent,
     message: DiscussionMessage
@@ -835,42 +837,39 @@ const DiscussionRoom: React.FC<{ currentUser: USER }> = ({ currentUser }) => {
     getParticipants();
   }, [discussionParticipants]);
 
- // Define the state outside of renderPinnedMessages
-const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null);
 
-const toggleExpand = (id: string) => {
-  setExpandedMessageId((prev) => (prev === id ? null : id));
-};
+  const toggleExpand = (id: string) => {
+    setExpandedMessageId((prev) => (prev === id ? null : id));
+  };
 
-const renderPinnedMessages = () => {
-  const pinnedMsgs = messages.filter((msg) => msg.isPinned);
+  const renderPinnedMessages = () => {
+    const pinnedMsgs = messages.filter((msg) => msg.isPinned);
 
-  return pinnedMsgs.length > 0 ? (
-    <PinnedMessagesContainer>
-      {pinnedMsgs.map((pinnedMsg) => {
-        const isExpanded = expandedMessageId === pinnedMsg.id;
+    return pinnedMsgs.length > 0 ? (
+      <PinnedMessagesContainer>
+        {pinnedMsgs.map((pinnedMsg) => {
+          const isExpanded = expandedMessageId === pinnedMsg.id;
 
-        return (
-          <PinnedMessage
-            key={pinnedMsg.id}
-            expanded={isExpanded}
-            onClick={() => toggleExpand(pinnedMsg.id)}
-            onDoubleClick={()=>toggleMessagePin(pinnedMsg.id)}
-          >
-            <Typography variant="body2" sx={{ fontWeight: "bold" }}>
-              {pinnedMsg.content.slice(0, 20)}... 
-            </Typography>
-           
-            <MessageContent expanded={isExpanded}>
-              <Typography variant="body2">{pinnedMsg.content}</Typography>
-            </MessageContent>
-          </PinnedMessage>
-        );
-      })}
-    </PinnedMessagesContainer>
-  ) : null;
-};
+          return (
+            <PinnedMessage
+              key={pinnedMsg.id}
+              expanded={isExpanded}
+              onClick={() => toggleExpand(pinnedMsg.id)}
+              onDoubleClick={() => toggleMessagePin(pinnedMsg.id)}
+            >
+              <Typography variant="body2" sx={{ fontWeight: "bold" }}>
+                {pinnedMsg.content.slice(0, 20)}...
+              </Typography>
 
+              <MessageContent expanded={isExpanded}>
+                <Typography variant="body2">{pinnedMsg.content}</Typography>
+              </MessageContent>
+            </PinnedMessage>
+          );
+        })}
+      </PinnedMessagesContainer>
+    ) : null;
+  };
 
   if (loading) {
     return <SpinLoader />;
@@ -894,10 +893,7 @@ const renderPinnedMessages = () => {
       </div>
     );
   }
-  const markMessageAsRead = async (
-    messageId: string,
-    userId: string
-  ) => {
+  const markMessageAsRead = async (messageId: string, userId: string) => {
     try {
       const messageRef = doc(db, "messages", messageId);
       await updateDoc(messageRef, {
@@ -927,7 +923,7 @@ const renderPinnedMessages = () => {
         await updateDoc(messageRef, {
           isPinned: false,
         });
-        handleCloseMenu()
+        handleCloseMenu();
       } else {
         await updateDoc(discussionRef, {
           pinnedMessages: arrayUnion(messageId),
@@ -935,12 +931,11 @@ const renderPinnedMessages = () => {
         await updateDoc(messageRef, {
           isPinned: true,
         });
-        handleCloseMenu()
+        handleCloseMenu();
       }
     } catch (error) {
       console.error("Error toggling message pin:", error);
     }
-    
   };
   const rCl1 = `#456`;
   const rCl2 = `#978500`;
@@ -985,7 +980,7 @@ const renderPinnedMessages = () => {
           </IconButton>
         </TopBar>
         <MessageList>
-        {renderPinnedMessages()}
+          {renderPinnedMessages()}
           {messages.map((message, index) => {
             const messageDate = message.createdAt
               ? new Date(message.createdAt).toLocaleDateString()
